@@ -1,8 +1,3 @@
-# Copyright Iris contributors
-#
-# This file is part of Iris and is released under the LGPL license.
-# See COPYING and COPYING.LESSER in the root of the repository for full
-# licensing details.
 """
 An adaptor layer allowing an NcData to masquerade as a netCDF4.Dataset object.
 
@@ -53,7 +48,7 @@ class _Nc4DatalikeWithNcattrs:
 
     def __getattr__(self, attr):
         # Extend local object attribute access to the ncattrs of the stored data item
-        #  (Yuck, but I think the Iris load code requires it).
+        #  (Unpleasant, but I think the Iris load code requires it).
         return self.getncattr(attr)
 
     def __setattr__(self, attr, value):
