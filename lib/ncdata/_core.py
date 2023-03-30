@@ -1,10 +1,5 @@
-# Copyright Iris contributors
-#
-# This file is part of Iris and is released under the LGPL license.
-# See COPYING and COPYING.LESSER in the root of the repository for full
-# licensing details.
 """
-Our basic representation classes for netCDF4 data.
+Our main classes for representing netCDF data.
 
 These structures support groups, variables, attributes.
 Both data and attributes are stored as numpy-compatible array-like values (though this
