@@ -39,3 +39,7 @@ coverage.xml
 .project
 .pydevproject
 .settings
+
+# Docs
+docs/_build
+docs/api
