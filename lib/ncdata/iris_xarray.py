@@ -1,6 +1,6 @@
 """
 Interface routines for converting data between :class:`ncdata.NcData` and
-:class:`iris.Cubelist` objects.
+:class:`iris.cube.Cubelist` objects.
 
 """
 import iris

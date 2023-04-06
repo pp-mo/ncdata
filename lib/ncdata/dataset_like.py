@@ -6,7 +6,7 @@ netCDF4.Dataset.
 
 This is provided primarily to support a re-use of the iris.fileformats.netcdf file
 format load + save, to convert cubes to+from ncdata objects, and hence convert Iris
- cubes to+from an xarray.Dataset.
+cubes to+from an xarray.Dataset.
 
 Note: currently only supports what is required for Iris load/save capability.
 It should be possible to use these objects with other packages expecting a
