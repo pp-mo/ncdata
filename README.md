@@ -125,12 +125,14 @@ There is no release yet.
 
 ## Known limitations
 Unsupported features : not planned 
- * user datatypes are not supported
- * variable-length datatypes are not supported
+ * user-defined datatypes are not supported
+   * this includes compound and variable-length types
+
 Unsupported features : planned for future release 
  * groups (not yet fully supported)
  * unlimited dimensions (not yet fully supported)
  * file compression and encoding options
+ * file output chunking control
 
 # Principles
   * ncdata represents NetCDF data as Python objects
