@@ -99,7 +99,11 @@ indexing) may be better done using Iris/Xarray.
 
 
 # Code Examples
-  * TBD
+  * mostly TBD
+  * proof-of-concept script for
+    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration/nc4_interface_exercise.py)
+  * proof-of-concept script for
+    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration/ncdata_exercise.py)    
 
 # Status
 ## Code Stability
