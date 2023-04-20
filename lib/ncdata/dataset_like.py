@@ -1,17 +1,27 @@
 """
-An adaptor layer allowing an NcData to masquerade as a netCDF4.Dataset object.
+An adaptor layer allowing an :class:`~ncdata.NcData` to masquerade as a
+:class:`netCDF4.Dataset` object.
 
-These classes contain NcData and NcVariables, but emulating the access APIs of a
-netCDF4.Dataset.
+Note:
+    This is a low-level interface, exposed publicly for extended experimental uses.
+    If you only want to convert **Iris** data to+from :class:`~ncdata.NcData`,
+    please use the functions in :mod:`ncdata.iris` instead.
 
-This is provided primarily to support a re-use of the iris.fileformats.netcdf file
-format load + save, to convert cubes to+from ncdata objects, and hence convert Iris
-cubes to+from an xarray.Dataset.
+----
 
-Note: currently only supports what is required for Iris load/save capability.
-It should be possible to use these objects with other packages expecting a
-netCDF4.Dataset object, however the API simulation is far from complete, so it may in
-future require extending to support other desired uses.
+These classes contain :class:`~ncdata.NcData` and :class:`~ncdata.NcVariable`\s, but
+emulate the access APIs of a :class:`netCDF4.Dataset` / :class:`netCDF4.Variable`.
+
+This is provided primarily to support a re-use of the :mod:`iris.fileformats.netcdf`
+file format load + save, to convert cubes to+from ncdata objects (and hence, especially,
+convert Iris :class:`~iris.cube.Cube`\s to+from an Xarray :class:`~xarray.Dataset`).
+
+Notes
+-----
+Currently only supports what is required for Iris load/save capability.
+It *should* be possible to use these objects with other packages expecting a
+:class:`netCDF4.Dataset` object, however the API simulation is far from complete, so
+this may need to be extended, in future, to support other such uses.
 
 """
 import numpy as np

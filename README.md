@@ -92,8 +92,8 @@ cubes = to_cubes(ncdata)
 ncdata can also be used for data extraction and modification, similar to the scope of
 CDO and NCO command-line operators but without file operations.  
 However, this type of usage is as yet still undeveloped :  There is no inbuilt support
-for data consistency checking, or obviously useful operations such as dimension
-indexing.  
+for data consistency checking, or obviously useful operations such as indexing by
+dimension. 
 This could be added in future, but it is also true that many such operations (like
 indexing) may be better done using Iris/Xarray.
 
@@ -101,9 +101,9 @@ indexing) may be better done using Iris/Xarray.
 # Code Examples
   * mostly TBD
   * proof-of-concept script for
-    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration/nc4_interface_exercise.py)
+    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration/ex_ncdata_netcdf_conversion.py)
   * proof-of-concept script for
-    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration/ncdata_exercise.py)    
+    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration/ex_iris_xarray_conversion.py)    
 
 # Status
 ## Code Stability

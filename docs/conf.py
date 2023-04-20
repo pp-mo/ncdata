@@ -33,7 +33,7 @@ release = '0.01'
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
-    "sphinxcontrib.napoleon"
+    "sphinx.ext.napoleon"
 ]
 
 intersphinx_mapping = {
@@ -41,7 +41,6 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "dask": ("https://docs.dask.org/en/stable/", None),
     "xarray": ("https://docs.xarray.dev/en/stable/", None),
-    # Doesn't work as expected ?
     "iris": ("https://scitools-iris.readthedocs.io/en/latest/", None),
     # Can't make this work ??
     # "netCDF4": ("https://github.com/Unidata/netcdf4-python", None),
@@ -67,6 +66,10 @@ autopackage_name = [
     'ncdata.xarray',
     'ncdata.dataset_like'
 ]
+# api generation configuration
+autoclass_content = "both"
+autodoc_member_order = "bysource"
+autodoc_typehints = "none"
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

@@ -1,6 +1,6 @@
 """
-Interface routines for converting data between :class:`ncdata.NcData` and
-:class:`xarray.Dataset` objects.
+Interface routines for converting data between :class:`~ncdata.NcData` and
+Xarray :class:`~xarray.Dataset` objects.
 
 This embeds a certain amount of Xarray knowledge (and dependency), hopefully a minimal
 amount.  The structure of an NcData object makes it fairly painless.
@@ -14,15 +14,17 @@ import xarray as xr
 from ._core import NcAttribute, NcData, NcDimension, NcVariable
 
 
-class _XarrayNcDataStore:  # (xr.backends.common.AbstractWritableDataStore)
-    # An interface class providing a subset of the
-    # :class:`xr.AbstractWriteableDataStore` interface, and which converts to/from a
-    # contained ncdata.NcData.
-    # This requires some knowledge of Xarray, but it is very small.
-    #
-    # This code pinched from @TomekTrzeciak
-    # see https://gist.github.com/TomekTrzeciak/b00ff6c9dc301ed6f684990e400d1435
+class _XarrayNcDataStore:
+    """
+    An interface class providing a subset of the
+    :class:`xarray.common.AbstractWriteableDataStore` interface, and which converts
+    to/from a contained :class:`~ncdata.NcData`.
 
+    This requires some knowledge of Xarray, but it is very small.
+
+    This code originated from @TomekTrzeciak.
+    See https://gist.github.com/TomekTrzeciak/b00ff6c9dc301ed6f684990e400d1435
+    """
     def __init__(self, ncdata: NcData = None):
         if ncdata is None:
             ncdata = NcData()
@@ -131,9 +133,44 @@ class _XarrayNcDataStore:  # (xr.backends.common.AbstractWritableDataStore)
         return ds
 
 
-def to_xarray(ncdata: NcData) -> xr.Dataset:
-    return _XarrayNcDataStore(ncdata).to_xarray()
+def to_xarray(ncdata: NcData, **kwargs) -> xr.Dataset:
+    """
+    Convert :class:`~ncdata.NcData` to an xarray :class:`~xarray.Dataset`.
+
+    Parameters
+    ----------
+    ncdata : NcData
+        source data
+
+    kwargs : dict
+        additional xarray "load keywords", passed to :meth:`xarray.Dataset.load_store`
+
+    Returns
+    -------
+    xrds : xarray.Dataset
+        converted data in the form of an Xarray :class:`xarray.Dataset`
+
+    """
+    return _XarrayNcDataStore(ncdata).to_xarray(**kwargs)
 
 
 def from_xarray(xrds: Union[xr.Dataset, Path, AnyStr]) -> NcData:
+    """
+    Convert an xarray :class:`xarray.Dataset` to a :class:`NcData`
+
+    Parameters
+    ----------
+    xrds : :class:`xarray.Dataset`
+        source data
+
+    kwargs : dict
+        additional xarray "save keywords", passed to
+        :meth:`xarray.Dataset.dump_to_store`
+
+    Returns
+    -------
+    ncdata : NcData
+        data converted to an :class:`~ncdata.NcData`
+
+    """
     return _XarrayNcDataStore.from_xarray(xrds).ncdata
