@@ -1,0 +1,15 @@
+name: iris-dev
+
+channels:
+  - conda-forge
+
+dependencies:
+  - netCDF4
+  - iris
+  - xarray
+  - filelock
+  - iris-sample-data
+  - pytest
+  - sphinx
+  - sphinxcontrib-napoleon
+  - pydata-sphinx-theme
