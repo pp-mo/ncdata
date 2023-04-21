@@ -16,7 +16,7 @@ from . import NcAttribute, NcData, NcDimension, NcVariable
 
 def to_nc4(
     ncdata: NcData, nc4_dataset_or_file: Union[nc.Dataset, Path, AnyStr]
-):
+) -> None:
     """
     Write an NcData to a provided (writeable) :class:`netCDF4.Dataset`, or filepath.
 
@@ -31,9 +31,10 @@ def to_nc4(
     -------
     None
 
-    ..Note:
-        If filepath is provided, a file is written and closed afterwards.
-        If a dataset is provided, it must be writeable and remains open afterward.
+    Note
+    ----
+    If a filepath is provided, a file is written and closed afterwards.
+    If a dataset is provided, it must be writeable and remains open afterward.
 
     """
     caller_owns_dataset = hasattr(nc4_dataset_or_file, "variables")
