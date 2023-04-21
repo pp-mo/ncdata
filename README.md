@@ -11,8 +11,9 @@ This enables the user to freely mix+match operations from both projects, getting
   * [Motivation](#motivation)
     * [Primary Use](#primary-use)
     * [Secondary Uses](#secondary-uses)
-  * [Working Examples](#code-examples) 
-  * [Project Status](#status)
+  * [Working Usage Examples](#code-examples) 
+  * [API documentation](#api-documentation)
+  * [Project Status](#project-status)
     * [Code stability](#code-stability)
     * [Iris and Xarray version compatibility](#iris-and-xarray-compatibility)
     * [Current Limitations](#known-limitations)
@@ -108,7 +109,7 @@ indexing) may be better done using Iris/Xarray.
 # API documentation
   * see the [ReadTheDocs build](https://ncdata.readthedocs.io/en/latest/index.html)
 
-# Status
+# Project Status
 ## Code Stability
 
 Code here is all still experimental.   
@@ -121,7 +122,7 @@ There is no release yet.
     * branch in pp-mo fork : https://github.com/pp-mo/iris/tree/bridge_support , *or*
     * this PR in main Iris repo : https://github.com/SciTools/iris/pull/5216
   * **in future** the necessary changes should be included and released with
-    [Iris 3.6](https://github.com/orgs/SciTools/projects/11).
+    (planned) [Iris 3.7](https://github.com/SciTools/iris/discussions/5209).
 ### Xarray
   * appears working against 'current' Xarray at time of writing
     * [v2023.03.0 (March 22, 2023)](https://docs.xarray.dev/en/latest/whats-new.html#v2023-03-0-march-22-2023)
