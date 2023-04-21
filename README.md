@@ -105,6 +105,9 @@ indexing) may be better done using Iris/Xarray.
   * proof-of-concept script for
     [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration/ex_iris_xarray_conversion.py)    
 
+# API documentation
+  * see the [ReadTheDocs build](https://ncdata.readthedocs.io/en/latest/index.html)
+
 # Status
 ## Code Stability
 
