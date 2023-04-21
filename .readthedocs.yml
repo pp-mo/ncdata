@@ -4,6 +4,16 @@ build:
   os: ubuntu-20.04
   tools:
     python: mambaforge-4.10
+  jobs:
+    post_install:
+      - echo "post-install apidocs build ==test output=="
+      - pwd
+      - ls -1
+      - python -c "import os; print(os)"
+      - ls -1 ./docs
+      - ls -1 ./lib
+      - rm -rf ./docs/api
+      - sphinx-apidoc -Mfe -o ./docs/api ./lib/ncdata
 
 conda:
   environment: requirements/readthedocs.yml
