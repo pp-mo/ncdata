@@ -11,7 +11,7 @@ from typing import AnyStr, Union
 
 import xarray as xr
 
-from ._core import NcAttribute, NcData, NcDimension, NcVariable
+from . import NcAttribute, NcData, NcDimension, NcVariable
 
 
 class _XarrayNcDataStore:
