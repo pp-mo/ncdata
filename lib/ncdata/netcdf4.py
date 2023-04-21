@@ -8,7 +8,6 @@ from typing import AnyStr, Union
 
 import dask.array as da
 import netCDF4 as nc
-
 from iris._lazy_data import as_lazy_data
 from iris.fileformats.netcdf import NetCDFDataProxy
 

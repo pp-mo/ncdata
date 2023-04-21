@@ -25,6 +25,7 @@ class _XarrayNcDataStore:
     This code originated from @TomekTrzeciak.
     See https://gist.github.com/TomekTrzeciak/b00ff6c9dc301ed6f684990e400d1435
     """
+
     def __init__(self, ncdata: NcData = None):
         if ncdata is None:
             ncdata = NcData()

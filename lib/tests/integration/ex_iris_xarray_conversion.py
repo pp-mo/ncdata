@@ -2,13 +2,12 @@
 A temporary proof-of-concept test workflow
 
 """
+import iris
+import iris.tests as itsts
 import numpy as np
 import xarray as xr
 
-import iris
 from ncdata.iris_xarray import cubes_from_xarray, cubes_to_xarray
-
-import iris.tests as itsts
 
 
 def example_from_xr():

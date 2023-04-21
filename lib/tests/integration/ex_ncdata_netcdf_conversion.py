@@ -1,5 +1,6 @@
-from ncdata.netcdf4 import from_nc4, to_nc4
 import iris.tests as itsts
+
+from ncdata.netcdf4 import from_nc4, to_nc4
 
 
 def example_nc4_roundtrip():

@@ -9,12 +9,12 @@ Note:
 
 ----
 
-These classes contain :class:`~ncdata.NcData` and :class:`~ncdata.NcVariable`\s, but
+These classes contain :class:`~ncdata.NcData` and :class:`~ncdata.NcVariable`\\s, but
 emulate the access APIs of a :class:`netCDF4.Dataset` / :class:`netCDF4.Variable`.
 
 This is provided primarily to support a re-use of the :mod:`iris.fileformats.netcdf`
 file format load + save, to convert cubes to+from ncdata objects (and hence, especially,
-convert Iris :class:`~iris.cube.Cube`\s to+from an Xarray :class:`~xarray.Dataset`).
+convert Iris :class:`~iris.cube.Cube`\\s to+from an Xarray :class:`~xarray.Dataset`).
 
 Notes
 -----
@@ -82,6 +82,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
     content of the emulated "root group".
 
     """
+
     _local_instance_props = ("_ncdata", "variables")
 
     def __init__(self, ncdata: NcData = None):
@@ -159,6 +160,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     The core NcData content, 'self._ncdata', is a :class:`NcVariable`.
 
     """
+
     _local_instance_props = ("_ncdata", "name", "datatype", "_in_memory_data")
 
     def __init__(self, ncvar: NcVariable, datatype: np.dtype):
