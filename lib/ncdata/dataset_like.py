@@ -26,7 +26,7 @@ this may need to be extended, in future, to support other such uses.
 """
 import numpy as np
 
-from ._core import NcAttribute, NcData, NcDimension, NcVariable
+from . import NcAttribute, NcData, NcDimension, NcVariable
 
 
 class _Nc4DatalikeWithNcattrs:

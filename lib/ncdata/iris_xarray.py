@@ -1,18 +1,17 @@
 """
-Interface routines for converting data between :class:`ncdata.NcData` and iterables of
-:class:`iris.cube.Cube`\\s.
+Interface routines for converting data between an Xarray :class:`~xarray.Dataset` and
+iterables of Iris :class:`~iris.cube.Cube`\\s.
+
+By design, these transformations should be equivalent to saving data from one package
+to a netcdf file, and re-loading into the other package.  There is also support for
+passing additional keywords to the appropriate load/save routines.
 
 """
 import xarray
 from iris.cube import CubeList
 
-from ncdata.xarray import from_xarray, to_xarray
-
 from .iris import from_iris, to_iris
-
-#
-# The primary conversion interfaces
-#
+from .xarray import from_xarray, to_xarray
 
 
 def cubes_from_xarray(

@@ -13,9 +13,8 @@ import iris
 import iris.fileformats.netcdf as ifn
 from iris.cube import Cube, CubeList
 
-from ncdata.dataset_like import Nc4DatasetLike
-
-from ._core import NcData
+from . import NcData
+from .dataset_like import Nc4DatasetLike
 
 #
 # The primary conversion interfaces

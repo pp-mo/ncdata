@@ -11,14 +11,31 @@ import netCDF4 as nc
 from iris._lazy_data import as_lazy_data
 from iris.fileformats.netcdf import NetCDFDataProxy
 
-from ._core import NcAttribute, NcData, NcDimension, NcVariable
+from . import NcAttribute, NcData, NcDimension, NcVariable
 
 
 def to_nc4(
     ncdata: NcData, nc4_dataset_or_file: Union[nc.Dataset, Path, AnyStr]
-):
+) -> None:
     """
     Write an NcData to a provided (writeable) :class:`netCDF4.Dataset`, or filepath.
+
+    Parameters
+    ----------
+    ncdata : NcData
+        input data
+    nc4_dataset_or_file : :class:`netCDF4.Dataset` or :class:`pathlib.Path` or str
+        output filepath or :class:`netCDF4.Dataset` to write into
+
+    Returns
+    -------
+    None
+
+    Note
+    ----
+    If a filepath is provided, a file is written and closed afterwards.
+    If a dataset is provided, it must be writeable and remains open afterward.
+
     """
     caller_owns_dataset = hasattr(nc4_dataset_or_file, "variables")
     if caller_owns_dataset:
@@ -68,6 +85,16 @@ def from_nc4(
 ) -> NcData:
     """
     Read an NcData from a provided :class:`netCDF4.Dataset`, or filepath.
+
+    Parameters
+    ----------
+    nc4_dataset_or_file
+        source of load data.  Can be either a :class:`netCDF4.Dataset`,
+        a :class:`netCDF4.Group`, a :class:`pathlib.Path` or a string.
+
+    Returns
+    -------
+    ncdata : NcData
     """
     ncdata = NcData()
     caller_owns_dataset = hasattr(nc4_dataset_or_file, "variables")
