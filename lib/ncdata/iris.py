@@ -7,15 +7,15 @@ objects, which are used like files to load and save Iris data.
 This means that all we need to know of Iris is its netcdf load+save interfaces.
 
 """
-from typing import Union, Iterable, Dict, AnyStr
+from typing import AnyStr, Dict, Iterable, Union
 
 import iris
-from iris.cube import CubeList, Cube
 import iris.fileformats.netcdf as ifn
-
-from ._core import NcData
+from iris.cube import Cube, CubeList
 
 from ncdata.dataset_like import Nc4DatasetLike
+
+from ._core import NcData
 
 #
 # The primary conversion interfaces
@@ -47,9 +47,8 @@ def to_iris(ncdata: NcData, **kwargs) -> CubeList:
 
 
 def from_iris(
-        cubes: Union[Cube, Iterable[Cube]],
-        **kwargs: Dict[AnyStr, AnyStr]
-    ) -> NcData:
+    cubes: Union[Cube, Iterable[Cube]], **kwargs: Dict[AnyStr, AnyStr]
+) -> NcData:
     """
     Create an :class:`~ncdata.NcData` from Iris cubes
 
@@ -69,7 +68,5 @@ def from_iris(
 
     """
     nc4like = Nc4DatasetLike()
-    iris.save(
-        cubes, nc4like, saver=iris.fileformats.netcdf.save, **kwargs
-    )
+    iris.save(cubes, nc4like, saver=iris.fileformats.netcdf.save, **kwargs)
     return nc4like._ncdata
