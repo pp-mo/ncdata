@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import AnyStr, List, Union
 from warnings import warn
 
+import netCDF4
 import netCDF4 as nc
 import numpy as np
 
@@ -67,7 +68,7 @@ def compare_nc_files(
             vars_order=check_vars_order,
             attrs_order=check_attrs_order,
             groups_order=check_groups_order,
-            data_values=check_var_data,
+            data_equality=check_var_data,
             suppress_warnings=suppress_warnings,
         )
     finally:
@@ -78,40 +79,93 @@ def compare_nc_files(
 
     return errs
 
+def _compare_name_lists(
+        errslist, l1, l2, elemname, order_strict=True, suppress_warnings=False):
+    msg = f"{elemname} do not match: {l1} != {l2}"
+    ok = l1 == l2
+    ok_except_order = ok
+    if not ok:
+        ok_except_order = sorted(l1) == sorted(l2)
+
+    if not ok:
+        if not ok_except_order or order_strict:
+            errslist.append(msg)
+        elif ok_except_order and not suppress_warnings:
+            warn("(Ignoring: " + msg + " )", category=UserWarning)
+
+
+def _compare_attributes(
+        errs, obj1, obj2, elemname,
+        attrs_order=True, suppress_warnings=False
+):
+    """
+    Compare attribute name lists.
+    Does not return results, but appends error messages to 'errs'.
+    """
+    attrnames, attrnames2 = [obj.ncattrs() for obj in (obj1, obj2)]
+    _compare_name_lists(
+        errs,
+        attrnames,
+        attrnames2,
+        f"{elemname} attribute lists",
+        order_strict=attrs_order,
+        suppress_warnings=suppress_warnings
+    )
+
+    # Compare the attributes themselves (dtypes and values)
+    for attrname in attrnames:
+        if attrname not in attrnames2:
+            continue
+        attr, attr2 = [obj.getncattr(attrname) for obj in (obj1, obj2)]
+        dtype, dtype2 = [
+            # Get x.dtype, or fallback on type(x) -- basically, for strings.
+            getattr(attr, "dtype", type(attr))
+            for attr in (attr, attr2)
+        ]
+        # Cast attrs, which might be strings, to arrays for comparison
+        arr, arr2 = [np.asarray(attr) for attr in (attr, attr2)]
+        if arr.shape != arr2.shape or not np.all(arr == arr2):
+            msg = (
+                f'{elemname} "{attrname}" attribute values differ : '
+                f"{attr!r} != {attr2!r}"
+            )
+            errs.append(msg)
+        elif dtype != dtype2:
+            # If values match (only then), compare datatypes
+            msg = (
+                f'{elemname} "{attrname}" attribute datatypes differ : '
+                f"{dtype!r} != {dtype2!r}"
+            )
+            errs.append(msg)
+
+
 
 def _compare_nc_groups(
-    errs,
-    g1,
-    g2,
-    group_id_string,
-    dims_order=True,
-    vars_order=True,
-    attrs_order=True,
-    groups_order=True,
-    data_values=True,
-    suppress_warnings=False,
+    errs: List[str],
+    g1: Union[netCDF4.Dataset, netCDF4.Group],
+    g2: Union[netCDF4.Dataset, netCDF4.Group],
+    group_id_string: str,
+    dims_order: bool=True,
+    vars_order: bool=True,
+    attrs_order: bool=True,
+    groups_order: bool=True,
+    data_equality: bool=True,
+    suppress_warnings: bool=False,
 ):
+    """
+    Inner routine.
+    Note that, rather than returning a list of error strings, it appends them to the
+    passed arg `errs`.  This just makes recursive calling easier.
+    """
     # Compare lists of dimension names
     dimnames, dimnames2 = [list(grp.dimensions.keys()) for grp in (g1, g2)]
-
-    def compare_strlists(l1, l2, elemname, order_strict=True):
-        msg = f"{elemname} do not match: {l1} != {l2}"
-        ok = l1 == l2
-        ok_except_order = ok
-        if not ok:
-            ok_except_order = sorted(l1) == sorted(l2)
-
-        if not ok:
-            if not ok_except_order or order_strict:
-                errs.append(msg)
-            elif ok_except_order and not suppress_warnings:
-                warn("(Ignoring: " + msg + " )", category=UserWarning)
-
-    compare_strlists(
+    _compare_name_lists(
+        errs,
         dimnames,
         dimnames2,
         f"{group_id_string} dimension lists",
         order_strict=dims_order,
+        suppress_warnings=suppress_warnings,
     )
 
     # Compare the dimensions themselves
@@ -127,54 +181,21 @@ def _compare_nc_groups(
             )
             errs.append(msg)
 
-    def compare_attributes(obj1, obj2, elemname):
-        # Compare attribute name lists
-        attrnames, attrnames2 = [obj.ncattrs() for obj in (obj1, obj2)]
-        compare_strlists(
-            attrnames,
-            attrnames2,
-            f"{elemname} attribute lists",
-            order_strict=attrs_order,
-        )
-
-        # Compare the attributes themselves (dtypes and values)
-        for attrname in attrnames:
-            if attrname not in attrnames2:
-                continue
-            attr, attr2 = [obj.getncattr(attrname) for obj in (obj1, obj2)]
-            dtype, dtype2 = [
-                # Get x.dtype, or fallback on type(x) -- basically, for strings.
-                getattr(attr, "dtype", type(attr))
-                for attr in (attr, attr2)
-            ]
-            if dtype != dtype2:
-                msg = (
-                    f'{elemname} "{attrname}" attribute datatypes differ : '
-                    f"{dtype!r} != {dtype2!r}"
-                )
-                errs.append(msg)
-
-            # Cast attrs, which might be strings, to arrays for comparison
-            arr, arr2 = [np.array(attr) for attr in (attr, attr2)]
-            if arr.shape != arr2.shape or not np.all(arr == arr2):
-                msg = (
-                    f'{elemname} "{attrname}" attribute values differ : '
-                    f"{attr!r} != {attr2!r}"
-                )
-                errs.append(msg)
-
-    # Compare file attribute lists
-    compare_attributes(g1, g2, group_id_string)
-
     # Compare file attributes
+    _compare_attributes(
+        errs, g1, g2, group_id_string,
+        attrs_order=attrs_order, suppress_warnings=suppress_warnings
+    )
 
     # Compare lists of variables
     varnames, varnames2 = [list(grp.variables.keys()) for grp in (g1, g2)]
-    compare_strlists(
+    _compare_name_lists(
+        errs,
         varnames,
         varnames2,
         f"{group_id_string} variable lists",
         order_strict=dims_order,
+        suppress_warnings=suppress_warnings
     )
 
     # Compare the variables themselves
@@ -191,7 +212,11 @@ def _compare_nc_groups(
             msg = f"{var_id_string} dimensions differ : {dims!r} != {dims2!r}"
 
         # attributes
-        compare_attributes(v1, v2, var_id_string)
+        _compare_attributes(
+            errs, v1, v2, var_id_string,
+            attrs_order=attrs_order,
+            suppress_warnings=suppress_warnings
+        )
 
         # dtypes
         dtype, dtype2 = [v.datatype for v in (v1, v2)]
@@ -200,15 +225,19 @@ def _compare_nc_groups(
             errs.append(msg)
 
         # data values
-        data, data2 = [v[:] for v in (v1, v2)]
-        n_diffs = np.count_nonzero(data != data2)
-        if n_diffs:
-            msg = f"{var_id_string} data values differ, at {n_diffs} points."
+        if data_equality:
+            data, data2 = [v[:] for v in (v1, v2)]
+            n_diffs = np.count_nonzero(data != data2)
+            if n_diffs:
+                msg = f"{var_id_string} data values differ, at {n_diffs} points."
 
     # Finally, recurse over groups
     grpnames, grpnames2 = [list(grp.groups.keys()) for grp in (g1, g2)]
-    compare_strlists(
-        grpnames, grpnames2, f"{group_id_string} subgroup lists", groups_order
+    _compare_name_lists(
+        errs,
+        grpnames, grpnames2, f"{group_id_string} subgroup lists",
+        order_strict=groups_order,
+        suppress_warnings=suppress_warnings
     )
     for grpname in grpnames:
         if grpname not in grpnames2:
@@ -223,7 +252,7 @@ def _compare_nc_groups(
             vars_order=vars_order,
             attrs_order=attrs_order,
             groups_order=groups_order,
-            data_values=data_values,
+            data_equality=data_equality,
         )
 
 
