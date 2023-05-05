@@ -1,6 +1,7 @@
 """
-A temporary proof-of-concept test workflow
+A proof-of-concept example workflow for :mod:`ncdata.iris_xarray`.
 
+Showing conversion from Xarray to Iris, and back again.
 """
 import iris
 import iris.tests as itsts
@@ -10,7 +11,7 @@ import xarray as xr
 from ncdata.iris_xarray import cubes_from_xarray, cubes_to_xarray
 
 
-def example_from_xr():
+def example_from_xr():  # noqa: D103
     iris.FUTURE.datum_support = True
     filepath = itsts.get_data_path(
         ["NetCDF", "stereographic", "toa_brightness_temperature.nc"]

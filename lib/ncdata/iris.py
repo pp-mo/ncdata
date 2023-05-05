@@ -1,6 +1,7 @@
-"""
-Interface routines for converting data between :class:`~ncdata.NcData` and
-Iris :class:`~iris.cube.Cube` objects.
+r"""
+Interface routines for converting data between ncdata and Iris.
+
+Convert :class:`~ncdata.NcData` to and from Iris :class:`~iris.cube.Cube`\\s.
 
 This uses the :class:`ncdata.dataset_like` interface ability to mimic netCDF4.Dataset
 objects, which are used like files to load and save Iris data.
@@ -23,7 +24,7 @@ from .dataset_like import Nc4DatasetLike
 
 def to_iris(ncdata: NcData, **kwargs) -> CubeList:
     """
-    Read Iris cubes from an :class:`~ncdata.NcData`
+    Read Iris cubes from an :class:`~ncdata.NcData`.
 
     Behaves like an Iris 'load' operation.
 
@@ -49,7 +50,7 @@ def from_iris(
     cubes: Union[Cube, Iterable[Cube]], **kwargs: Dict[AnyStr, AnyStr]
 ) -> NcData:
     """
-    Create an :class:`~ncdata.NcData` from Iris cubes
+    Create an :class:`~ncdata.NcData` from Iris cubes.
 
     Behaves like an Iris 'save' operation.
 

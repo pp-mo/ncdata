@@ -1,6 +1,7 @@
 """
-Interface routines for converting data between :class:`ncdata.NcData` and
-:class:`netCDF4.Dataset` objects.
+Interface routines for converting data between ncdata and netCDF4.
+
+Converts :class:`ncdata.NcData` to and from :class:`netCDF4.Dataset` objects.
 
 """
 from pathlib import Path

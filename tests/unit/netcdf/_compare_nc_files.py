@@ -1,7 +1,7 @@
 """
-Utility for comparing 2 netcdf files,
-for purposes of testing ncdata.netcdf4 behaviour.
+Utility for comparing 2 netcdf files.
 
+For purposes of testing ncdata.netcdf4 behaviour.
 """
 
 from pathlib import Path
@@ -23,8 +23,8 @@ def compare_nc_files(
     check_var_data: bool = True,
     suppress_warnings: bool = False,
 ) -> List[str]:
-    """
-    Compare 2 netcdf files, given as paths or open :class:`netCDF4.Dataset`\\s
+    r"""
+    Compare 2 netcdf files, given as paths or open :class:`netCDF4.Dataset`\\s.
 
     Parameters
     ----------
@@ -79,8 +79,10 @@ def compare_nc_files(
 
     return errs
 
+
 def _compare_name_lists(
-        errslist, l1, l2, elemname, order_strict=True, suppress_warnings=False):
+    errslist, l1, l2, elemname, order_strict=True, suppress_warnings=False
+):
     msg = f"{elemname} do not match: {l1} != {l2}"
     ok = l1 == l2
     ok_except_order = ok
@@ -95,11 +97,11 @@ def _compare_name_lists(
 
 
 def _compare_attributes(
-        errs, obj1, obj2, elemname,
-        attrs_order=True, suppress_warnings=False
+    errs, obj1, obj2, elemname, attrs_order=True, suppress_warnings=False
 ):
     """
     Compare attribute name lists.
+
     Does not return results, but appends error messages to 'errs'.
     """
     attrnames, attrnames2 = [obj.ncattrs() for obj in (obj1, obj2)]
@@ -109,7 +111,7 @@ def _compare_attributes(
         attrnames2,
         f"{elemname} attribute lists",
         order_strict=attrs_order,
-        suppress_warnings=suppress_warnings
+        suppress_warnings=suppress_warnings,
     )
 
     # Compare the attributes themselves (dtypes and values)
@@ -139,21 +141,21 @@ def _compare_attributes(
             errs.append(msg)
 
 
-
 def _compare_nc_groups(
     errs: List[str],
     g1: Union[netCDF4.Dataset, netCDF4.Group],
     g2: Union[netCDF4.Dataset, netCDF4.Group],
     group_id_string: str,
-    dims_order: bool=True,
-    vars_order: bool=True,
-    attrs_order: bool=True,
-    groups_order: bool=True,
-    data_equality: bool=True,
-    suppress_warnings: bool=False,
+    dims_order: bool = True,
+    vars_order: bool = True,
+    attrs_order: bool = True,
+    groups_order: bool = True,
+    data_equality: bool = True,
+    suppress_warnings: bool = False,
 ):
     """
-    Inner routine.
+    Inner routine to compare either whole datasets or subgroups.
+
     Note that, rather than returning a list of error strings, it appends them to the
     passed arg `errs`.  This just makes recursive calling easier.
     """
@@ -183,8 +185,12 @@ def _compare_nc_groups(
 
     # Compare file attributes
     _compare_attributes(
-        errs, g1, g2, group_id_string,
-        attrs_order=attrs_order, suppress_warnings=suppress_warnings
+        errs,
+        g1,
+        g2,
+        group_id_string,
+        attrs_order=attrs_order,
+        suppress_warnings=suppress_warnings,
     )
 
     # Compare lists of variables
@@ -195,7 +201,7 @@ def _compare_nc_groups(
         varnames2,
         f"{group_id_string} variable lists",
         order_strict=dims_order,
-        suppress_warnings=suppress_warnings
+        suppress_warnings=suppress_warnings,
     )
 
     # Compare the variables themselves
@@ -213,9 +219,12 @@ def _compare_nc_groups(
 
         # attributes
         _compare_attributes(
-            errs, v1, v2, var_id_string,
+            errs,
+            v1,
+            v2,
+            var_id_string,
             attrs_order=attrs_order,
-            suppress_warnings=suppress_warnings
+            suppress_warnings=suppress_warnings,
         )
 
         # dtypes
@@ -229,15 +238,19 @@ def _compare_nc_groups(
             data, data2 = [v[:] for v in (v1, v2)]
             n_diffs = np.count_nonzero(data != data2)
             if n_diffs:
-                msg = f"{var_id_string} data values differ, at {n_diffs} points."
+                msg = (
+                    f"{var_id_string} data values differ, at {n_diffs} points."
+                )
 
     # Finally, recurse over groups
     grpnames, grpnames2 = [list(grp.groups.keys()) for grp in (g1, g2)]
     _compare_name_lists(
         errs,
-        grpnames, grpnames2, f"{group_id_string} subgroup lists",
+        grpnames,
+        grpnames2,
+        f"{group_id_string} subgroup lists",
         order_strict=groups_order,
-        suppress_warnings=suppress_warnings
+        suppress_warnings=suppress_warnings,
     )
     for grpname in grpnames:
         if grpname not in grpnames2:
