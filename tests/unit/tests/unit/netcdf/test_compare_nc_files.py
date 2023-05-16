@@ -20,7 +20,7 @@ from tests.unit.netcdf._compare_nc_files import (
     _compare_attributes,
     compare_nc_files,
 )
-from tests.nc_testdata import ncgen_from_cdl
+from test_samplecode_cdlgen_comparablecdl import ncgen_from_cdl
 
 # CDL to create a reference file with "all" features included.
 _base_cdl = """
