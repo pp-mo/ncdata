@@ -34,6 +34,12 @@ class _Nc4DatalikeWithNcattrs:
     #  objects attribute to those things also
     # N.B. "self._ncdata" is the underlying NcData object : either an NcData or
     #  NcVariable object.
+
+    # Don't like this, but it is burnt into Iris that we *must* use objects from
+    # `iris._thread_safe_nc` in place of those from `netCDF4`.
+    # Therefore required on our Dataset- and Variable- like classes.
+    THREAD_SAFE_FLAG = 1
+
     def ncattrs(self):
         return list(self._ncdata.attributes.keys())
 
@@ -160,7 +166,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
 
     """
 
-    _local_instance_props = ("_ncdata", "name", "datatype", "_in_memory_data")
+    _local_instance_props = ("_ncdata", "name", "datatype", "_data_array")
 
     def __init__(self, ncvar: NcVariable, datatype: np.dtype):
         self._ncdata = ncvar
@@ -173,7 +179,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
             # NOTE: significantly, does *not* allocate an actual full array in memory
             array = np.zeros(self.shape, self.datatype)
             ncvar.data = array
-        self._in_memory_data = ncvar.data
+        self._data_array = ncvar.data
 
     @classmethod
     def _from_ncvariable(cls, ncvar: NcVariable, dtype: np.dtype = None):
@@ -188,11 +194,11 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     # Label this as an 'emulated' netCDF4.Variable, containing an actual (possibly
     #  lazy) array, which can be directly read/written.
     @property
-    def _in_memory_data(self):
+    def _data_array(self):
         return self._ncdata.data
 
-    @_in_memory_data.setter
-    def _in_memory_data(self, data):
+    @_data_array.setter
+    def _data_array(self, data):
         self._ncdata.data = data
         self.datatype = data.dtype
 
@@ -216,7 +222,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         return self._ncdata.data[keys]
 
     # The __setitem__ is not required for normal saving.
-    # The saver will assign ._in_memory_data instead
+    # The saver will assign ._data_array instead
     # TODO: might need to support this for future non-Iris usage ?
     #
     # def __setitem__(self, keys, data):

@@ -1,1 +1,1 @@
-"""Integrar tests for :mod:`ncdata`."""
+"""Integration tests for :mod:`ncdata`."""

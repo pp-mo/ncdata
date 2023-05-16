@@ -68,5 +68,12 @@ def from_iris(
 
     """
     nc4like = Nc4DatasetLike()
-    iris.save(cubes, nc4like, saver=iris.fileformats.netcdf.save, **kwargs)
+    delayed = iris.save(
+        cubes,
+        nc4like,
+        compute=False,  # *required* for save-to-dataset.
+        saver=ifn.save,
+        **kwargs,
+    )
+    delayed.compute()  # probably a no-op, but for sake of completeness.
     return nc4like._ncdata
