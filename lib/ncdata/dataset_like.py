@@ -1,6 +1,5 @@
-"""
-An adaptor layer allowing an :class:`~ncdata.NcData` to masquerade as a
-:class:`netCDF4.Dataset` object.
+r"""
+An adaptor layer allowing an :class:`~ncdata.NcData` to masquerade as a :class:`netCDF4.Dataset` object.
 
 Note:
     This is a low-level interface, exposed publicly for extended experimental uses.
@@ -75,8 +74,7 @@ class _Nc4DatalikeWithNcattrs:
 
 class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
     """
-    An object which contains a :class:`ncdata.NcData` and emulates a
-    :class:`netCDF4.Dataset`.
+    An object which contains a :class:`ncdata.NcData` and emulates a :class:`netCDF4.Dataset`.
 
     The core NcData content, 'self._ncdata', is a :class:`NcData`.  It defines the
     content of the emulated "root group".
@@ -97,16 +95,16 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         }
 
     @property
-    def dimensions(self):
+    def dimensions(self):  # noqa: D102
         return {
             name: dim.size for name, dim in self._ncdata.dimensions.items()
         }
 
     @property
-    def groups(self):
+    def groups(self):  # noqa: D102
         return None  # not supported
 
-    def createDimension(self, dimname, size):
+    def createDimension(self, dimname, size):  # noqa: D102
         if dimname in self.dimensions:
             msg = f'creating duplicate dimension "{dimname}".'
             raise ValueError(msg)
@@ -117,7 +115,9 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
             self._ncdata.dimensions[dimname] = NcDimension(dimname, size)
         return size
 
-    def createVariable(self, varname, datatype, dimensions=(), **encoding):
+    def createVariable(
+        self, varname, datatype, dimensions=(), **encoding
+    ):  # noqa: D102
         if varname in self.variables:
             msg = f'creating duplicate variable "{varname}".'
             raise ValueError(msg)
@@ -135,14 +135,14 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         self.variables[varname] = nc4var
         return nc4var
 
-    def sync(self):
+    def sync(self):  # noqa: D102
         pass
 
-    def close(self):
+    def close(self):  # noqa: D102
         self.sync()
 
     @staticmethod
-    def filepath():
+    def filepath():  # noqa: D102
         #
         # Note: for now, let's just not care about this.
         # we *might* need this to be an optional defined item on an NcData ??
@@ -154,8 +154,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
 
 class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     """
-    An object which contains a :class:`ncdata.NcVariable` and emulates a
-    :class:`netCDF4.Variable`.
+    An object which contains a :class:`ncdata.NcVariable` and emulates a :class:`netCDF4.Variable`.
 
     The core NcData content, 'self._ncdata', is a :class:`NcVariable`.
 
@@ -198,18 +197,18 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         self.datatype = data.dtype
 
     @property
-    def group(self):
+    def group(self):  # noqa: D102
         return self._ncdata.group
 
     @property
-    def dimensions(self):
+    def dimensions(self):  # noqa: D102
         return self._ncdata.dimensions
 
     #
     # "Normal" data access is via indexing.
     # N.B. we do still need to support this, e.g. for DimCoords ?
     #
-    def __getitem__(self, keys):
+    def __getitem__(self, keys):  # noqa: D105
         if keys != slice(None):
             raise IndexError(keys)
         if self.ndim == 0:
@@ -235,25 +234,25 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     #     self.datatype = data.dtype
 
     @property
-    def dtype(self):
+    def dtype(self):  # noqa: D102
         return self.datatype
 
     @property
-    def dims(self):
+    def dims(self):  # noqa: D102
         return self.dimensions
 
     @property
-    def ndim(self):
+    def ndim(self):  # noqa: D102
         return len(self.dimensions)
 
     @property
-    def shape(self):
+    def shape(self):  # noqa: D102
         dims = self.group.dimensions
         return tuple(dims[n].size for n in self.dimensions)
 
     @property
-    def size(self):
+    def size(self):  # noqa: D102
         return np.prod(self.shape)
 
-    def chunking(self):
+    def chunking(self):  # noqa: D102
         return None

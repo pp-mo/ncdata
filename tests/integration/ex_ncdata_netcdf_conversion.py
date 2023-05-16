@@ -1,9 +1,15 @@
+"""
+A proof-of-concept example workflow for :mod:`ncdata.netcdf4`.
+
+Showing loading and saving ncdata to/from netcdf files.
+"""
+
 import iris.tests as itsts
 
 from ncdata.netcdf4 import from_nc4, to_nc4
 
 
-def example_nc4_roundtrip():
+def example_nc4_roundtrip():  # noqa: D103
     filepath = itsts.get_data_path(
         ["NetCDF", "stereographic", "toa_brightness_temperature.nc"]
     )

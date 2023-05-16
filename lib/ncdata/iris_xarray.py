@@ -1,6 +1,7 @@
-"""
-Interface routines for converting data between an Xarray :class:`~xarray.Dataset` and
-iterables of Iris :class:`~iris.cube.Cube`\\s.
+r"""
+Interface routines for converting data between Xarray and Iris.
+
+Convert :class:`~xarray.Dataset` to and from Iris :class:`~iris.cube.Cube`\\s.
 
 By design, these transformations should be equivalent to saving data from one package
 to a netcdf file, and re-loading into the other package.  There is also support for
@@ -53,7 +54,7 @@ def cubes_from_xarray(
 def cubes_to_xarray(
     cubes, iris_save_kwargs=None, xr_load_kwargs=None
 ) -> xarray.Dataset:
-    """
+    r"""
     Convert Iris :class:`iris.cube.Cube`\\s to an xarray :class:`xarray.Dataset`.
 
     Equivalent to saving the dataset to a netcdf file, and loading that with Xarray.

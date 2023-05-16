@@ -1,7 +1,9 @@
 """
-Tests for :mod:`tests.unit.netcdf._compare_nc_files`
+PoC code for netcdf file CDL-based testing mechanisms.
 
-Yes I know, tests of tests.  But it seems necessary.
+File generation from CDL (with ncgen), and CDL comparison (with ncdump).
+
+The status and usage of this are yet to be determined.
 """
 import os
 import shutil
@@ -14,6 +16,7 @@ from typing import AnyStr, Optional, List
 # Note : `_env_bin_path` and `ncgen_from_cdl` are taken from Iris test code.
 # Code here duplicated from Iris v3.4.1
 # https://github.com/SciTools/iris/blob/v3.4.1/lib/iris/tests/stock/netcdf.py#L18-L63
+
 
 def _env_bin_path(exe_name: AnyStr = None):
     """
@@ -40,6 +43,7 @@ def _env_bin_path(exe_name: AnyStr = None):
     if exe_name is not None:
         exe_path = exe_path / exe_name
     return exe_path
+
 
 NCGEN_PATHSTR = str(_env_bin_path("ncgen"))
 
@@ -132,30 +136,27 @@ group: grp_2 {
 """
 
 
-def comparable_cdl(text:str) -> List[str]:
+def comparable_cdl(text: str) -> List[str]:
     """
     Convert a CDL string to a list of stripped lines, with certain problematic things
     removed.  The resulting list of strings should be comparable between identical
     netcdf files.
 
     """
-    lines = text.split('\n')
-    lines = [
-        line.strip(' \t\n')
-        for line in lines
-    ]
+    lines = text.split("\n")
+    lines = [line.strip(" \t\n") for line in lines]
     lines = [
         line
         for line in lines
         if (
-                len(line)
-                # Exclude global pseudo-attribute (some versions of ncdump)
-                and ':_NCProperties =' not in line
+            len(line)
+            # Exclude global pseudo-attribute (some versions of ncdump)
+            and ":_NCProperties =" not in line
         )
     ]
     # Also exclude the first line, which includes the filename
     hdr, lines = lines[0], lines[1:]
-    assert hdr.startswith('netcdf') and hdr[-1] == "{"
+    assert hdr.startswith("netcdf") and hdr[-1] == "{"
     return lines
 
 
@@ -169,7 +170,7 @@ def test_gen():
         nc_path = tmp_dirpath / "tmp_nccompare_test.nc"
 
         ncgen_from_cdl(cdl_str=_base_cdl, cdl_path=cdl_path, nc_path=nc_path)
-        bytes = subprocess.check_output(['ncdump', '-h', nc_path])
+        bytes = subprocess.check_output(["ncdump", "-h", nc_path])
 
         cdl_lines = comparable_cdl(_base_cdl)
         dump_lines = comparable_cdl(bytes.decode())
@@ -178,4 +179,3 @@ def test_gen():
 
     finally:
         shutil.rmtree(tmp_dirpath)
-

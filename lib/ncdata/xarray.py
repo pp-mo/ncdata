@@ -1,6 +1,7 @@
 """
-Interface routines for converting data between :class:`~ncdata.NcData` and
-Xarray :class:`~xarray.Dataset` objects.
+Interface routines for converting data between ncdata and xarray.
+
+Converts :class:`~ncdata.NcData` to and from Xarray :class:`~xarray.Dataset` objects.
 
 This embeds a certain amount of Xarray knowledge (and dependency), hopefully a minimal
 amount.  The structure of an NcData object makes it fairly painless.
@@ -16,7 +17,9 @@ from . import NcAttribute, NcData, NcDimension, NcVariable
 
 class _XarrayNcDataStore:
     """
-    An interface class providing a subset of the
+    An adapter class presenting ncdata as an xarray datastore.
+
+    Provides a subset of the
     :class:`xarray.common.AbstractWriteableDataStore` interface, and which converts
     to/from a contained :class:`~ncdata.NcData`.
 
@@ -157,7 +160,7 @@ def to_xarray(ncdata: NcData, **kwargs) -> xr.Dataset:
 
 def from_xarray(xrds: Union[xr.Dataset, Path, AnyStr]) -> NcData:
     """
-    Convert an xarray :class:`xarray.Dataset` to a :class:`NcData`
+    Convert an xarray :class:`xarray.Dataset` to a :class:`NcData`.
 
     Parameters
     ----------
@@ -167,6 +170,10 @@ def from_xarray(xrds: Union[xr.Dataset, Path, AnyStr]) -> NcData:
     kwargs : dict
         additional xarray "save keywords", passed to
         :meth:`xarray.Dataset.dump_to_store`
+
+    OtherStuff
+    ----------
+    A non-numpy standard section.
 
     Returns
     -------

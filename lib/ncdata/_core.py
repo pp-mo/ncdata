@@ -22,8 +22,9 @@ import numpy as np
 
 class NcData:
     """
-    A group- or dataset-level container, containing dimensions, variables, attributes
-    and sub-groups.
+    An object representing a netcdf group- or dataset-level container.
+
+    Containing dimensions, variables, attributes and sub-groups.
     """
 
     def __init__(
@@ -44,7 +45,9 @@ class NcData:
 
 class NcDimension:
     """
-    A dimension associates a length with a name.
+    An object representing a netcdf dimension.
+
+    Associates a length with a name.
     A length of 0 indicates an "unlimited" dimension, though that is essentially a
     file-specific concept.
 
@@ -60,19 +63,21 @@ class NcDimension:
 
 class NcVariable:
     """
-        A variable with dimensions, dtype and data, and attributes.
+    An object representing a netcdf variable.
 
-        'data' may be None, but if not is expected to be an array : either numpy (real) or
-        Dask (lazy).
+    With dimensions, dtype and data, and attributes.
 
-        The 'dtype' will presumably should match the data, if any.
+    'data' may be None, but if not is expected to be an array : either numpy (real) or
+    Dask (lazy).
 
-        It has no 'shape' property, in practice this might be inferred from either the
-        data or dimensions.  If the dims are empty, it is a scalar.
+    The 'dtype' will presumably should match the data, if any.
 
-        A variable makes no effort to ensure that its dimensions, dtype + data are
-        consistent.  This is to be managed by the creator.
-    ="""
+    It has no 'shape' property, in practice this might be inferred from either the
+    data or dimensions.  If the dims are empty, it is a scalar.
+
+    A variable makes no effort to ensure that its dimensions, dtype + data are
+    consistent.  This is to be managed by the creator.
+    """
 
     def __init__(
         self,
@@ -90,7 +95,9 @@ class NcVariable:
         group: "NcData" = None,
     ):
         """
-        Create a variable.  The 'dtype' arg relevant only when no data is provided :
+        Create a variable.
+
+        The 'dtype' arg relevant only when no data is provided :
         If 'data' is provided, it is converted to an array if needed, and its dtype
         replaces any provided 'dtype'.
         """
@@ -118,7 +125,8 @@ class NcVariable:
 
 class NcAttribute:
     """
-    An object representing a variable or dataset attribute.
+    An object representing a netcdf variable or dataset attribute.
+
     Associates a name to a value which is either a numpy 1-D array or scalar.
 
     We expect the value to be 0- or 1-dimensional, and an allowed dtype.
