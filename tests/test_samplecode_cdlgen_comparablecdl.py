@@ -6,12 +6,11 @@ File generation from CDL (with ncgen), and CDL comparison (with ncdump).
 The status and usage of this are yet to be determined.
 """
 import os
-import shutil
 from pathlib import Path
 import subprocess
-from tempfile import mkdtemp
 from typing import AnyStr, Optional, List
 
+import pytest
 
 # Note : `_env_bin_path` and `ncgen_from_cdl` are taken from Iris test code.
 # Code here duplicated from Iris v3.4.1
@@ -46,6 +45,7 @@ def _env_bin_path(exe_name: AnyStr = None):
 
 
 NCGEN_PATHSTR = str(_env_bin_path("ncgen"))
+NCDUMP_PATHSTR = str(_env_bin_path("ncdump"))
 
 
 def ncgen_from_cdl(
@@ -160,22 +160,43 @@ def comparable_cdl(text: str) -> List[str]:
     return lines
 
 
-# This is a self-testing routine for the test utility function (!)
-def test_gen():
-    from pathlib import Path
+@pytest.fixture(scope='module')
+def testdata_cdl(tmp_path_factory):
+    tmpdir_path = tmp_path_factory.mktemp('cdltests')
+    cdl_path = tmpdir_path / "tmp_nccompare_test.cdl"
+    nc_path = tmpdir_path / "tmp_nccompare_test.nc"
+    ncgen_from_cdl(cdl_str=_base_cdl, cdl_path=cdl_path, nc_path=nc_path)
+    bytes = subprocess.check_output([NCDUMP_PATHSTR, "-h", nc_path])
+    cdl_regen_text = bytes.decode()
+    return cdl_regen_text
 
-    tmp_dirpath = mkdtemp()
-    try:
-        cdl_path = tmp_dirpath / "tmp_nccompare_test.cdl"
-        nc_path = tmp_dirpath / "tmp_nccompare_test.nc"
 
-        ncgen_from_cdl(cdl_str=_base_cdl, cdl_path=cdl_path, nc_path=nc_path)
-        bytes = subprocess.check_output(["ncdump", "-h", nc_path])
+def test_ncgen_from_cdl(testdata_cdl):
+    # Integration test for 'ncgen_from_cdl' (! tests-of-tests !)
+    def text_lines_nowhitespace(text):
+        lines = text.split('\n')
+        lines = [line.strip() for line in lines]
+        lines = [
+            ''.join(char for char in line.strip() if not char.isspace())
+            for line in lines
+        ]
+        lines = [line for line in lines if line]
+        return lines
 
-        cdl_lines = comparable_cdl(_base_cdl)
-        dump_lines = comparable_cdl(bytes.decode())
-        assert cdl_lines == dump_lines
-        # os.system('ncdump -h ' + str(nc_path))
+    lines_result = text_lines_nowhitespace(testdata_cdl)
+    lines_original = text_lines_nowhitespace(_base_cdl)
 
-    finally:
-        shutil.rmtree(tmp_dirpath)
+    # Full original lines definitely do NOT match, because dataset name =filename
+    assert lines_result != lines_original
+
+    # Lines beyond 1st may STILL not match because of _NCProperties
+    # ... however, skipping that line (and first line), they *should* match
+    lines_result = [l for l in lines_result if not '_NCProp' in l]
+    assert lines_result[1:] == lines_original[1:]
+
+
+def test_comparable_cdl(testdata_cdl):
+    # Integration test for 'comparable_cdl' (! tests-of-tests !)
+    cdl_lines = comparable_cdl(_base_cdl)
+    dump_lines = comparable_cdl(testdata_cdl)
+    assert cdl_lines == dump_lines
