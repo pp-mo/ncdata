@@ -27,12 +27,12 @@ jobs:
           miniforge-version: latest
           activate-environment: testenv
           python-version: ${{ matrix.version }}
-          channels: conda-forge,defaults
+          channels: conda-forge
           show-channel-urls: true
 
       - name: "Install dependencies"
         run: |
-          conda install --yes pytest netCDF4
+          conda install --yes pytest netCDF4 iris
           python -m pip install --no-deps --editable .
 
       - name: "Conda info"
@@ -42,4 +42,4 @@ jobs:
 
       - name: "Run tests"
         run: |
-          PYTHONPATH=./tests:$PYTHONPATH pytest ./lib ./tests
+          PYTHONPATH=./tests:$PYTHONPATH pytest -v ./lib ./tests
