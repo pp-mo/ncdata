@@ -160,9 +160,9 @@ def comparable_cdl(text: str) -> List[str]:
     return lines
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture(scope="module")
 def testdata_cdl(tmp_path_factory):
-    tmpdir_path = tmp_path_factory.mktemp('cdltests')
+    tmpdir_path = tmp_path_factory.mktemp("cdltests")
     cdl_path = tmpdir_path / "tmp_nccompare_test.cdl"
     nc_path = tmpdir_path / "tmp_nccompare_test.nc"
     ncgen_from_cdl(cdl_str=_base_cdl, cdl_path=cdl_path, nc_path=nc_path)
@@ -174,10 +174,10 @@ def testdata_cdl(tmp_path_factory):
 def test_ncgen_from_cdl(testdata_cdl):
     # Integration test for 'ncgen_from_cdl' (! tests-of-tests !)
     def text_lines_nowhitespace(text):
-        lines = text.split('\n')
+        lines = text.split("\n")
         lines = [line.strip() for line in lines]
         lines = [
-            ''.join(char for char in line.strip() if not char.isspace())
+            "".join(char for char in line.strip() if not char.isspace())
             for line in lines
         ]
         lines = [line for line in lines if line]
@@ -191,7 +191,7 @@ def test_ncgen_from_cdl(testdata_cdl):
 
     # Lines beyond 1st may STILL not match because of _NCProperties
     # ... however, skipping that line (and first line), they *should* match
-    lines_result = [l for l in lines_result if not '_NCProp' in l]
+    lines_result = [l for l in lines_result if not "_NCProp" in l]
     assert lines_result[1:] == lines_original[1:]
 
 

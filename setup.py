@@ -1,3 +1,4 @@
+# noqa
 from setuptools import find_packages, setup
 
 setup(
@@ -7,6 +8,7 @@ setup(
     author="pp-mo",
     author_email="patrick.peglar@metoffice.gov.uk",
     description="NetCDF data interoperability between Iris and Xarray",
-    packages=find_packages(),
+    packages=find_packages(where="lib"),
+    package_dir={"": "lib"},
     install_requires=["numpy"],
 )
