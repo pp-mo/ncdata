@@ -32,7 +32,7 @@ jobs:
 
       - name: "Install dependencies"
         run: |
-          conda install --yes pytest netCDF4
+          conda install --yes pytest netCDF4 dask
 
       - name: "Install repo-under-test"
         run: |
