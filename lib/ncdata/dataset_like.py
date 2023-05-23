@@ -35,11 +35,6 @@ class _Nc4DatalikeWithNcattrs:
     # N.B. "self._ncdata" is the underlying NcData object : either an NcData or
     #  NcVariable object.
 
-    # Don't like this, but it is burnt into Iris that we *must* use objects from
-    # `iris._thread_safe_nc` in place of those from `netCDF4`.
-    # Therefore required on our Dataset- and Variable- like classes.
-    THREAD_SAFE_FLAG = 1
-
     def ncattrs(self):
         return list(self._ncdata.attributes.keys())
 
@@ -80,16 +75,32 @@ class _Nc4DatalikeWithNcattrs:
 
 class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
     """
-    An object which contains a :class:`ncdata.NcData` and emulates a :class:`netCDF4.Dataset`.
+    An object which emulates a :class:`netCDF4.Dataset`.
 
-    The core NcData content, 'self._ncdata', is a :class:`NcData`.  It defines the
-    content of the emulated "root group".
+    It can be both read and written (modified) via its emulated
+    :class:`netCDF4.Dataset`-like API.
+
+    The core NcData content, 'self._ncdata', is a :class:`ncdata.NcData`.
+    This completely defines the parent object state.
 
     """
 
     _local_instance_props = ("_ncdata", "variables")
 
     def __init__(self, ncdata: NcData = None):
+        """
+        Make a new Nc4DatasetLike.
+
+        Parameters
+        ----------
+        ncdata : NcData, defaults to None
+            The "contained" dataset.  If None, create a new, empty :class:`NcData`.
+
+        Returns
+        -------
+        dataset_like : Nc4DatasetLike
+
+        """
         if ncdata is None:
             ncdata = NcData()  # an empty dataset
         self._ncdata = ncdata
@@ -103,7 +114,8 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
     @property
     def dimensions(self):  # noqa: D102
         return {
-            name: dim.size for name, dim in self._ncdata.dimensions.items()
+            name: Nc4DimensionLike(dim)
+            for name, dim in self._ncdata.dimensions.items()
         }
 
     @property
@@ -118,8 +130,9 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
             #     raise ValueError(f"size mismatch for dimension {name!r}: "
             #                      f"{self.dimensions[name]} != {size}")
         else:
-            self._ncdata.dimensions[dimname] = NcDimension(dimname, size)
-        return size
+            dim = NcDimension(dimname, size)
+            self._ncdata.dimensions[dimname] = dim
+        return dim
 
     def createVariable(
         self, varname, datatype, dimensions=(), **encoding
@@ -163,12 +176,13 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     An object which contains a :class:`ncdata.NcVariable` and emulates a :class:`netCDF4.Variable`.
 
     The core NcData content, 'self._ncdata', is a :class:`NcVariable`.
+    This completely defines the parent object state.
 
     """
 
     _local_instance_props = ("_ncdata", "name", "datatype", "_data_array")
 
-    def __init__(self, ncvar: NcVariable, datatype: np.dtype):
+    def __init__(self, ncvar: NcVariable, datatype: np.dtype):  # noqa: D107
         self._ncdata = ncvar
         self.name = ncvar.name
         # Note: datatype must be known at creation, which may be before an actual data
@@ -261,4 +275,32 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         return np.prod(self.shape)
 
     def chunking(self):  # noqa: D102
+        return None
+
+
+class Nc4DimensionLike:
+    """
+    An object which emulates a :class:`netCDF4.Dimension` object.
+
+    The core NcData content, 'self._ncdata', is a :class:`ncdata.NcDimension`.
+    This completely defines the parent object state.
+
+    """
+
+    def __init__(self, ncdim: NcDimension):  # noqa: D107
+        self._ncdata = ncdim
+
+    @property
+    def name(self):  # noqa: D102
+        return self._ncdata.name
+
+    @property
+    def size(self):  # noqa: D102
+        return self._ncdata.size
+
+    def isunlimited(self):  # noqa: D102
+        return self.size == 0
+
+    def group(self):  # noqa: D102
+        # Not properly supported ?
         return None
