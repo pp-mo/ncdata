@@ -20,6 +20,23 @@ import numpy as np
 #
 
 
+def _addlines_indent(text, indent=""):
+    return [indent + line for line in text.split("\n")]
+
+
+def _attr_print(attr):
+    name = attr.name
+    value = attr._as_python_value()
+
+    # Convert numpy non-string scalars to simple Python values, in string output.
+    if getattr(value, "shape", None) in ((0,), (1,), ()):
+        op = {"i": int, "f": float}[value.dtype.kind]
+        value = op(value.flatten()[0])
+
+    result = f":{name} = {value!r}"
+    return result
+
+
 class NcData:
     """
     An object representing a netcdf group- or dataset-level container.
@@ -34,13 +51,33 @@ class NcData:
         variables: Dict[str, "NcVariable"] = None,
         attributes: Dict[str, "NcAttribute"] = None,
         groups: Dict[str, "NcData"] = None,
-    ):
+    ):  # noqa: D107
         #: a group/dataset name : optional
         self.name: str = name
         self.dimensions: Dict[str, "NcDimension"] = dimensions or {}
         self.variables: Dict[str, "NcVariable"] = variables or {}
         self.attributes: Dict[str, "NcAttribute"] = attributes or {}
         self.groups: Dict[str, "NcData"] = groups or {}
+
+    def __str__(self):  # noqa: D105
+        lines = [f'<NcData: {self.name or "<no name>"}']
+        indent = "        "
+        for eltype in ("dimensions", "variables", "attributes", "groups"):
+            els = getattr(self, eltype)
+            if len(els):
+                lines += [f"    {eltype}:"]
+                if eltype == "attributes":
+                    # NOTE: like variable attributes, but *without* parent name.
+                    attrs_lines = [
+                        _attr_print(attr) for attr in self.attributes.values()
+                    ]
+                    lines += _addlines_indent("\n".join(attrs_lines), indent)
+                else:
+                    for dim in els.values():
+                        lines += _addlines_indent(str(dim), indent)
+
+        lines += [">"]
+        return "\n".join(lines)
 
 
 class NcDimension:
@@ -56,9 +93,16 @@ class NcDimension:
      'is_unlimited' meaning.
     """
 
-    def __init__(self, name: str, size: int = 0):
+    def __init__(self, name: str, size: int = 0):  # noqa: D107
         self.name: str = name
         self.size: int = size  # N.B. we retain the 'zero size means unlimited'
+
+    def isunlimited(self):  # noqa: D102
+        # We'll support this for now, as it makes the object identity more solid.
+        return self.size == 0
+
+    def __str__(self):  # noqa: D105
+        return f"{self.name} = {self.size}"
 
 
 class NcVariable:
@@ -122,6 +166,21 @@ class NcVariable:
     # def shape(self):
     #     return self.data.shape
 
+    def __str__(self):  # noqa: D105
+        dimstr = ", ".join(self.dimensions)
+        hdr = f"<Ncvariable: {self.name}({dimstr})"
+        if not self.attributes:
+            hdr += ">"
+            lines = [hdr]
+        else:
+            lines = [hdr]
+            attrs_lines = [
+                _attr_print(attr) for attr in self.attributes.values()
+            ]
+            lines += _addlines_indent("\n".join(attrs_lines), "    ")
+            lines += [">"]
+        return "\n".join(lines)
+
 
 class NcAttribute:
     """
@@ -135,7 +194,7 @@ class NcAttribute:
     In an actual netcdf dataset, a "scalar" is actually just an array of length 1.
     """
 
-    def __init__(self, name: str, value):
+    def __init__(self, name: str, value):  # noqa: D107
         self.name: str = name
         # Attribute values are arraylike, have dtype
         # TODO: may need to regularise string representations?
@@ -173,3 +232,9 @@ class NcAttribute:
         # if isinstance(result, bytes):
         #     result = result.decode()
         return result
+
+    def __str__(self):  # noqa: D105
+        return f"{self.name} = {self._as_python_value()!r}"
+
+    def __repr__(self):  # noqa: D105
+        return f"NcAttribute({self.name}, {self._as_python_value()!r})"
