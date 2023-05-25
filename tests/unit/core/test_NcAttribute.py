@@ -13,7 +13,6 @@ _attribute_testdata = {
     "float": [1.2, 3.4, 5.6],
     "string": ["xx", "yyy", "z"],
 }
-_attribute_test_types = _attribute_testdata.keys()
 
 _data_types = [
     "int",
@@ -77,8 +76,8 @@ class Test_NcAttribute__init__:
 class Test_NcAttribute__as_python_value:
     def test_value(self, datatype, structuretype):
         value = attrvalue(datatype, structuretype)
-
         attr = NcAttribute("x", value)
+
         result = attr._as_python_value()
 
         # Note: "vectorof1" data should appear as *scalar*.
@@ -99,3 +98,31 @@ class Test_NcAttribute__as_python_value:
             else:
                 # array scalar
                 assert result.shape == ()
+
+
+class Test_NcAttribute__str_repr:
+    def test_str(self, datatype, structuretype):
+        value = attrvalue(datatype, structuretype)
+        attr = NcAttribute("x", value)
+
+        result = str(attr)
+        if structuretype == "vectorofN":
+            value_repr = repr(value)
+            if "string" not in datatype:
+                value_repr = f"array({value_repr})"
+        else:
+            value_single = np.array(value).flatten()[0]
+            if "string" in datatype:
+                value_repr = repr(value_single)
+            else:
+                value_repr = str(value_single)
+
+        expect = f"NcAttribute('x', {value_repr})"
+        assert result == expect
+
+    def test_repr_same(self, datatype, structuretype):
+        value = attrvalue(datatype, structuretype)
+        attr = NcAttribute("x", value)
+        result = str(attr)
+        expected = repr(attr)
+        assert result == expected
