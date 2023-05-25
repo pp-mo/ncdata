@@ -8,12 +8,7 @@ import pytest
 
 from ncdata import NcAttribute
 
-_attribute_testdata = {
-    "int": [1, 2, 3, 4],
-    "float": [1.2, 3.4, 5.6],
-    "string": ["xx", "yyy", "z"],
-}
-
+# Support for building testcases
 _data_types = [
     "int",
     "float",
@@ -23,6 +18,11 @@ _data_types = [
     "numpystring",
 ]
 _container_types = ["scalar", "vectorof1", "vectorofN"]
+_attribute_testdata = {
+    "int": [1, 2, 3, 4],
+    "float": [1.2, 3.4, 5.6],
+    "string": ["xx", "yyy", "z"],
+}
 
 
 @pytest.fixture(params=_data_types)
@@ -78,7 +78,7 @@ class Test_NcAttribute__as_python_value:
         value = attrvalue(datatype, structuretype)
         attr = NcAttribute("x", value)
 
-        result = attr._as_python_value()
+        result = attr.as_python_value()
 
         # Note: "vectorof1" data should appear as *scalar*.
         is_vector = "vectorofN" in structuretype

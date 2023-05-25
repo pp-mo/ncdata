@@ -38,7 +38,7 @@ class _XarrayNcDataStore:
         variables = {}
         for k, v in self.ncdata.variables.items():
             attrs = {
-                name: attr._as_python_value()
+                name: attr.as_python_value()
                 for name, attr in v.attributes.items()
             }
             xr_var = xr.Variable(
@@ -49,7 +49,7 @@ class _XarrayNcDataStore:
             xr_var = xr.conventions.decode_cf_variable(k, xr_var)
             variables[k] = xr_var
         attributes = {
-            name: attr._as_python_value()
+            name: attr.as_python_value()
             for name, attr in self.ncdata.attributes.items()
         }
         return variables, attributes
@@ -170,10 +170,6 @@ def from_xarray(xrds: Union[xr.Dataset, Path, AnyStr]) -> NcData:
     kwargs : dict
         additional xarray "save keywords", passed to
         :meth:`xarray.Dataset.dump_to_store`
-
-    OtherStuff
-    ----------
-    A non-numpy standard section.
 
     Returns
     -------

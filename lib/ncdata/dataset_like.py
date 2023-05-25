@@ -23,6 +23,8 @@ It *should* be possible to use these objects with other packages expecting a
 this may need to be extended, in future, to support other such uses.
 
 """
+from typing import Dict, List
+
 import numpy as np
 
 from . import NcAttribute, NcData, NcDimension, NcVariable
@@ -35,20 +37,20 @@ class _Nc4DatalikeWithNcattrs:
     # N.B. "self._ncdata" is the underlying NcData object : either an NcData or
     #  NcVariable object.
 
-    def ncattrs(self):
+    def ncattrs(self) -> List[str]:
         return list(self._ncdata.attributes.keys())
 
-    def getncattr(self, attr):
+    def getncattr(self, attr: str):
         attrs = self._ncdata.attributes
         if attr in attrs:
-            result = attrs[attr]._as_python_value()
+            result = attrs[attr].as_python_value()
         else:
             # Don't allow it to issue a KeyError, as this upsets 'getattr' usage.
             # Raise an AttributeError instead.
             raise AttributeError(attr)
         return result
 
-    def setncattr(self, attr, value):
+    def setncattr(self, attr: str, value):
         # TODO: are we sure we need this translation ??
         if isinstance(value, bytes):
             value = value.decode("utf-8")
@@ -82,27 +84,16 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
 
     The core NcData content, 'self._ncdata', is a :class:`ncdata.NcData`.
     This completely defines the parent object state.
+    If not provided on init, a new, empty dataset is created.
 
     """
 
     _local_instance_props = ("_ncdata", "variables")
 
     def __init__(self, ncdata: NcData = None):
-        """
-        Make a new Nc4DatasetLike.
-
-        Parameters
-        ----------
-        ncdata : NcData, defaults to None
-            The "contained" dataset.  If None, create a new, empty :class:`NcData`.
-
-        Returns
-        -------
-        dataset_like : Nc4DatasetLike
-
-        """
         if ncdata is None:
             ncdata = NcData()  # an empty dataset
+        #: the contained dataset.  If not provided, a new, empty dataset is created.
         self._ncdata = ncdata
         # N.B. we need to create + store our OWN variables, as they are wrappers for
         #  the underlying NcVariable objects, with different properties.
@@ -112,7 +103,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         }
 
     @property
-    def dimensions(self):  # noqa: D102
+    def dimensions(self) -> Dict[str, "Nc4DimensionLike"]:  # noqa: D102
         return {
             name: Nc4DimensionLike(dim)
             for name, dim in self._ncdata.dimensions.items()
@@ -122,7 +113,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
     def groups(self):  # noqa: D102
         return None  # not supported
 
-    def createDimension(self, dimname, size):  # noqa: D102
+    def createDimension(self, dimname: str, size: int):  # noqa: D102
         if dimname in self.dimensions:
             msg = f'creating duplicate dimension "{dimname}".'
             raise ValueError(msg)
@@ -135,7 +126,11 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         return dim
 
     def createVariable(
-        self, varname, datatype, dimensions=(), **encoding
+        self,
+        varname: str,
+        datatype: np.dtype,
+        dimensions: List[str] = (),
+        **encoding: Dict[str, str],
     ):  # noqa: D102
         if varname in self.variables:
             msg = f'creating duplicate variable "{varname}".'
@@ -161,7 +156,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         self.sync()
 
     @staticmethod
-    def filepath():  # noqa: D102
+    def filepath() -> str:  # noqa: D102
         #
         # Note: for now, let's just not care about this.
         # we *might* need this to be an optional defined item on an NcData ??
@@ -216,12 +211,11 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         self._ncdata.data = data
         self.datatype = data.dtype
 
-    @property
     def group(self):  # noqa: D102
         return self._ncdata.group
 
     @property
-    def dimensions(self):  # noqa: D102
+    def dimensions(self) -> List[str]:  # noqa: D102
         return self._ncdata.dimensions
 
     #
@@ -267,7 +261,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
 
     @property
     def shape(self):  # noqa: D102
-        dims = self.group.dimensions
+        dims = self.group().dimensions
         return tuple(dims[n].size for n in self.dimensions)
 
     @property
@@ -275,6 +269,13 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         return np.prod(self.shape)
 
     def chunking(self):  # noqa: D102
+        """
+        Return chunk sizes.
+
+        Actual datasets return a list of sizes by dimension, or 'contiguous'.
+
+        For now, simply returns ``None``.  Could be replaced when required.
+        """
         return None
 
 

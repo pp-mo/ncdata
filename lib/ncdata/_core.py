@@ -11,8 +11,9 @@ Current limitations :
 of dimensions referenced by variables.
 
 """
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
+import numpy
 import numpy as np
 
 #
@@ -44,11 +45,15 @@ class NcData:
         attributes: Dict[str, "NcAttribute"] = None,
         groups: Dict[str, "NcData"] = None,
     ):  # noqa: D107
-        #: a group/dataset name : optional
+        #: a group/dataset name (optional)
         self.name: str = name
+        #: group/dataset dimensions
         self.dimensions: Dict[str, "NcDimension"] = dimensions or {}
+        #: group/dataset variables
         self.variables: Dict[str, "NcVariable"] = variables or {}
+        #: group/dataset global attributes
         self.attributes: Dict[str, "NcAttribute"] = attributes or {}
+        #: sub-groups
         self.groups: Dict[str, "NcData"] = groups or {}
 
     def _print_content(self) -> str:
@@ -110,21 +115,23 @@ class NcDimension:
     Associates a length with a name.
     A length of 0 indicates an "unlimited" dimension, though that is essentially a
     file-specific concept.
-
-    TODO: I think the unlimited interpretation is limiting, since we will want to
-     represent "current length" too :  Change this by defining a boolean with
-     'is_unlimited' meaning.
     """
 
+    # TODO : I think the unlimited interpretation is limiting, since we will want to
+    #  represent "current length" too.
+    #  ? Change this by adopting a boolean "is_unlimited" property ?
+
     def __init__(self, name: str, size: int):  # noqa: D107
+        #: dimension name
         self.name: str = name
+        #: dimension size (0 = unlimited)
         self.size: int = size  # N.B. we retain the 'zero size means unlimited'
 
-    def isunlimited(self):  # noqa: D102
+    def isunlimited(self) -> bool:  # noqa: D102
         # We'll support this for now, as it makes the object identity more solid.
         return self.size == 0
 
-    def _print_content(self):  # noqa: D105
+    def _print_content(self) -> str:  # noqa: D105
         return f"{self.name} = {self.size}"
 
     def __repr__(self):  # noqa: D105
@@ -143,7 +150,7 @@ class NcVariable:
     'data' may be None, but if not is expected to be an array : either numpy (real) or
     Dask (lazy).
 
-    The 'dtype' will presumably should match the data, if any.
+    The 'dtype' will presumably match the data, if any.
 
     It has no 'shape' property, in practice this might be inferred from either the
     data or dimensions.  If the dims are empty, it is a scalar.
@@ -175,16 +182,21 @@ class NcVariable:
         replaces any provided 'dtype'.
         """
         #: variable name
-        self.name = name
-        self.dimensions = tuple(dimensions)
+        self.name: str = name
+        #: variable dimension names (a list of strings, *not* a dict of objects)
+        self.dimensions: List[str] = tuple(dimensions)
         if data is not None:
             if not hasattr(data, "dtype"):
                 data = np.asanyarray(data)
             dtype = data.dtype
-        self.dtype = dtype
+        #: variable datatype, as a numpy :class:`numpy.dtype`
+        self.dtype: numpy.dtype = dtype
+        #: variable data (an array-like, typically a dask or numpy array)
         self.data = data  # Supports lazy, and normally provides a dtype
-        self.attributes = attributes or {}
-        self.group = group
+        #: variable attributes
+        self.attributes: Dict[str, NcAttribute] = attributes or {}
+        #: parent group
+        self.group: Optional[NcData] = group
 
     # # Provide some array-like readonly properties reflected from the data.
     # @property
@@ -223,7 +235,7 @@ class NcAttribute:
     """
     An object representing a netcdf variable or dataset attribute.
 
-    Associates a name to a value which is either a numpy 1-D array or scalar.
+    Associates a name to a value which is a numpy scalar or 1-D array.
 
     We expect the value to be 0- or 1-dimensional, and an allowed dtype.
     However none of this is checked.
@@ -232,14 +244,16 @@ class NcAttribute:
     """
 
     def __init__(self, name: str, value):  # noqa: D107
+        #: attribute name
         self.name: str = name
         # Attribute values are arraylike, have dtype
         # TODO: may need to regularise string representations?
         if not hasattr(value, "dtype"):
             value = np.asanyarray(value)
+        #: attribute value
         self.value: np.ndarray = value
 
-    def _as_python_value(self):
+    def as_python_value(self):
         """
         Return the content, but converting any character data to Python strings.
 
@@ -271,7 +285,7 @@ class NcAttribute:
         return result
 
     def _print_value(self):
-        value = self._as_python_value()
+        value = self.as_python_value()
 
         # Convert numpy non-string scalars to simple Python values, in string output.
         if getattr(value, "shape", None) in ((0,), (1,), ()):

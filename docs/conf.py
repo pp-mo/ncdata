@@ -1,3 +1,4 @@
+# noqa
 # Configuration file for the Sphinx documentation builder.
 #
 # This file only contains a selection of the most common options. For a full
@@ -71,7 +72,17 @@ autopackage_name = [
 # api generation configuration
 autoclass_content = "both"
 autodoc_member_order = "bysource"
-autodoc_typehints = "none"
+autodoc_typehints = "description"
+autodoc_class_signature = "separated"
+autodoc_inherited_members = True
+
+autodoc_default_options = {
+    "member-order": "bysource",
+    "inherited-members": True,
+    "class-signature": "separated",
+    "autodoc_typehints": "description",
+    "autoclass_content": "both",
+}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
