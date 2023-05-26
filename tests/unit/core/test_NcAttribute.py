@@ -106,16 +106,20 @@ class Test_NcAttribute__str_repr:
         attr = NcAttribute("x", value)
 
         result = str(attr)
-        if structuretype == "vectorofN":
-            value_repr = repr(value)
-            if "string" not in datatype:
-                value_repr = f"array({value_repr})"
-        else:
-            value_single = np.array(value).flatten()[0]
-            if "string" in datatype:
-                value_repr = repr(value_single)
-            else:
-                value_repr = str(value_single)
+
+        # Work out what we expect/intend the value string to look like.
+        is_multiple = structuretype == "vectorofN"
+        if not is_multiple:
+            assert structuretype in ("scalar", "vectorof1")
+            # All single values appear as scalars.
+            value = np.array(value).flatten()[0]
+
+        value_repr = repr(value)
+
+        if is_multiple and "string" not in datatype:
+            # All *non-string* vectors appear wrapped as numpy 'array(...)'.
+            # N.B. but *string vectors* print just as a list of Python strings.
+            value_repr = f"array({value_repr})"
 
         expect = f"NcAttribute('x', {value_repr})"
         assert result == expect
