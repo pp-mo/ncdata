@@ -88,7 +88,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
 
     """
 
-    _local_instance_props = ("_ncdata", "variables")
+    _local_instance_props = ("_ncdata", "variables", "dimensions")
 
     def __init__(self, ncdata: NcData = None):
         if ncdata is None:
@@ -101,10 +101,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
             name: Nc4VariableLike._from_ncvariable(ncvar)
             for name, ncvar in self._ncdata.variables.items()
         }
-
-    @property
-    def dimensions(self) -> Dict[str, "Nc4DimensionLike"]:  # noqa: D102
-        return {
+        self.dimensions = {
             name: Nc4DimensionLike(dim)
             for name, dim in self._ncdata.dimensions.items()
         }
@@ -117,13 +114,14 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         if dimname in self.dimensions:
             msg = f'creating duplicate dimension "{dimname}".'
             raise ValueError(msg)
-            # if self.dimensions[name] != size:
-            #     raise ValueError(f"size mismatch for dimension {name!r}: "
-            #                      f"{self.dimensions[name]} != {size}")
-        else:
-            dim = NcDimension(dimname, size)
-            self._ncdata.dimensions[dimname] = dim
-        return dim
+
+        # Create a new actual NcDimension in the contained dataset.
+        dim = NcDimension(dimname, size)
+        self._ncdata.dimensions[dimname] = dim
+        # Create a wrapper for it, install that into self, and return it.
+        nc4dim = Nc4DimensionLike(dim)
+        self.dimensions[dimname] = nc4dim
+        return nc4dim
 
     def createVariable(
         self,
