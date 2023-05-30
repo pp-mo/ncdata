@@ -126,13 +126,14 @@ class NcDimension:
     ):  # noqa: D107
         #: dimension name
         self.name: str = name
-        #: dimension size (0 = unlimited)
+        #: dimension size (current size, if unlimited)
         self.size: int = size  # N.B. we retain the 'zero size means unlimited'
         if size == 0:
             unlimited = True
         else:
             unlimited = bool(unlimited)
-        self.unlimited = unlimited
+        #: whether dimension is unlimited
+        self.unlimited: bool = unlimited
 
     def isunlimited(self) -> bool:  # noqa: D102
         # We'll support this for now, as it makes the object identity more solid.
