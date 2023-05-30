@@ -4,23 +4,23 @@ Tests for :mod:`tests.unit.netcdf._compare_nc_files`
 Yes I know, tests of tests.  But it seems necessary.
 """
 import os
-import warnings
-from pathlib import Path
 import shutil
 import subprocess
+import warnings
+from pathlib import Path
 from typing import AnyStr, Optional
 from unittest import mock
 
 import netCDF4 as nc
 import numpy as np
 import pytest
+from test_samplecode_cdlgen_comparablecdl import ncgen_from_cdl
 
 from tests.unit.netcdf._compare_nc_files import (
-    _compare_name_lists,
     _compare_attributes,
+    _compare_name_lists,
     compare_nc_files,
 )
-from test_samplecode_cdlgen_comparablecdl import ncgen_from_cdl
 
 # CDL to create a reference file with "all" features included.
 _base_cdl = """

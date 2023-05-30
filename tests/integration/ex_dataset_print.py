@@ -3,7 +3,7 @@ import iris
 import iris.tests as itsts
 
 import ncdata.iris as nci
-from ncdata import NcData, NcDimension, NcVariable, NcAttribute
+from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 
 
 def sample_printout():  # noqa: D103

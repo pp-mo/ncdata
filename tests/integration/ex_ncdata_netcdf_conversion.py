@@ -4,12 +4,12 @@ A proof-of-concept example workflow for :mod:`ncdata.netcdf4`.
 Showing loading and saving ncdata to/from netcdf files.
 """
 from pathlib import Path
-import netCDF4 as nc
 
 import iris.tests as itsts
-
+import netCDF4 as nc
 import numpy as np
-from ncdata import NcData, NcDimension, NcVariable, NcAttribute
+
+from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 from ncdata.netcdf4 import from_nc4, to_nc4
 from tests.unit.netcdf._compare_nc_files import compare_nc_files
 

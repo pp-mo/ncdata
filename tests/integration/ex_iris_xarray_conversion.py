@@ -84,7 +84,9 @@ def example_from_xr():  # noqa: D103
             )
         ),
     )
-    assert np.all(xrds2["x"].data == cube.coord("projection_x_coordinate").points)
+    assert np.all(
+        xrds2["x"].data == cube.coord("projection_x_coordinate").points
+    )
 
 
 if __name__ == "__main__":
