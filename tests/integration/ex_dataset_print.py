@@ -18,7 +18,7 @@ def sample_printout():  # noqa: D103
     # namely groups and shortform variables (vars with no attrs)
     ds.groups["extra"] = NcData(
         name="extra",
-        dimensions={"extra_qq": NcDimension("extra_qq", 4)},
+        dimensions={"extra_qq": NcDimension("extra_qq", 4, unlimited=True)},
         variables={
             "noattrs": NcVariable("noattrs", ["x"]),
             "x": NcVariable(

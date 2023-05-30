@@ -121,21 +121,30 @@ class NcDimension:
     #  represent "current length" too.
     #  ? Change this by adopting a boolean "is_unlimited" property ?
 
-    def __init__(self, name: str, size: int):  # noqa: D107
+    def __init__(
+        self, name: str, size: int, unlimited: Optional[bool] = None
+    ):  # noqa: D107
         #: dimension name
         self.name: str = name
         #: dimension size (0 = unlimited)
         self.size: int = size  # N.B. we retain the 'zero size means unlimited'
+        if size == 0:
+            unlimited = True
+        else:
+            unlimited = bool(unlimited)
+        self.unlimited = unlimited
 
     def isunlimited(self) -> bool:  # noqa: D102
         # We'll support this for now, as it makes the object identity more solid.
-        return self.size == 0
+        return self.unlimited
 
     def _print_content(self) -> str:  # noqa: D105
-        return f"{self.name} = {self.size}"
+        str_unlim = "  **UNLIMITED**" if self.unlimited else ""
+        return f"{self.name} = {self.size}{str_unlim}"
 
     def __repr__(self):  # noqa: D105
-        return f"NcDimension({self.name!r}, {self.size})"
+        str_unlim = ", unlimited=True" if self.unlimited else ""
+        return f"NcDimension({self.name!r}, {self.size}{str_unlim})"
 
     def __str__(self):  # noqa: D105
         return repr(self)

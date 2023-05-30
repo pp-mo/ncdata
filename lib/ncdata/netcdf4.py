@@ -46,7 +46,8 @@ def to_nc4(
 
     try:
         for dimname, dim in ncdata.dimensions.items():
-            nc4ds.createDimension(dimname, dim.size)
+            size = 0 if dim.unlimited else dim.size
+            nc4ds.createDimension(dimname, size)
 
         for varname, var in ncdata.variables.items():
             fillattr = "_FillValue"
@@ -106,7 +107,9 @@ def from_nc4(
 
     try:
         for dimname, nc4dim in nc4ds.dimensions.items():
-            ncdata.dimensions[dimname] = NcDimension(dimname, nc4dim.size)
+            size = len(nc4dim)
+            unlimited = nc4dim.isunlimited()
+            ncdata.dimensions[dimname] = NcDimension(dimname, size, unlimited)
 
         for varname, nc4var in nc4ds.variables.items():
             var = NcVariable(
