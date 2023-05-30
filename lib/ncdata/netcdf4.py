@@ -71,10 +71,10 @@ def to_nc4(
 
             for attrname, attr in var.attributes.items():
                 if attrname != "_FillValue":
-                    nc4var.setncattr(attrname, attr._as_python_value())
+                    nc4var.setncattr(attrname, attr.as_python_value())
 
         for attrname, attr in ncdata.attributes.items():
-            nc4ds.setncattr(attrname, attr._as_python_value())
+            nc4ds.setncattr(attrname, attr.as_python_value())
 
     finally:
         if not caller_owns_dataset:

@@ -8,13 +8,7 @@ import pytest
 
 from ncdata import NcAttribute
 
-_attribute_testdata = {
-    "int": [1, 2, 3, 4],
-    "float": [1.2, 3.4, 5.6],
-    "string": ["xx", "yyy", "z"],
-}
-_attribute_test_types = _attribute_testdata.keys()
-
+# Support for building testcases
 _data_types = [
     "int",
     "float",
@@ -24,6 +18,11 @@ _data_types = [
     "numpystring",
 ]
 _container_types = ["scalar", "vectorof1", "vectorofN"]
+_attribute_testdata = {
+    "int": [1, 2, 3, 4],
+    "float": [1.2, 3.4, 5.6],
+    "string": ["xx", "yyy", "z"],
+}
 
 
 @pytest.fixture(params=_data_types)
@@ -77,9 +76,9 @@ class Test_NcAttribute__init__:
 class Test_NcAttribute__as_python_value:
     def test_value(self, datatype, structuretype):
         value = attrvalue(datatype, structuretype)
-
         attr = NcAttribute("x", value)
-        result = attr._as_python_value()
+
+        result = attr.as_python_value()
 
         # Note: "vectorof1" data should appear as *scalar*.
         is_vector = "vectorofN" in structuretype
@@ -99,3 +98,35 @@ class Test_NcAttribute__as_python_value:
             else:
                 # array scalar
                 assert result.shape == ()
+
+
+class Test_NcAttribute__str_repr:
+    def test_str(self, datatype, structuretype):
+        value = attrvalue(datatype, structuretype)
+        attr = NcAttribute("x", value)
+
+        result = str(attr)
+
+        # Work out what we expect/intend the value string to look like.
+        is_multiple = structuretype == "vectorofN"
+        if not is_multiple:
+            assert structuretype in ("scalar", "vectorof1")
+            # All single values appear as scalars.
+            value = np.array(value).flatten()[0]
+
+        value_repr = repr(value)
+
+        if is_multiple and "string" not in datatype:
+            # All *non-string* vectors appear wrapped as numpy 'array(...)'.
+            # N.B. but *string vectors* print just as a list of Python strings.
+            value_repr = f"array({value_repr})"
+
+        expect = f"NcAttribute('x', {value_repr})"
+        assert result == expect
+
+    def test_repr_same(self, datatype, structuretype):
+        value = attrvalue(datatype, structuretype)
+        attr = NcAttribute("x", value)
+        result = str(attr)
+        expected = repr(attr)
+        assert result == expected

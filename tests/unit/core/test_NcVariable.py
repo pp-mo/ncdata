@@ -3,11 +3,13 @@
 There is almost no actual behaviour, but we can test some constructor behaviours,
 such as valid calling options and possibilities for data and dtype.
 """
+import re
+
 import dask.array as da
 import numpy as np
 import pytest
 
-from ncdata import NcData, NcVariable
+from ncdata import NcData, NcVariable, NcAttribute
 
 
 class Test_NcVariable__init__:
@@ -123,3 +125,56 @@ class Test_NcVariable__init__:
         arr = da.ones((2, 3))
         var = NcVariable("x", data=arr)
         assert var.data is arr
+
+
+class TestNcVariable__str__repr:
+    def test_nameonly(self):
+        var = NcVariable("varname")
+        result = str(var)
+        expected = "<NcVariable: varname()>"
+        assert result == expected
+
+    def test_dimsnoargs(self):
+        var = NcVariable("var_w_dims", ["dim0", "dim1"])
+        result = str(var)
+        expected = "<NcVariable: var_w_dims(dim0, dim1)>"
+        assert result == expected
+
+    def test_oneattr(self):
+        var = NcVariable(
+            "var_w_attrs", attributes={"a1": NcAttribute("a1", 1)}
+        )
+        result = str(var)
+        expected = "\n".join(
+            ["<NcVariable: var_w_attrs()", "    var_w_attrs:a1 = 1", ">"]
+        )
+        assert result == expected
+
+    def test_multiattrs(self):
+        var = NcVariable(
+            "var_multi",
+            attributes={
+                "a1": NcAttribute("a1", 1),
+                "a2": NcAttribute("a2", ["one", "three"]),
+            },
+        )
+        result = str(var)
+        expected = "\n".join(
+            [
+                "<NcVariable: var_multi()",
+                "    var_multi:a1 = 1",
+                "    var_multi:a2 = ['one', 'three']",
+                ">",
+            ]
+        )
+        assert result == expected
+
+    def test_repr(var):
+        var = NcVariable(
+            "var",
+            dimensions=("x", "y"),
+            attributes={"a1": NcAttribute("a1", 1)},
+        )
+        result = repr(var)
+        expected = f"<ncdata._core.NcVariable object at 0x{id(var):012x}>"
+        assert result == expected

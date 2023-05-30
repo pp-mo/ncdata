@@ -42,3 +42,7 @@ class Test_NcData__init__:
         for name in dir(sample1):
             if not name.startswith("_"):
                 assert getattr(sample2, name) is getattr(sample1, name)
+
+
+# Note: str() and repr() of NcData are too complex to test unit-wise.
+# See integration tests for some sample results.

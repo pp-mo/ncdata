@@ -11,8 +11,9 @@ Current limitations :
 of dimensions referenced by variables.
 
 """
-from typing import Dict, Optional, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
+import numpy
 import numpy as np
 
 #
@@ -21,20 +22,12 @@ import numpy as np
 
 
 def _addlines_indent(text, indent=""):
+    # Routine to indent each line within a newline-joined string.
     return [indent + line for line in text.split("\n")]
 
 
-def _attr_print(attr):
-    name = attr.name
-    value = attr._as_python_value()
-
-    # Convert numpy non-string scalars to simple Python values, in string output.
-    if getattr(value, "shape", None) in ((0,), (1,), ()):
-        op = {"i": int, "f": float}[value.dtype.kind]
-        value = op(value.flatten()[0])
-
-    result = f":{name} = {value!r}"
-    return result
+# common indent spacing
+_indent = " " * 4
 
 
 class NcData:
@@ -52,32 +45,67 @@ class NcData:
         attributes: Dict[str, "NcAttribute"] = None,
         groups: Dict[str, "NcData"] = None,
     ):  # noqa: D107
-        #: a group/dataset name : optional
+        #: a group/dataset name (optional)
         self.name: str = name
+        #: group/dataset dimensions
         self.dimensions: Dict[str, "NcDimension"] = dimensions or {}
+        #: group/dataset variables
         self.variables: Dict[str, "NcVariable"] = variables or {}
+        #: group/dataset global attributes
         self.attributes: Dict[str, "NcAttribute"] = attributes or {}
+        #: sub-groups
         self.groups: Dict[str, "NcData"] = groups or {}
 
-    def __str__(self):  # noqa: D105
-        lines = [f'<NcData: {self.name or "<no name>"}']
-        indent = "        "
-        for eltype in ("dimensions", "variables", "attributes", "groups"):
+    def _print_content(self) -> str:
+        """
+        Construct a string printout.
+
+        NcData classes all define '_print_content' (though they have no common base
+        class, so it isn't technically an abstract method).
+        This "NcData._print_content()" is called recursively for groups.
+        """
+        global _indent
+        # Define a header line (always a separate line).
+        noname = "<'no-name'>"
+        lines = [f"<NcData: {self.name or noname}"]
+
+        # Add internal sections in order, indenting everything.
+        for eltype in ("dimensions", "variables", "groups", "attributes"):
             els = getattr(self, eltype)
             if len(els):
-                lines += [f"    {eltype}:"]
                 if eltype == "attributes":
-                    # NOTE: like variable attributes, but *without* parent name.
+                    # Attributes a bit different: #1 add 'globol' to section title.
+                    lines += [f"{_indent}global attributes:"]
+                    # NOTE: #2 show like variable attributes, but *no parent name*.
                     attrs_lines = [
-                        _attr_print(attr) for attr in self.attributes.values()
+                        f":{attr._print_content()}"
+                        for attr in self.attributes.values()
                     ]
-                    lines += _addlines_indent("\n".join(attrs_lines), indent)
+                    lines += _addlines_indent(
+                        "\n".join(attrs_lines), _indent * 2
+                    )
                 else:
-                    for dim in els.values():
-                        lines += _addlines_indent(str(dim), indent)
+                    lines += [f"{_indent}{eltype}:"]
+                    for el in els.values():
+                        lines += _addlines_indent(
+                            el._print_content(), _indent * 2
+                        )
+                lines.append("")
 
+        # Strip off final blank lines (tidier for Groups as well as main dataset).
+        while len(lines[-1]) == 0:
+            lines = lines[:-1]
+
+        # Add closing line.
         lines += [">"]
+        # Join with linefeeds for a simple string result.
         return "\n".join(lines)
+
+    def __str__(self):  # noqa: D105
+        return self._print_content()
+
+    # NOTE: for 'repr', an interpretable literal string is too complex.
+    # So just retain the default "object" address-based representation.
 
 
 class NcDimension:
@@ -87,22 +115,30 @@ class NcDimension:
     Associates a length with a name.
     A length of 0 indicates an "unlimited" dimension, though that is essentially a
     file-specific concept.
-
-    TODO: I think the unlimited interpretation is limiting, since we will want to
-     represent "current length" too :  Change this by defining a boolean with
-     'is_unlimited' meaning.
     """
 
-    def __init__(self, name: str, size: int = 0):  # noqa: D107
+    # TODO : I think the unlimited interpretation is limiting, since we will want to
+    #  represent "current length" too.
+    #  ? Change this by adopting a boolean "is_unlimited" property ?
+
+    def __init__(self, name: str, size: int):  # noqa: D107
+        #: dimension name
         self.name: str = name
+        #: dimension size (0 = unlimited)
         self.size: int = size  # N.B. we retain the 'zero size means unlimited'
 
-    def isunlimited(self):  # noqa: D102
+    def isunlimited(self) -> bool:  # noqa: D102
         # We'll support this for now, as it makes the object identity more solid.
         return self.size == 0
 
-    def __str__(self):  # noqa: D105
+    def _print_content(self) -> str:  # noqa: D105
         return f"{self.name} = {self.size}"
+
+    def __repr__(self):  # noqa: D105
+        return f"NcDimension({self.name!r}, {self.size})"
+
+    def __str__(self):  # noqa: D105
+        return repr(self)
 
 
 class NcVariable:
@@ -114,7 +150,7 @@ class NcVariable:
     'data' may be None, but if not is expected to be an array : either numpy (real) or
     Dask (lazy).
 
-    The 'dtype' will presumably should match the data, if any.
+    The 'dtype' will presumably match the data, if any.
 
     It has no 'shape' property, in practice this might be inferred from either the
     data or dimensions.  If the dims are empty, it is a scalar.
@@ -146,16 +182,21 @@ class NcVariable:
         replaces any provided 'dtype'.
         """
         #: variable name
-        self.name = name
-        self.dimensions = tuple(dimensions)
+        self.name: str = name
+        #: variable dimension names (a list of strings, *not* a dict of objects)
+        self.dimensions: List[str] = tuple(dimensions)
         if data is not None:
             if not hasattr(data, "dtype"):
                 data = np.asanyarray(data)
             dtype = data.dtype
-        self.dtype = dtype
+        #: variable datatype, as a numpy :class:`numpy.dtype`
+        self.dtype: numpy.dtype = dtype
+        #: variable data (an array-like, typically a dask or numpy array)
         self.data = data  # Supports lazy, and normally provides a dtype
-        self.attributes = attributes or {}
-        self.group = group
+        #: variable attributes
+        self.attributes: Dict[str, NcAttribute] = attributes or {}
+        #: parent group
+        self.group: Optional[NcData] = group
 
     # # Provide some array-like readonly properties reflected from the data.
     # @property
@@ -166,27 +207,35 @@ class NcVariable:
     # def shape(self):
     #     return self.data.shape
 
-    def __str__(self):  # noqa: D105
+    def _print_content(self):
+        global _indent
         dimstr = ", ".join(self.dimensions)
-        hdr = f"<Ncvariable: {self.name}({dimstr})"
+        hdr = f"<NcVariable: {self.name}({dimstr})"
         if not self.attributes:
             hdr += ">"
             lines = [hdr]
         else:
             lines = [hdr]
             attrs_lines = [
-                _attr_print(attr) for attr in self.attributes.values()
+                f"{self.name}:{attr._print_content()}"
+                for attr in self.attributes.values()
             ]
-            lines += _addlines_indent("\n".join(attrs_lines), "    ")
+            lines += _addlines_indent("\n".join(attrs_lines), _indent)
             lines += [">"]
         return "\n".join(lines)
+
+    def __str__(self):  # noqa: D105
+        return self._print_content()
+
+    # NOTE: as for NcData, an interpretable 'repr' string is too complex.
+    # So just retain the default "object" address-based representation.
 
 
 class NcAttribute:
     """
     An object representing a netcdf variable or dataset attribute.
 
-    Associates a name to a value which is either a numpy 1-D array or scalar.
+    Associates a name to a value which is a numpy scalar or 1-D array.
 
     We expect the value to be 0- or 1-dimensional, and an allowed dtype.
     However none of this is checked.
@@ -195,14 +244,16 @@ class NcAttribute:
     """
 
     def __init__(self, name: str, value):  # noqa: D107
+        #: attribute name
         self.name: str = name
         # Attribute values are arraylike, have dtype
         # TODO: may need to regularise string representations?
         if not hasattr(value, "dtype"):
             value = np.asanyarray(value)
+        #: attribute value
         self.value: np.ndarray = value
 
-    def _as_python_value(self):
+    def as_python_value(self):
         """
         Return the content, but converting any character data to Python strings.
 
@@ -233,8 +284,21 @@ class NcAttribute:
         #     result = result.decode()
         return result
 
-    def __str__(self):  # noqa: D105
-        return f"{self.name} = {self._as_python_value()!r}"
+    def _print_value(self):
+        value = self.as_python_value()
+
+        # Convert numpy non-string scalars to simple Python values, in string output.
+        if getattr(value, "shape", None) in ((0,), (1,), ()):
+            op = {"i": int, "f": float}[value.dtype.kind]
+            value = op(value.flatten()[0])
+
+        return repr(value)
+
+    def _print_content(self):
+        return f"{self.name} = {self._print_value()}"
 
     def __repr__(self):  # noqa: D105
-        return f"NcAttribute({self.name}, {self._as_python_value()!r})"
+        return f"NcAttribute({self.name!r}, {self._print_value()})"
+
+    def __str__(self):  # noqa: D105
+        return repr(self)
