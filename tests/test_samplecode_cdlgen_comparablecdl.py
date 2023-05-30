@@ -6,9 +6,9 @@ File generation from CDL (with ncgen), and CDL comparison (with ncdump).
 The status and usage of this are yet to be determined.
 """
 import os
-from pathlib import Path
 import subprocess
-from typing import AnyStr, Optional, List
+from pathlib import Path
+from typing import AnyStr, List, Optional
 
 import pytest
 

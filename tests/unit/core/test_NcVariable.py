@@ -9,7 +9,7 @@ import dask.array as da
 import numpy as np
 import pytest
 
-from ncdata import NcData, NcVariable, NcAttribute
+from ncdata import NcAttribute, NcData, NcVariable
 
 
 class Test_NcVariable__init__:
