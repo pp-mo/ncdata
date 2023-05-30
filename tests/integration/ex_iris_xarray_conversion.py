@@ -52,14 +52,19 @@ def example_from_xr():  # noqa: D103
 
     print("\n")
     print("============ Array identity checks ... =========")
+
     print(
         "xrds2['data'].data   is   cube.core_data() : ",
         bool(xrds2["data"].data is cube.core_data()),
     )
+    assert xrds2["data"].data is cube.core_data()
+
     print(
         "xrds2['lon'].data   is   cube.coord('longitude').core_points() : ",
         bool(xrds2["lon"].data is cube.coord("longitude").core_points()),
     )
+    assert xrds2["lon"].data is cube.coord("longitude").core_points()
+
     print(
         "xrds2['x'].data   is   cube.coord('projection_x_coordinate').core_points() : ",
         bool(
@@ -67,6 +72,10 @@ def example_from_xr():  # noqa: D103
             is cube.coord("projection_x_coordinate").core_points()
         ),
     )
+    # NOTE: this one does **not** succeed.
+    # TODO: find out exactly why -- ? in some way, because it is a dim coord ?
+    # assert xrds2["x"].data is cube.coord("projection_x_coordinate").core_points()
+
     print(
         "np.all(xrds2['x'].data == cube.coord('projection_x_coordinate').points) : ",
         bool(
@@ -75,6 +84,7 @@ def example_from_xr():  # noqa: D103
             )
         ),
     )
+    assert np.all(xrds2["x"].data == cube.coord("projection_x_coordinate").points)
 
 
 if __name__ == "__main__":

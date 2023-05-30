@@ -11,6 +11,7 @@ import iris.tests as itsts
 import numpy as np
 from ncdata import NcData, NcDimension, NcVariable, NcAttribute
 from ncdata.netcdf4 import from_nc4, to_nc4
+from tests.unit.netcdf._compare_nc_files import compare_nc_files
 
 
 def example_nc4_load_save_roundtrip():  # noqa: D103
@@ -30,9 +31,11 @@ def example_nc4_load_save_roundtrip():  # noqa: D103
     print("Round-tripped result, as iris cube:")
     print(cube2)
     print("\nold-file-cube == new-file-cube ? ", cube1 == cube2)
-    from tests.unit.netcdf._compare_nc_files import compare_nc_files
+    assert cube1 == cube2
 
-    print("\nFiles compare? :", compare_nc_files(filepath, filepath2))
+    equals_result = compare_nc_files(filepath, filepath2) == []
+    print("\nFiles compare? :", equals_result)
+    assert equals_result
 
 
 def example_nc4_save_reload_unlimited_roundtrip():
