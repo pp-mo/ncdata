@@ -13,6 +13,7 @@ from ncdata.netcdf4 import from_nc4, to_nc4
 from tests.unit.netcdf._compare_nc_files import compare_nc_files
 from tests import testdata_dir
 
+
 def example_nc4_load_save_roundtrip():  # noqa: D103
     # Load an existing file, save-netcdf4 : check same (with Iris for now)
     filepath = testdata_dir / "toa_brightness_temperature.nc"

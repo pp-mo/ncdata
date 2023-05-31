@@ -10,7 +10,7 @@ from tests import testdata_dir
 
 def sample_printout():  # noqa: D103
     iris.FUTURE.datum_support = True
-    filepath = testdata_dir / 'toa_brightness_temperature.nc'
+    filepath = testdata_dir / "toa_brightness_temperature.nc"
     cubes = iris.load(filepath)
 
     ds = nci.from_iris(cubes)

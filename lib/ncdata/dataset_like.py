@@ -298,7 +298,7 @@ class Nc4DimensionLike:
         return self._ncdata.size
 
     def isunlimited(self):  # noqa: D102
-        return self.size == 0
+        return self._ncdata.unlimited
 
     def group(self):  # noqa: D102
         # Not properly supported ?
