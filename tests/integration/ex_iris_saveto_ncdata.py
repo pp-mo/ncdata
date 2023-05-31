@@ -8,6 +8,7 @@ import iris
 from ncdata.iris import from_iris
 from tests import testdata_dir
 
+
 def example_ncdata_from_iris():
     print("")
     print("==============")

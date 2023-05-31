@@ -34,7 +34,7 @@ jobs:
         run: |
           conda install --yes numpy pytest netCDF4 dask filelock xarray cartopy cf-units cftime dask-core matplotlib python-xxhash pyproj scipy shapely 
 
-      - name: "Install Iris"
+      - name: "Install *latest* Iris"
         run: |
           git clone https://github.com/SciTools/iris.git ./iris
           cd iris

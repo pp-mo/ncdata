@@ -135,15 +135,6 @@ class NcDimension:
         #: whether dimension is unlimited
         self.unlimited: bool = unlimited
 
-    def isunlimited(self) -> bool:  # noqa: D102
-        """
-        Whether the dimension is "unlimited" (in a file).
-
-        We support this, as it is needed to support wrapping with
-        :class:`iris.fileformats.netcdf._thread_safe_nc.DimensionWrapper`.
-        """
-        return self.unlimited
-
     def _print_content(self) -> str:  # noqa: D105
         str_unlim = "  **UNLIMITED**" if self.unlimited else ""
         return f"{self.name} = {self.size}{str_unlim}"
