@@ -9,14 +9,13 @@ import numpy as np
 import xarray as xr
 
 from ncdata.iris_xarray import cubes_from_xarray, cubes_to_xarray
+from tests import testdata_dir
 
 
 def example_from_xr():  # noqa: D103
-    iris.FUTURE.datum_support = True
-    filepath = itsts.get_data_path(
-        ["NetCDF", "stereographic", "toa_brightness_temperature.nc"]
-    )
+    filepath = testdata_dir / "toa_brightness_temperature.nc"
     xrds = xr.open_dataset(filepath, chunks="auto")
+    iris.FUTURE.datum_support = True
     print("\nOriginal Xarray dataset:\n", xrds)
     cubes = cubes_from_xarray(xrds)
     print("\nxrds['time']:\n", xrds["time"])

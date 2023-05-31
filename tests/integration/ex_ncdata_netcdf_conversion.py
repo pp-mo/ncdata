@@ -5,20 +5,17 @@ Showing loading and saving ncdata to/from netcdf files.
 """
 from pathlib import Path
 
-import iris.tests as itsts
 import netCDF4 as nc
 import numpy as np
 
 from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 from ncdata.netcdf4 import from_nc4, to_nc4
 from tests.unit.netcdf._compare_nc_files import compare_nc_files
-
+from tests import testdata_dir
 
 def example_nc4_load_save_roundtrip():  # noqa: D103
     # Load an existing file, save-netcdf4 : check same (with Iris for now)
-    filepath = itsts.get_data_path(
-        ["NetCDF", "stereographic", "toa_brightness_temperature.nc"]
-    )
+    filepath = testdata_dir / "toa_brightness_temperature.nc"
     ncdata = from_nc4(filepath)
     filepath2 = Path("./temp_nc_output.nc").absolute()
     to_nc4(ncdata, filepath2)

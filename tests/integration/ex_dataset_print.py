@@ -1,16 +1,16 @@
 """Temporary integrational proof-of-concept example for dataset printout."""
+from pathlib import Path
+
 import iris
-import iris.tests as itsts
 
 import ncdata.iris as nci
 from ncdata import NcAttribute, NcData, NcDimension, NcVariable
+from tests import testdata_dir
 
 
 def sample_printout():  # noqa: D103
     iris.FUTURE.datum_support = True
-    filepath = itsts.get_data_path(
-        ["NetCDF", "stereographic", "toa_brightness_temperature.nc"]
-    )
+    filepath = testdata_dir / 'toa_brightness_temperature.nc'
     cubes = iris.load(filepath)
 
     ds = nci.from_iris(cubes)
