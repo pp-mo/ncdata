@@ -32,7 +32,7 @@ jobs:
 
       - name: "Install dependencies"
         run: |
-          conda install --yes pytest netCDF4 dask filelock xarray
+          conda install --yes numpy pytest netCDF4 dask filelock xarray cartopy cf-units cftime dask-core matplotlib python-xxhash pyproj scipy shapely 
 
       - name: "Install Iris"
         run: |
