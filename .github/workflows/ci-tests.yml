@@ -32,7 +32,14 @@ jobs:
 
       - name: "Install dependencies"
         run: |
-          conda install --yes pytest netCDF4 dask iris filelock
+          conda install --yes pytest netCDF4 dask filelock xarray
+
+      - name: "Install Iris"
+        run: |
+          git clone https://github.com/SciTools/iris.git ./iris
+          cd iris
+          pip install -e .
+          cd ..
 
       - name: "Install repo-under-test"
         run: |
