@@ -33,29 +33,29 @@ class Test_NcDimension__init__:
         # assert sample.isunlimited() == sample.unlimited
 
 
-# class Test_NcDimension__isunlimited:
-#     def test_isunlimited__is__implicit(self):
-#         sample = NcDimension("this", 0)
-#         assert sample.isunlimited()
-#
-#     def test_isunlimited__is__explicit(self):
-#         sample = NcDimension("this", 2, unlimited=True)
-#         assert sample.isunlimited()
-#
-#     def test_isunlimited__isnt(self):
-#         sample = NcDimension("this", 2)
-#         assert not sample.isunlimited()
-#
-#     def test_isunlimited__equivalent_unlimited(self):
-#         # cheat: monkeypatch 'bool' in constructor to create distinct objects.
-#         with mock.patch('ncdata._core.bool', mock.Mock):
-#             sample = NcDimension("this", 2)
-#         assert (
-#            isinstance(sample.unlimited, mock.Mock)
-#            and not isinstance(sample.unlimited, bool)
-#         )
-#         # The isunlimited() call returns EXACTLY the unlimited
-#         assert sample.isunlimited() is sample.unlimited
+class Test_NcDimension__isunlimited:
+    def test_isunlimited__is__implicit(self):
+        sample = NcDimension("this", 0)
+        assert sample.isunlimited()
+
+    def test_isunlimited__is__explicit(self):
+        sample = NcDimension("this", 2, unlimited=True)
+        assert sample.isunlimited()
+
+    def test_isunlimited__isnt(self):
+        sample = NcDimension("this", 2)
+        assert not sample.isunlimited()
+
+    def test_isunlimited__equivalent_unlimited(self):
+        # cheat: monkeypatch 'bool' in constructor to create distinct objects.
+        with mock.patch('ncdata._core.bool', mock.Mock):
+            sample = NcDimension("this", 2)
+        assert (
+           isinstance(sample.unlimited, mock.Mock)
+           and not isinstance(sample.unlimited, bool)
+        )
+        # The isunlimited() call returns EXACTLY the unlimited
+        assert sample.isunlimited() is sample.unlimited
 
 
 class Test_NcDimension__str:
