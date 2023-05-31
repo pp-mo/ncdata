@@ -4,19 +4,16 @@ A proof-of-concept example workflow for :func:`ncdata.iris.from_iris`.
 Check that conversion succeeds and print the resulting dataset.
 """
 import iris
-import iris.tests as itsts
 
 from ncdata.iris import from_iris
-
+from tests import testdata_dir
 
 def example_ncdata_from_iris():
     print("")
     print("==============")
     print("TEMPORARY: iris save-to-ncdata test")
     iris.FUTURE.datum_support = True
-    filepath = itsts.get_data_path(
-        ["NetCDF", "stereographic", "toa_brightness_temperature.nc"]
-    )
+    filepath = testdata_dir / "toa_brightness_temperature.nc"
     cubes = iris.load(filepath)
     ds = from_iris(cubes)
     # save to file
