@@ -1,7 +1,11 @@
 """
-Utility for comparing 2 netcdf files.
+Utility for comparing 2 netcdf datasets.
+
+Works with file-specs, netCDF4.Datasets *or* NcData.
 
 For purposes of testing ncdata.netcdf4 behaviour.
+TODO: one day might be public ?
+TODO: can make netCDF4/NcData api switch more granular ??
 """
 
 from pathlib import Path
@@ -12,10 +16,12 @@ import netCDF4
 import netCDF4 as nc
 import numpy as np
 
+from ncdata import NcData
 
-def compare_nc_files(
-    dataset_or_path_1: Union[Path, AnyStr, nc.Dataset],
-    dataset_or_path_2: Union[Path, AnyStr, nc.Dataset],
+
+def compare_nc_datasets(
+    dataset_or_path_1: Union[Path, AnyStr, nc.Dataset, NcData],
+    dataset_or_path_2: Union[Path, AnyStr, nc.Dataset, NcData],
     check_dims_order: bool = True,
     check_vars_order: bool = True,
     check_attrs_order: bool = True,
@@ -24,24 +30,33 @@ def compare_nc_files(
     suppress_warnings: bool = False,
 ) -> List[str]:
     r"""
-    Compare 2 netcdf files, given as paths or open :class:`netCDF4.Dataset`\\s.
+    Compare netcdf data.
+
+    Accepts paths, pathstrings, open :class:`netCDF4.Dataset`\\s or :class:`NcData` objects.
 
     Parameters
     ----------
-    dataset_or_path_1, dataset_or_path_2 : str or Path or :class:`netCDF4.Dataset`
-        two files to compare
+    dataset_or_path_1, dataset_or_path_2 : str or Path or netCDF4.Dataset or NcData
+        two datasets to compare
     check_dims_order, check_vars_order, check_attrs_order, check_groups_order : bool, default True
         If False, no error results from the same contents in a different order,
-        however unless `suppress_warnings` the error string is issued as a warning.
-    check_var_data
+        however unless `suppress_warnings` is True, the error string is issued as a warning.
+    check_var_data : bool, default True
         If True, all variable data is also checked for equality.
         If False, only dtype and shape are compared.
+    suppress_warnings : bool, default False
+        When False (the default), report changes in content order as Warnings.
+        When True, ignore changes in ordering.
 
     Returns
     -------
     errs : list of str
         a list of error strings.
         If empty, no differences were found.
+
+    .. Note::
+        Though paths are replaced with netCDF4 dataset, if either input is a
+        :class:`NcData` they must both be.
 
     """
     ds1_was_path = not hasattr(dataset_or_path_1, "variables")
@@ -83,7 +98,7 @@ def compare_nc_files(
 def _compare_name_lists(
     errslist, l1, l2, elemname, order_strict=True, suppress_warnings=False
 ):
-    msg = f"{elemname} do not match: {l1} != {l2}"
+    msg = f"{elemname} do not match: {list(l1)} != {list(l2)}"
     ok = l1 == l2
     ok_except_order = ok
     if not ok:
@@ -96,15 +111,28 @@ def _compare_name_lists(
             warn("(Ignoring: " + msg + " )", category=UserWarning)
 
 
+def _isncdata(obj):
+    return hasattr(obj, "_print_content")
+
+
 def _compare_attributes(
-    errs, obj1, obj2, elemname, attrs_order=True, suppress_warnings=False
+    errs,
+    obj1,
+    obj2,
+    elemname,
+    attrs_order=True,
+    suppress_warnings=False,
 ):
     """
     Compare attribute name lists.
 
     Does not return results, but appends error messages to 'errs'.
     """
-    attrnames, attrnames2 = [obj.ncattrs() for obj in (obj1, obj2)]
+    attrnames, attrnames2 = [
+        obj.attributes.keys() if _isncdata(obj) else obj.ncattrs()
+        for obj in (obj1, obj2)
+    ]
+
     _compare_name_lists(
         errs,
         attrnames,
@@ -117,28 +145,41 @@ def _compare_attributes(
     # Compare the attributes themselves (dtypes and values)
     for attrname in attrnames:
         if attrname not in attrnames2:
+            # Only compare attributes exisiting on both inputs.
             continue
-        attr, attr2 = [obj.getncattr(attrname) for obj in (obj1, obj2)]
+
+        attr, attr2 = [
+            (
+                obj.attributes[attrname].value
+                if _isncdata(obj)
+                else obj.getncattr(attrname)
+            )
+            for obj in (obj1, obj2)
+        ]
+
         dtype, dtype2 = [
             # Get x.dtype, or fallback on type(x) -- basically, for strings.
             getattr(attr, "dtype", type(attr))
             for attr in (attr, attr2)
         ]
-        # Cast attrs, which might be strings, to arrays for comparison
-        arr, arr2 = [np.asarray(attr) for attr in (attr, attr2)]
-        if arr.shape != arr2.shape or not np.all(arr == arr2):
-            msg = (
-                f'{elemname} "{attrname}" attribute values differ : '
-                f"{attr!r} != {attr2!r}"
-            )
-            errs.append(msg)
-        elif dtype != dtype2:
+
+        if dtype != dtype2:
             # If values match (only then), compare datatypes
             msg = (
                 f'{elemname} "{attrname}" attribute datatypes differ : '
                 f"{dtype!r} != {dtype2!r}"
             )
             errs.append(msg)
+
+        else:
+            # Cast attrs, which might be strings, to arrays for comparison
+            arr, arr2 = [np.asarray(attr) for attr in (attr, attr2)]
+            if arr.shape != arr2.shape or not np.all(arr == arr2):
+                msg = (
+                    f'{elemname} "{attrname}" attribute values differ : '
+                    f"{attr!r} != {attr2!r}"
+                )
+                errs.append(msg)
 
 
 def _compare_nc_groups(
@@ -227,16 +268,22 @@ def _compare_nc_groups(
             suppress_warnings=suppress_warnings,
         )
 
-        # dtypes
-        dtype, dtype2 = [v.datatype for v in (v1, v2)]
+        dtype, dtype2 = [
+            v.dtype if _isncdata(v) else v.datatype for v in (v1, v2)
+        ]
+
         if dtype != dtype2:
             msg = f"{var_id_string} datatypes differ : {dtype!r} != {dtype2!r}"
             errs.append(msg)
 
         # data values
         if data_equality:
-            data, data2 = [v[:] for v in (v1, v2)]
-            # Since netCDF4 > 1.4, should always be masked arrays.
+            # NOTE: no attempt to use laziness here.  Could be improved.
+            data, data2 = [
+                v.data.compute() if _isncdata(v) else v[:] for v in (v1, v2)
+            ]
+
+            # Since netCDF4 > 1.4, data should always be masked arrays.
             mask, mask2 = (array.mask for array in (data, data2))
             n_diffs = np.count_nonzero(mask != mask2)
             bothvalid = ~mask & ~mask2
@@ -291,7 +338,7 @@ if __name__ == "__main__":
         [fp4, fp5],
     ]
     for p1, p2 in pairs:
-        errs = compare_nc_files(p1, p2, check_attrs_order=False)
+        errs = compare_nc_datasets(p1, p2, check_attrs_order=False)
         print("")
         print(f"Compare {p1} with {p2} : {len(errs)} errors ")
         for err in errs:

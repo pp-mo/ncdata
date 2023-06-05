@@ -14,13 +14,14 @@ from unittest import mock
 import netCDF4 as nc
 import numpy as np
 import pytest
-from test_samplecode_cdlgen_comparablecdl import ncgen_from_cdl
 
-from tests.unit.netcdf._compare_nc_files import (
+import ncdata.netcdf4
+from tests._compare_nc_datasets import (
     _compare_attributes,
     _compare_name_lists,
-    compare_nc_files,
+    compare_nc_datasets,
 )
+from tests.test_samplecode_cdlgen_comparablecdl import ncgen_from_cdl
 
 # CDL to create a reference file with "all" features included.
 _base_cdl = """
@@ -74,23 +75,6 @@ variables:
 	int x(x) ;
 }
 """
-
-
-@pytest.fixture(autouse=True, scope="module")
-def temp_ncfiles_dir(tmp_path_factory):
-    tmp_dirpath = tmp_path_factory.mktemp("samencfiles")
-    return tmp_dirpath
-
-
-@pytest.fixture
-def samefiles(temp_ncfiles_dir):
-    file1_nc = temp_ncfiles_dir / "tmp1.nc"
-    file1_cdl = temp_ncfiles_dir / "tmp1.cdl"
-    file2_nc = temp_ncfiles_dir / "tmp2.nc"
-    file2_cdl = temp_ncfiles_dir / "tmp2.cdl"
-    ncgen_from_cdl(cdl_str=_simple_cdl, nc_path=file1_nc, cdl_path=file1_cdl)
-    ncgen_from_cdl(cdl_str=_simple_cdl, nc_path=file2_nc, cdl_path=file2_cdl)
-    return file1_nc, file2_nc
 
 
 class Test__compare_name_lists:
@@ -154,13 +138,19 @@ class Test__compare_attributes:
         # Mimic 2 objects with NO attributes.
         attrs1 = mock.MagicMock()
         attrs2 = mock.MagicMock()
-        obj1 = mock.Mock(ncattrs=mock.Mock(return_value=attrs1))
-        obj2 = mock.Mock(ncattrs=mock.Mock(return_value=attrs2))
+        # Make the test objects look like real files (not NcData), and ensure that
+        # obj.ncattrs() is iterable.
+        obj1 = mock.Mock(
+            spec="ncattrs", ncattrs=mock.Mock(return_value=attrs1)
+        )
+        obj2 = mock.Mock(
+            spec="ncattrs", ncattrs=mock.Mock(return_value=attrs2)
+        )
         errs = mock.sentinel.errors_list
         elemname = "<elem_types>"
         order = mock.sentinel.attrs_order
         suppress = mock.sentinel.suppress_warnings
-        tgt = "tests.unit.netcdf._compare_nc_files._compare_name_lists"
+        tgt = "tests._compare_nc_datasets._compare_name_lists"
         with mock.patch(tgt) as patch_tgt:
             _compare_attributes(
                 errs=errs,
@@ -251,7 +241,8 @@ class Test__compare_attributes:
         errs = []
         _compare_attributes(errs, obj1, obj2, "<object attributes>")
         assert errs == [
-            '<object attributes> "a" attribute values differ : 0.0 != 1.0'
+            '<object attributes> "a" attribute datatypes differ : '
+            "dtype('float32') != dtype('float64')"
         ]
 
     def test_compare_attributes_values__string_nonstring(self):
@@ -261,7 +252,8 @@ class Test__compare_attributes:
         errs = []
         _compare_attributes(errs, obj1, obj2, "<object attributes>")
         assert errs == [
-            "<object attributes> \"a\" attribute values differ : 1 != '1'"
+            '<object attributes> "a" attribute datatypes differ : '
+            "dtype('int64') != <class 'str'>"
         ]
 
     def test_compare_attributes_values__string_match(self):
@@ -302,51 +294,100 @@ class Test__compare_attributes:
         ]
 
 
+@pytest.fixture(autouse=True, scope="module")
+def temp_ncfiles_dir(tmp_path_factory):
+    tmp_dirpath = tmp_path_factory.mktemp("samencfiles")
+    return tmp_dirpath
+
+
+@pytest.fixture
+def samefiles(temp_ncfiles_dir):
+    file1_nc = temp_ncfiles_dir / "tmp1.nc"
+    file1_cdl = temp_ncfiles_dir / "tmp1.cdl"
+    file2_nc = temp_ncfiles_dir / "tmp2.nc"
+    file2_cdl = temp_ncfiles_dir / "tmp2.cdl"
+    ncgen_from_cdl(cdl_str=_simple_cdl, nc_path=file1_nc, cdl_path=file1_cdl)
+    ncgen_from_cdl(cdl_str=_simple_cdl, nc_path=file2_nc, cdl_path=file2_cdl)
+    return file1_nc, file2_nc
+
+
+@pytest.fixture(params=["InputsFile", "InputsNcdata"])
+def sourcetype(request):
+    return request.param
+
+
+@pytest.fixture
+def samefiles_bothtypes(samefiles, sourcetype):
+    source1, source2 = samefiles
+    if sourcetype == "InputsNcdata":
+        from ncdata.netcdf4 import from_nc4
+
+        source1, source2 = [from_nc4(src) for src in (source1, source2)]
+    return source1, source2
+
+
 class Test_compare_nc_files__api:
-    def test_identical_paths(self, samefiles):
-        path1, path2 = samefiles
-        result = compare_nc_files(path1, path2)
+    def test_identical(self, samefiles_bothtypes):
+        source1, source2 = samefiles_bothtypes
+        result = compare_nc_datasets(source1, source2)
         assert result == []
 
     def test_identical_stringpaths(self, samefiles):
-        path1, path2 = samefiles
-        result = compare_nc_files(str(path1), str(path2))
+        source1, source2 = samefiles
+        result = compare_nc_datasets(str(source1), str(source2))
         assert result == []
 
-    def test_identical_datasets(self, samefiles):
-        path1, path2 = samefiles
+    def test_identical_datasets(self, samefiles, sourcetype):
+        source1, source2 = samefiles
         ds1, ds2 = None, None
         try:
-            ds1 = nc.Dataset(path1)
-            ds2 = nc.Dataset(path2)
-            result = compare_nc_files(ds1, ds2)
+            ds1 = nc.Dataset(source1)
+            ds2 = nc.Dataset(source2)
+            result = compare_nc_datasets(ds1, ds2)
             assert result == []
         finally:
             for ds in (ds1, ds2):
                 if ds:
                     ds.close()
 
-    def test_small_difference(self, samefiles, temp_ncfiles_dir):
-        path1, _ = samefiles
-        path2 = temp_ncfiles_dir / "smalldiff.nc"
-        shutil.copy(path1, path2)
-        ds = nc.Dataset(path2, "r+")
-        ds.extra_global_attr = 1
-        ds.close()
-        result = compare_nc_files(path1, path2)
+    def test_small_difference(
+        self, samefiles_bothtypes, temp_ncfiles_dir, sourcetype
+    ):
+        source1, source2 = samefiles_bothtypes
+
+        if sourcetype == "InputsFile":
+            # Replace source2 with a modified, renamed file.
+            source2 = temp_ncfiles_dir / "smalldiff.nc"
+            shutil.copy(source1, source2)
+            ds = nc.Dataset(source2, "r+")
+            ds.extra_global_attr = 1
+            ds.close()
+        else:
+            # Source1/2 are NcData : just modify source2
+            source2.attributes["extra_global_attr"] = 1
+
+        result = compare_nc_datasets(source1, source2)
         assert result == [
             "Dataset attribute lists do not match: [] != ['extra_global_attr']"
         ]
 
-    def test_vardata_difference(self, samefiles, temp_ncfiles_dir):
+    def test_vardata_difference(
+        self, samefiles_bothtypes, temp_ncfiles_dir, sourcetype
+    ):
         # Temporary test just to cover problem encountered with masked data differences.
-        path1, _ = samefiles
-        path2 = temp_ncfiles_dir / "vardiff.nc"
-        shutil.copy(path1, path2)
-        ds = nc.Dataset(path2, "r+")
-        ds.variables["x"][-1] = 1.23
-        ds.close()
-        result = compare_nc_files(path1, path2)
+        source1, source2 = samefiles_bothtypes
+        if sourcetype == "InputsFile":
+            # Replace source2 with a modified, renamed file.
+            source2 = temp_ncfiles_dir / "vardiff.nc"
+            shutil.copy(source1, source2)
+            ds = nc.Dataset(source2, "r+")
+            ds.variables["x"][-1] = 1.23
+            ds.close()
+        else:
+            # Source1/2 are NcData : just modify source2
+            source2.variables["x"].data[-1] = 1.23
+
+        result = compare_nc_datasets(source1, source2)
         assert result == [
             'Dataset variable "x" data contents differ, at 1 points.'
         ]
