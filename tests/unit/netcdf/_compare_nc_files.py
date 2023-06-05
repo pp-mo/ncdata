@@ -236,11 +236,17 @@ def _compare_nc_groups(
         # data values
         if data_equality:
             data, data2 = [v[:] for v in (v1, v2)]
-            n_diffs = np.count_nonzero(data != data2)
-            if n_diffs:
-                msg = (
-                    f"{var_id_string} data values differ, at {n_diffs} points."
+            # Since netCDF4 > 1.4, should always be masked arrays.
+            mask, mask2 = (array.mask for array in (data, data2))
+            n_diffs = np.count_nonzero(mask != mask2)
+            bothvalid = ~mask & ~mask2
+            if np.any(bothvalid):
+                n_diffs += np.count_nonzero(
+                    data[bothvalid] != data2[bothvalid]
                 )
+            if n_diffs:
+                msg = f"{var_id_string} data contents differ, at {n_diffs} points."
+                errs.append(msg)
 
     # Finally, recurse over groups
     grpnames, grpnames2 = [list(grp.groups.keys()) for grp in (g1, g2)]

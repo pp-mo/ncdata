@@ -326,9 +326,9 @@ class Test_compare_nc_files__api:
                 if ds:
                     ds.close()
 
-    def test_smalldiff(self, samefiles, temp_ncfiles_dir):
+    def test_small_difference(self, samefiles, temp_ncfiles_dir):
         path1, _ = samefiles
-        path2 = path1.parent / "smalldiff.nc"
+        path2 = temp_ncfiles_dir / "smalldiff.nc"
         shutil.copy(path1, path2)
         ds = nc.Dataset(path2, "r+")
         ds.extra_global_attr = 1
@@ -336,4 +336,17 @@ class Test_compare_nc_files__api:
         result = compare_nc_files(path1, path2)
         assert result == [
             "Dataset attribute lists do not match: [] != ['extra_global_attr']"
+        ]
+
+    def test_vardata_difference(self, samefiles, temp_ncfiles_dir):
+        # Temporary test just to cover problem encountered with masked data differences.
+        path1, _ = samefiles
+        path2 = temp_ncfiles_dir / "vardiff.nc"
+        shutil.copy(path1, path2)
+        ds = nc.Dataset(path2, "r+")
+        ds.variables["x"][-1] = 1.23
+        ds.close()
+        result = compare_nc_files(path1, path2)
+        assert result == [
+            'Dataset variable "x" data contents differ, at 1 points.'
         ]
