@@ -12,13 +12,13 @@ import numpy as np
 
 from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 from ncdata.netcdf4 import from_nc4, to_nc4
-from tests.unit.netcdf._compare_nc_files import compare_nc_files
 from tests import testdata_dir
+from tests._compare_nc_datasets import compare_nc_datasets
 
 
 def example_nc4_load_save_roundtrip():  # noqa: D103
     # Load an existing file, save-netcdf4 : check same (with Iris for now)
-    print('\n----\nNetcdf4 load-save example.')
+    print("\n----\nNetcdf4 load-save example.")
 
     filepath = testdata_dir / "toa_brightness_temperature.nc"
     ncdata = from_nc4(filepath)
@@ -28,30 +28,20 @@ def example_nc4_load_save_roundtrip():  # noqa: D103
         filepath2 = tempdir_path / "temp_nc_output.nc"
         to_nc4(ncdata, filepath2)
 
-        # Convert to Iris + compare (a bit of a cheat, bit OK for now?)
-        import iris
-
-        cube1 = iris.load_cube(filepath)
-        cube2 = iris.load_cube(filepath2)
-        print("Round-tripped result, as iris cube:")
-        print(cube2)
-        print("\nold-file-cube == new-file-cube ? ", cube1 == cube2)
-        assert cube1 == cube2
-
-        equals_result = compare_nc_files(filepath, filepath2) == []
+        result = compare_nc_datasets(filepath, filepath2)
+        equals_result = result == []
         print("\nFiles compare? :", equals_result)
         assert equals_result
 
     finally:
         rmtree(tempdir_path)
 
-    print('\n== Netcdf4 load-save roundtrip finished OK.\n')
-
+    print("\n== Netcdf4 load-save roundtrip finished OK.\n")
 
 
 def example_nc4_save_reload_unlimited_roundtrip():
     # Create arbitrary ncdata, save to netcdf4, re-load and check.
-    print('\n----\nNetcdf4 save-load example.')
+    print("\n----\nNetcdf4 save-load example.")
 
     ncdata = NcData()
     len_x, len_y = 4, 2
@@ -114,8 +104,7 @@ def example_nc4_save_reload_unlimited_roundtrip():
     finally:
         rmtree(tempdir_path)
 
-    print('\n== Netcdf4 save-load roundtrip finished OK.\n')
-
+    print("\n== Netcdf4 save-load roundtrip finished OK.\n")
 
 
 if __name__ == "__main__":
