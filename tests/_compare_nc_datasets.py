@@ -5,7 +5,6 @@ Works with file-specs, netCDF4.Datasets *or* NcData.
 
 For purposes of testing ncdata.netcdf4 behaviour.
 TODO: one day might be public ?
-TODO: can make netCDF4/NcData api switch more granular ??
 """
 
 from pathlib import Path
@@ -53,10 +52,6 @@ def compare_nc_datasets(
     errs : list of str
         a list of error strings.
         If empty, no differences were found.
-
-    .. Note::
-        Though paths are replaced with netCDF4 dataset, if either input is a
-        :class:`NcData` they must both be.
 
     """
     ds1_was_path = not hasattr(dataset_or_path_1, "variables")
@@ -145,7 +140,7 @@ def _compare_attributes(
     # Compare the attributes themselves (dtypes and values)
     for attrname in attrnames:
         if attrname not in attrnames2:
-            # Only compare attributes exisiting on both inputs.
+            # Only compare attributes existing on both inputs.
             continue
 
         attr, attr2 = [
