@@ -295,7 +295,7 @@ class NcAttribute:
 
         # Convert numpy non-string scalars to simple Python values, in string output.
         if getattr(value, "shape", None) in ((0,), (1,), ()):
-            op = {"i": int, "f": float}[value.dtype.kind]
+            op = {"i": int, "u": int, "f": float}[value.dtype.kind]
             value = op(value.flatten()[0])
 
         return repr(value)

@@ -229,18 +229,22 @@ _simple_test_spec = {
     "dims": [dict(name="x", size=3), dict(name="y", size=2)],
     "attrs": {"ga1": 2.3, "gas2": "this"},
     "vars": [dict(name="vx", dims=["x"], dtype=np.int32)],
-    # 'groups': [
-    #     {
-    #         'name': 'g_inner',
-    #         'dims': [dict(name='dim_i1', size=4)],
-    #         'vars': [dict(name='vix1', dims=['dim_i1', 'y'],
-    #                       dtype='u1', missing_inds=[2, 5],
-    #                       attrs={'_FillValue': 100}
-    #                       )
-    #                  ],
-    #         'attrs': {'ia1': 777}
-    #     }
-    # ]
+    "groups": [
+        {
+            "name": "g_inner",
+            "dims": [dict(name="dim_i1", size=4)],
+            "vars": [
+                dict(
+                    name="vix1",
+                    dims=["dim_i1", "y"],
+                    dtype="u1",
+                    missing_inds=[2, 5],
+                    attrs={"_FillValue": 100},
+                )
+            ],
+            "attrs": {"ia1": 777},
+        }
+    ],
 }
 
 
