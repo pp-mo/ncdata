@@ -22,8 +22,7 @@ _Forbidden_Variable_Kwargs = ["data", "dimensions", "datatype", "_FillValue"]
 def _to_nc4_group(
     ncdata: NcData,
     nc4object: Union[nc.Dataset, nc.Group],
-    var_kwargs: Dict[str, Any],
-    in_group_namepath: str,
+    var_kwargs: Optional[Dict[NcVariable, Any]] = None,
 ) -> None:
     """
     Inner routine supporting ``to_nc4``, and recursive calls for sub-groups.
@@ -32,6 +31,9 @@ def _to_nc4_group(
     **Except that** : this routine operates only on a dataset/group, does not accept a
     filepath string or Path.
     """
+    if var_kwargs is None:
+        var_kwargs = {}
+
     for dimname, dim in ncdata.dimensions.items():
         size = 0 if dim.unlimited else dim.size
         nc4object.createDimension(dimname, size)
@@ -43,10 +45,19 @@ def _to_nc4_group(
         else:
             fill_value = None
 
-        kwargs = var_kwargs.get(varname, {})
-        if any(kwarg in _Forbidden_Variable_Kwargs for kwarg in kwargs):
-            msg = "additional kwargs for variable "
+        kwargs = var_kwargs.get(var, {})
+        forbidden_keys = [
+            kwarg in _Forbidden_Variable_Kwargs for kwarg in kwargs
+        ]
+        if forbidden_keys:
+            msg = (
+                f"additional `var_kwargs` for variable {var} included key(s) "
+                f"{forbidden_keys}, which are disallowed since they are amongst those "
+                "controlled by the ncdata.netcdf interface itself : "
+                f"{_Forbidden_Variable_Kwargs!r}."
+            )
             raise ValueError(msg)
+
         nc4var = nc4object.createVariable(
             varname=varname,
             datatype=var.dtype,
@@ -74,7 +85,6 @@ def _to_nc4_group(
             ncdata=group,
             nc4object=nc4group,
             var_kwargs=var_kwargs.get(groupname, {}),
-            in_group_namepath=f"{in_group_namepath}/{groupname}",
         )
 
 
@@ -179,9 +189,7 @@ def to_nc4(
         nc4ds = nc.Dataset(nc4_dataset_or_file, "w")
 
     try:
-        _to_nc4_group(
-            ncdata, nc4ds, var_kwargs=var_kwargs or {}, in_group_namepath=""
-        )
+        _to_nc4_group(ncdata, nc4ds, var_kwargs=var_kwargs)
     finally:
         if not caller_owns_dataset:
             nc4ds.close()
@@ -223,7 +231,7 @@ def _from_nc4_group(
         # code shamelessly stolen from iris.fileformats.netcdf
 
         # Work out the shape of the variable.
-        # This can refer to dimensions in enclosing groups.
+        # It may refer to dimensions in enclosing groups.
         group = parent_ds
         dims_map = group.dimensions.copy()
         for group_name in group_names_path:

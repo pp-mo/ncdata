@@ -301,7 +301,7 @@ def temp_ncfiles_dir(tmp_path_factory):
 
 
 @pytest.fixture
-def samefiles(temp_ncfiles_dir):
+def samefiles_filesonly(temp_ncfiles_dir):
     file1_nc = temp_ncfiles_dir / "tmp1.nc"
     file1_cdl = temp_ncfiles_dir / "tmp1.cdl"
     file2_nc = temp_ncfiles_dir / "tmp2.nc"
@@ -317,8 +317,8 @@ def sourcetype(request):
 
 
 @pytest.fixture
-def samefiles_bothtypes(samefiles, sourcetype):
-    source1, source2 = samefiles
+def samefiles_bothtypes(samefiles_filesonly, sourcetype):
+    source1, source2 = samefiles_filesonly
     if sourcetype == "InputsNcdata":
         from ncdata.netcdf4 import from_nc4
 
@@ -332,13 +332,13 @@ class Test_compare_nc_files__api:
         result = compare_nc_datasets(source1, source2)
         assert result == []
 
-    def test_identical_stringpaths(self, samefiles):
-        source1, source2 = samefiles
+    def test_identical_stringpaths(self, samefiles_filesonly):
+        source1, source2 = samefiles_filesonly
         result = compare_nc_datasets(str(source1), str(source2))
         assert result == []
 
-    def test_identical_datasets(self, samefiles, sourcetype):
-        source1, source2 = samefiles
+    def test_identical_datasets(self, samefiles_filesonly, sourcetype):
+        source1, source2 = samefiles_filesonly
         ds1, ds2 = None, None
         try:
             ds1 = nc.Dataset(source1)
