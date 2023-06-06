@@ -1,9 +1,94 @@
 """
 An iteration that produces a sequence of possible file specifications.
 """
+from dataclasses import dataclass
+from pathlib import Path
+import re
+from typing import Iterable, Union, Tuple
+
 import netCDF4
 import netCDF4 as nc
 import numpy as np
+import pytest
+
+
+"""
+NOTES:
+
+Name coding for dataset sample params + their associated test-files
+
+ds_Empty
+
+ds_AttrF1Multi
+ds_AttrI2Single
+
+ds_VarNodims  (special-case)
+ds_VarAttr
+ds_VarType * types
+
+var
+  types * miss(Nomiss,Nmiss) * fill(user,default,userdefault)
+
+ds_VarNodims
+ds_Var1D * Fixed/Unlim
+ds_Var2d * (Unlime0 / Unlim1 / Unlim2)
+
+ds_GroupEmpty
+ds_GroupAttr
+# check that this is possible ??
+ds_GroupDimonly * Unlim0/Unlim1/Unlim2
+
+# original non-group check for unlim dims
+# test for different dims including single+multiplle unlimited dims
+# need to control dims to suit the vars under test
+ds_VarDims0
+ds_VarDims1Unlim0
+ds_VarDims1Unlim1
+ds_VarDims2Unlim0
+ds_VarDims2Unlim1
+ds_VarDims2Unlim2
+
+# beyond 'VarDims', also need to check for fill behaviour
+# treat this as a separate set of tests ?
+ds_Var(type)(missing0/MissingN)(Filldefault/Filluser/Filluserdefault)
+    (Defaultfill/Userfill/Userdefaultfill)
+E.G. ds_Var:typeString:missingN:fillUserdefault
+E.G. ds_Var:typeF4:missing0:fillUser
+  - these are all 1D vars, of some greater size.
+  - the given values and 'user' fill-values are taken from dicts
+
+# group-vars and dims testing
+# need to control parentvars, groupvars, parentdims, groupdims
+ds_GroupvarDims0
+ds_GroupvarDims1Local1Fixed1
+ds_GroupvarDims1Local1Unlim1
+ds_GroupvarDims1Parent1Fixed1
+ds_GroupvarDims1Parent1Unlim1
+ds_GroupvarDims2Local2Fixed2
+ds_GroupvarDims2Local2Fixed1Unlim1
+ds_GroupvarDims2Local1Fixed1Parent1Fixed1
+ds_GroupvarDims2Local1Unlim1Parent1Fixed1
+ds_GroupvarDims2Local1Fixed1Parent1Unlim1
+ds_GroupvarDims2Local1Unlim1Parent1Unlim1
+ds_GroupvarDims2Parent2Fixed2
+ds_GroupvarDims2Parent2Fixed1Unlim1
+ds_GroupvarDims2Parent2Unlim2
+
+# rethink with above style..
+ds_Groupvar:Dims2:Local2:(Fixed/Unlim/Fixed1Unlim1)
+ds_Groupvar:Dims2:Local1:Fixed:Parent1:Unlim
+ds_Groupvar:Dims2:Parent2:Unlim
+
+
+ds_Groupvar:Dims2:Local1:Fixed:Parent1:Unlim
+==> controls ...
+  parent-dims: [('dim1', 3, True)]
+  group-dims: [('gdim1', 4)]
+  group-vars: ['gv1', ('dim1', 'gdim1')]
+
+
+
+"""
 
 
 def data_types():
@@ -14,6 +99,7 @@ def data_types():
     Not yet supporting variable or user-defined (structured) types.
 
     Results are strings for all valid numeric dtypes, plus 'string'.
+    The strings are our choice, chosen to suit inclusion in pytest parameter naming.
     """
     # unsigned int types
     for n in (1, 2, 4, 8):
@@ -104,7 +190,6 @@ def _write_nc4_dataset(
     spec: dict,
     ds: netCDF4.Dataset,  # or an inner Group
     parent_spec: dict = None,
-    in_group_path: str = "",
 ):
     """
     Inner routine for ``make_testcase_dataset``.
@@ -123,7 +208,7 @@ def _write_nc4_dataset(
     var_specs = objmap(spec.get("vars", []))
     group_specs = objmap(spec.get("groups", []))
     # .. but attr specs are a simple dict
-    attr_specs = spec.get("attrs", [])
+    attr_specs = spec.get("attrs", {})
 
     # Assign actual file attrs (group or global)
     for name, value in attr_specs.items():
@@ -187,7 +272,6 @@ def _write_nc4_dataset(
             spec=group_spec,
             ds=nc_group,
             parent_spec=parent_spec,
-            in_group_path=f"{in_group_path}/{group_name}",
         )
 
 
@@ -223,6 +307,10 @@ def make_testcase_dataset(filepath, spec):
     finally:
         ds.close()
 
+_minimal_variable_test_spec = {
+    "vars": [dict(name='var_0', dims=[], dtype=int)]
+}
+
 
 _simple_test_spec = {
     "name": "",
@@ -257,84 +345,40 @@ def check_create_simple_data():
     ss("ncdump tmp.nc")
 
 
+# Define a sequence of standard testfile specs, with suitable param-names.
+_Standard_Testcases = {
+    'ds_Empty': {},
+    'ds_Minimal': _minimal_variable_test_spec,
+    'ds_Basic': _simple_test_spec,
+}
+
+@pytest.fixture(scope='session')
+def session_testdir(tmp_path_factory):
+    tmp_dir = tmp_path_factory.mktemp('standard_schema_testfiles')
+    return tmp_dir
+
+
+@dataclass
+class Schema:
+    name: str = ''
+    spec: dict = None
+    filepath: Path = None
+
+
+@pytest.fixture(params=list(_Standard_Testcases.keys()), scope='session')
+def standard_testcase(request, session_testdir):
+    """
+    A fixture which iterates over the standard testcases.
+
+    For each one, build the testfile and return a Schema tuple (name, spec, filepath).
+    """
+    name = request.param
+    spec = _Standard_Testcases[name]
+    filepath = session_testdir/ f"sampledata_{name}.nc"
+    make_testcase_dataset(filepath, spec)
+    return Schema(name=name, spec=spec, filepath=filepath)
+
+
 if __name__ == "__main__":
     # test create
     check_create_simple_data()
-
-"""
-NOTES:
-
-Name coding for dataset sample params + their associated test-files
-
-ds_Empty
-
-ds_AttrF1Multi
-ds_AttrI2Single
-
-ds_VarNodims  (special-case)
-ds_VarAttr
-ds_VarType * types
-
-var
-  types * miss(Nomiss,Nmiss) * fill(user,default,userdefault)
-
-ds_VarNodims
-ds_Var1D * Fixed/Unlim
-ds_Var2d * (Unlime0 / Unlim1 / Unlim2)
-
-ds_GroupEmpty
-ds_GroupAttr
-# check that this is possible ??
-ds_GroupDimonly * Unlim0/Unlim1/Unlim2
-
-# original non-group check for unlim dims
-# test for different dims including single+multiplle unlimited dims
-# need to control dims to suit the vars under test
-ds_VarDims0
-ds_VarDims1Unlim0
-ds_VarDims1Unlim1
-ds_VarDims2Unlim0
-ds_VarDims2Unlim1
-ds_VarDims2Unlim2
-
-# beyond 'VarDims', also need to check for fill behaviour
-# treat this as a separate set of tests ?
-ds_Var(type)(missing0/MissingN)(Filldefault/Filluser/Filluserdefault)
-    (Defaultfill/Userfill/Userdefaultfill)
-E.G. ds_Var:typeString:missingN:fillUserdefault
-E.G. ds_Var:typeF4:missing0:fillUser
-  - these are all 1D vars, of some greater size.
-  - the given values and 'user' fill-values are taken from dicts
-
-# group-vars and dims testing
-# need to control parentvars, groupvars, parentdims, groupdims
-ds_GroupvarDims0
-ds_GroupvarDims1Local1Fixed1
-ds_GroupvarDims1Local1Unlim1
-ds_GroupvarDims1Parent1Fixed1
-ds_GroupvarDims1Parent1Unlim1
-ds_GroupvarDims2Local2Fixed2
-ds_GroupvarDims2Local2Fixed1Unlim1
-ds_GroupvarDims2Local1Fixed1Parent1Fixed1
-ds_GroupvarDims2Local1Unlim1Parent1Fixed1
-ds_GroupvarDims2Local1Fixed1Parent1Unlim1
-ds_GroupvarDims2Local1Unlim1Parent1Unlim1
-ds_GroupvarDims2Parent2Fixed2
-ds_GroupvarDims2Parent2Fixed1Unlim1
-ds_GroupvarDims2Parent2Unlim2
-
-# rethink with above style..
-ds_Groupvar:Dims2:Local2:(Fixed/Unlim/Fixed1Unlim1)
-ds_Groupvar:Dims2:Local1:Fixed:Parent1:Unlim
-ds_Groupvar:Dims2:Parent2:Unlim
-
-
-ds_Groupvar:Dims2:Local1:Fixed:Parent1:Unlim
-==> controls ...
-  parent-dims: [('dim1', 3, True)]
-  group-dims: [('gdim1', 4)]
-  group-vars: ['gv1', ('dim1', 'gdim1')]
-
-
-
-"""

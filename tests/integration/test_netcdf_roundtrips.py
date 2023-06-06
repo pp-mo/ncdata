@@ -1,21 +1,35 @@
-from pathlib import Path
+from subprocess import check_output
 
 from ncdata.netcdf4 import from_nc4, to_nc4
 from tests._compare_nc_datasets import compare_nc_datasets
-from tests.data_testcase_schemas import (
-    _simple_test_spec,
-    make_testcase_dataset,
-)
+from tests.data_testcase_schemas import standard_testcase, session_testdir
+
+# Avoid complaints that the fixture is unused
+standard_testcase
+
+# _Debug = True
+_Debug = False
 
 
-def test_basic(tmp_path_factory):
-    tmpdir_path = Path(tmp_path_factory.mktemp("nc_roundtrips"))
-    testcase_filepath = tmpdir_path / "test_basic.nc"
-    roundtrip_filepath = tmpdir_path / "test_basic_resaved.nc"
-    make_testcase_dataset(testcase_filepath, _simple_test_spec)
+def test_basic(standard_testcase, tmp_path):
+    source_filepath = standard_testcase.filepath
+    intermediate_filepath = tmp_path / "temp_saved.nc"
 
-    ncdata = from_nc4(testcase_filepath)
-    to_nc4(ncdata, roundtrip_filepath)
+    # Load the testfile.
+    ncdata = from_nc4(source_filepath)
+    # Re-save
+    to_nc4(ncdata, intermediate_filepath)
 
-    results = compare_nc_datasets(testcase_filepath, roundtrip_filepath)
+    if _Debug:
+        print(f'\ntestcase: {standard_testcase.name}')
+        print('spec =')
+        print(standard_testcase.spec)
+        print('\nncdata =')
+        print(ncdata)
+        print('\nncdump =')
+        txt = check_output([f'ncdump {intermediate_filepath}'], shell=True).decode()
+        print(txt)
+
+    # Check that the re-saved file matches the original
+    results = compare_nc_datasets(source_filepath, intermediate_filepath)
     assert results == []
