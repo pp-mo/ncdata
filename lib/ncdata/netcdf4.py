@@ -6,7 +6,7 @@ Converts :class:`ncdata.NcData` to and from :class:`netCDF4.Dataset` objects.
 """
 from pathlib import Path
 from threading import Lock
-from typing import Any, AnyStr, Dict, Union
+from typing import Any, AnyStr, Dict, List, Optional, Union
 
 import dask.array as da
 import netCDF4 as nc
@@ -19,7 +19,7 @@ from . import NcAttribute, NcData, NcDimension, NcVariable
 _Forbidden_Variable_Kwargs = ["data", "dimensions", "datatype", "_FillValue"]
 
 
-def _to_group(
+def _to_nc4_group(
     ncdata: NcData,
     nc4object: Union[nc.Dataset, nc.Group],
     var_kwargs: Dict[str, Any],
@@ -70,7 +70,7 @@ def _to_group(
 
     for groupname, group in ncdata.groups.items():
         nc4group = nc4object.createGroup(groupname)
-        _to_group(
+        _to_nc4_group(
             ncdata=group,
             nc4object=nc4group,
             var_kwargs=var_kwargs.get(groupname, {}),
@@ -88,12 +88,17 @@ class _NetCDFDataProxy:
     Copied from Iris, with some simplifications.
     """
 
-    __slots__ = ("shape", "dtype", "path", "variable_name")
+    __slots__ = ("shape", "dtype", "path", "variable_name", "group_names_path")
 
-    def __init__(self, shape, dtype, path, variable_name):
+    def __init__(
+        self, shape, dtype, filepath, variable_name, group_names_path=None
+    ):
         self.shape = shape
         self.dtype = dtype
-        self.path = path
+        self.path = filepath
+        if group_names_path is None:
+            group_names_path = []
+        self.group_names_path = group_names_path
         self.variable_name = variable_name
 
     @property
@@ -106,8 +111,11 @@ class _NetCDFDataProxy:
         #  times by Dask. Use _GLOBAL_NETCDF4_LOCK directly instead.
         with _GLOBAL_NETCDF4_LIBRARY_THREADLOCK:
             dataset = nc.Dataset(self.path)
+            ds_or_group = dataset
             try:
-                variable = dataset.variables[self.variable_name]
+                for group_name in self.group_names_path:
+                    ds_or_group = ds_or_group.groups[group_name]
+                variable = ds_or_group.variables[self.variable_name]
                 # Get the NetCDF variable data and slice.
                 var = variable[keys]
             finally:
@@ -171,12 +179,91 @@ def to_nc4(
         nc4ds = nc.Dataset(nc4_dataset_or_file, "w")
 
     try:
-        _to_group(
+        _to_nc4_group(
             ncdata, nc4ds, var_kwargs=var_kwargs or {}, in_group_namepath=""
         )
     finally:
         if not caller_owns_dataset:
             nc4ds.close()
+
+
+def _from_nc4_group(
+    nc4ds: Union[nc.Dataset, nc.Group],
+    parent_ds: Optional[nc.Dataset] = None,
+    group_names_path: List[str] = None,
+) -> NcData:
+    """
+    Inner routine for :func:`from_nc4`.
+
+    See docstring there.
+    Provided mainly for recursion into groups, also to keep the dataset open/close separate.
+    """
+    if parent_ds is None:
+        parent_ds = nc4ds
+    if group_names_path is None:
+        group_names_path = []
+
+    ncdata = NcData(name=nc4ds.name)
+
+    for dimname, nc4dim in nc4ds.dimensions.items():
+        size = len(nc4dim)
+        unlimited = nc4dim.isunlimited()
+        ncdata.dimensions[dimname] = NcDimension(dimname, size, unlimited)
+
+    for varname, nc4var in nc4ds.variables.items():
+        var = NcVariable(
+            name=varname,
+            dimensions=nc4var.dimensions,
+            dtype=nc4var.dtype,
+            group=ncdata,
+        )
+        ncdata.variables[varname] = var
+
+        # Assign a data object : for now, always LAZY.
+        # code shamelessly stolen from iris.fileformats.netcdf
+
+        # Work out the shape of the variable.
+        # This can refer to dimensions in enclosing groups.
+        group = parent_ds
+        dims_map = group.dimensions.copy()
+        for group_name in group_names_path:
+            # Inner groups take priority, of course :
+            # their dimensions mask any of the same name in outer groups
+            group = group.groups[group_name]
+            dims_map.update(group.dimensions)
+
+        shape = tuple(dims_map[dimname].size for dimname in var.dimensions)
+
+        proxy = _NetCDFDataProxy(
+            shape=shape,
+            dtype=var.dtype,
+            filepath=nc4ds.filepath(),
+            variable_name=varname,
+            group_names_path=group_names_path,
+        )
+        var.data = da.from_array(
+            proxy, chunks=shape, asarray=True, meta=np.ndarray
+        )
+
+        for attrname in nc4var.ncattrs():
+            var.attributes[attrname] = NcAttribute(
+                attrname, nc4var.getncattr(attrname)
+            )
+
+    for attrname in nc4ds.ncattrs():
+        ncdata.attributes[attrname] = NcAttribute(
+            attrname, nc4ds.getncattr(attrname)
+        )
+
+    # And finally, groups -- by the magic of recursion ...
+    for group_name, group in nc4ds.groups.items():
+        ncdata.groups[group_name] = _from_nc4_group(
+            nc4ds=nc4ds.groups[group_name],
+            parent_ds=parent_ds,
+            group_names_path=group_names_path + [group_name],
+        )
+
+    return ncdata
 
 
 def from_nc4(
@@ -195,7 +282,6 @@ def from_nc4(
     -------
     ncdata : NcData
     """
-    ncdata = NcData()
     caller_owns_dataset = hasattr(nc4_dataset_or_file, "variables")
     if caller_owns_dataset:
         nc4ds = nc4_dataset_or_file
@@ -203,49 +289,7 @@ def from_nc4(
         nc4ds = nc.Dataset(nc4_dataset_or_file)
 
     try:
-        for dimname, nc4dim in nc4ds.dimensions.items():
-            size = len(nc4dim)
-            unlimited = nc4dim.isunlimited()
-            ncdata.dimensions[dimname] = NcDimension(dimname, size, unlimited)
-
-        for varname, nc4var in nc4ds.variables.items():
-            var = NcVariable(
-                name=varname,
-                dimensions=nc4var.dimensions,
-                dtype=nc4var.dtype,
-                group=ncdata,
-            )
-            ncdata.variables[varname] = var
-
-            # Assign a data object : for now, always LAZY.
-            # code shamelessly stolen from iris.fileformats.netcdf
-            shape = tuple(
-                ncdata.dimensions[dimname].size for dimname in var.dimensions
-            )
-            proxy = _NetCDFDataProxy(
-                shape=shape,
-                dtype=var.dtype,
-                path=nc4ds.filepath(),
-                variable_name=varname,
-            )
-            var.data = da.from_array(
-                proxy, chunks=shape, asarray=True, meta=np.ndarray
-            )
-
-            for attrname in nc4var.ncattrs():
-                var.attributes[attrname] = NcAttribute(
-                    attrname, nc4var.getncattr(attrname)
-                )
-
-        for attrname in nc4ds.ncattrs():
-            ncdata.attributes[attrname] = NcAttribute(
-                attrname, nc4ds.getncattr(attrname)
-            )
-
-        # And finally, groups -- by the magic of recursion ...
-        for grpname, group in nc4ds.groups.items():
-            ncdata.groups[grpname] = from_nc4(nc4ds.groups[grpname])
-
+        ncdata = _from_nc4_group(nc4ds)
     finally:
         if not caller_owns_dataset:
             nc4ds.close()
