@@ -266,10 +266,18 @@ _Standard_Testcases: Dict[str, Union[Path, dict]] = {
     "ds_Empty": {},
     "ds_Minimal": _minimal_variable_test_spec,
     "ds_Basic": _simple_test_spec,
-    "testdata1": Path(__file__).parent
-    / "testdata"
-    / "toa_brightness_temperature.nc",
+    "testdata1": (
+        Path(__file__).parent / "testdata" / "toa_brightness_temperature.nc"
+    ),
 }
+
+# TEMPORARY: add all the Iris testdata paths
+_testdirpath = Path("/data/users/itpp/git/iris-test-data/test_data/NetCDF/")
+_netcdf_testfile_paths = _testdirpath.rglob("**/*.nc")
+for filepath in _netcdf_testfile_paths:
+    # if 'lfric_surface_mean' in str(filepath):
+    name = filepath.name
+    _Standard_Testcases[f"testdata_{name}"] = filepath
 
 
 @pytest.fixture(scope="session")

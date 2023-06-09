@@ -240,7 +240,11 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
             raise IndexError(keys)
         if self.ndim == 0:
             return self._ncdata.data
-        return self._ncdata.data[keys]
+        array = self._ncdata.data[keys]
+        if hasattr(array, "compute"):
+            # When accessed as a data variable, we must realise lazy data.
+            array = array.compute()
+        return array
 
     # The __setitem__ is not required for normal saving.
     # The saver will assign ._data_array instead
