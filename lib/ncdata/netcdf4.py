@@ -14,7 +14,7 @@ import numpy as np
 
 from . import NcAttribute, NcData, NcDimension, NcVariable
 
-# The variable arguments that are 'claimed' by the existing to_nc4 code, and
+# The variable arguments which are 'claimed' by the existing to_nc4 code, and
 # therefore not valid to appear in the 'var_kwargs' parameter.
 _Forbidden_Variable_Kwargs = ["data", "dimensions", "datatype", "_FillValue"]
 
