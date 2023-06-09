@@ -1,11 +1,15 @@
+"""
+Test ncdata.netcdf by checking load-save roundtrips for standard testcases.
+"""
 from subprocess import check_output
 
-from ncdata.netcdf4 import from_nc4, to_nc4
 from tests._compare_nc_datasets import compare_nc_datasets
 from tests.data_testcase_schemas import standard_testcase, session_testdir
 
-# Avoid complaints that the fixture is unused
-standard_testcase
+from ncdata.netcdf4 import from_nc4, to_nc4
+
+# Avoid complaints that the imported fixtures are "unused"
+standard_testcase, session_testdir
 
 # _Debug = True
 _Debug = False
@@ -21,13 +25,15 @@ def test_basic(standard_testcase, tmp_path):
     to_nc4(ncdata, intermediate_filepath)
 
     if _Debug:
-        print(f'\ntestcase: {standard_testcase.name}')
-        print('spec =')
+        print(f"\ntestcase: {standard_testcase.name}")
+        print("spec =")
         print(standard_testcase.spec)
-        print('\nncdata =')
+        print("\nncdata =")
         print(ncdata)
-        print('\nncdump =')
-        txt = check_output([f'ncdump {intermediate_filepath}'], shell=True).decode()
+        print("\nncdump =")
+        txt = check_output(
+            [f"ncdump {intermediate_filepath}"], shell=True
+        ).decode()
         print(txt)
 
     # Check that the re-saved file matches the original

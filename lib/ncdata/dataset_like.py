@@ -90,6 +90,9 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
 
     _local_instance_props = ("_ncdata", "variables", "dimensions")
 
+    # Fixed for all of these.
+    file_format = "NETCDF4"
+
     def __init__(self, ncdata: NcData = None):
         if ncdata is None:
             ncdata = NcData()  # an empty dataset
@@ -137,6 +140,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         ncvar = NcVariable(
             name=varname,
             dimensions=dimensions,
+            dtype=datatype,
             group=self._ncdata,
         )
         # Note: initially has no data (or attributes), since this is how netCDF4 expects
