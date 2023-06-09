@@ -90,7 +90,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
 
     _local_instance_props = ("_ncdata", "variables", "dimensions")
 
-    # Fixed for all of these.
+    # Needed for Iris to recognise the dataset format.
     file_format = "NETCDF4"
 
     def __init__(self, ncdata: NcData = None):
@@ -137,14 +137,26 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
             msg = f'creating duplicate variable "{varname}".'
             raise ValueError(msg)
         # Add a variable into the underlying NcData object.
+
+        # N.B. to correctly mirror netCDF4, a variable must be created with all-masked
+        # content.  For this we need to decode the dims + work out the shape.
+        # NOTE: simplistic version here, as we don't support groups.
+        shape = tuple(
+            self._ncdata.dimensions[dim_name].size for dim_name in dimensions
+        )
+        # Note: does *not* allocate a full array in memory ...until you modify it.
+        initial_allmasked_data = np.ma.masked_array(
+            np.zeros(shape, dtype=datatype), mask=True
+        )
+
         ncvar = NcVariable(
             name=varname,
             dimensions=dimensions,
-            dtype=datatype,
+            data=initial_allmasked_data,
             group=self._ncdata,
         )
-        # Note: initially has no data (or attributes), since this is how netCDF4 expects
-        #  to do it.
+        # Note: no valid data is initially assigned, since that is how the netCDF4 API
+        # does it.
         self._ncdata.variables[varname] = ncvar
         # Create a netCDF4-like "wrapper" variable + install that here.
         nc4var = Nc4VariableLike._from_ncvariable(ncvar, dtype=datatype)
@@ -159,10 +171,9 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
 
     @staticmethod
     def filepath() -> str:  # noqa: D102
-        #
         # Note: for now, let's just not care about this.
         # we *might* need this to be an optional defined item on an NcData ??
-        # .. or, we ight need to store an xarray "encoding" somewhere ?
+        # .. or, we might need to store an xarray "encoding" somewhere ?
         # TODO: more thought here ?
         # return self.ncdata.encoding.get("source", "")
         return "<Nc4DatasetLike>"

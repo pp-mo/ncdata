@@ -7,7 +7,7 @@ returns info on the testcase, its defining spec and a filepath it can be loaded 
 from dataclasses import dataclass
 from pathlib import Path
 import re
-from typing import Iterable, Union, Tuple
+from typing import Iterable, Union, Tuple, Dict
 
 import netCDF4
 import netCDF4 as nc
@@ -261,10 +261,14 @@ _simple_test_spec = {
 }
 
 # Define a sequence of standard testfile specs, with suitable param-names.
-_Standard_Testcases = {
+
+_Standard_Testcases: Dict[str, Union[Path, dict]] = {
     "ds_Empty": {},
     "ds_Minimal": _minimal_variable_test_spec,
     "ds_Basic": _simple_test_spec,
+    "testdata1": Path(__file__).parent
+    / "testdata"
+    / "toa_brightness_temperature.nc",
 }
 
 
@@ -291,6 +295,12 @@ def standard_testcase(request, session_testdir):
     """
     name = request.param
     spec = _Standard_Testcases[name]
-    filepath = session_testdir / f"sampledata_{name}.nc"
-    make_testcase_dataset(filepath, spec)
+    if isinstance(spec, dict):
+        # Build a temporary testfile from the spec, and pass that out.
+        filepath = session_testdir / f"sampledata_{name}.nc"
+        make_testcase_dataset(filepath, spec)
+    else:
+        # Otherwise 'spec' is a test filepath: pass that, plus spec={}
+        filepath = spec
+        spec = {}
     return Schema(name=name, spec=spec, filepath=filepath)
