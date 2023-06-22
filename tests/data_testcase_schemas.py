@@ -14,6 +14,8 @@ import netCDF4 as nc
 import numpy as np
 import pytest
 
+import iris.tests
+
 
 def data_types():
     """
@@ -272,13 +274,15 @@ _Standard_Testcases: Dict[str, Union[Path, dict]] = {
 }
 
 # TEMPORARY: add all the Iris testdata paths
-_testdirpath = Path("/data/users/itpp/git/iris-test-data/test_data/NetCDF/")
+_testdirpath = Path(iris.tests.get_data_path("NetCDF"))
 _netcdf_testfile_paths = _testdirpath.rglob("**/*.nc")
 for filepath in _netcdf_testfile_paths:
-    # if 'lfric_surface_mean' in str(filepath):
     name = filepath.name
     _Standard_Testcases[f"testdata_{name}"] = filepath
 
+#
+# TODO: add files from xarray/tests/data AND xarray-data (separate repo)
+#
 
 @pytest.fixture(scope="session")
 def session_testdir(tmp_path_factory):
