@@ -17,6 +17,9 @@ jobs:
       run:
         shell: bash -l {0}
 
+    env:
+      IRIS_TEST_DATA_VERSION: "2.19"
+
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
@@ -50,6 +53,14 @@ jobs:
           conda info
           conda list --explicit
 
+      - name: "Fetch Iris-test-data"
+        run: |
+          wget --quiet https://github.com/SciTools/iris-test-data/archive/v${IRIS_TEST_DATA_VERSION}.zip -O iris-test-data.zip
+          unzip -q iris-test-data.zip
+          mkdir --parents ${GITHUB_WORKSPACE}/iris_test_data
+          mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${GITHUB_WORKSPACE}/iris_test_data_download
+
       - name: "Run tests"
         run: |
-          PYTHONPATH=./tests:$PYTHONPATH pytest -v ./tests
+          ls ${GITHUB_WORKSPACE}/iris_test_data_download/test_data
+          OVERRIDE_TEST_DATA_REPOSITORY=${GITHUB_WORKSPACE}/iris_test_data_download/test_data PYTHONPATH=./tests:$PYTHONPATH pytest -v ./tests
