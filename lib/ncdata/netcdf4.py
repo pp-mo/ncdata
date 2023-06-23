@@ -66,15 +66,17 @@ def _to_nc4_group(
             **kwargs,
         )
 
+        # Assign attributes.
+        # N.B. must be done before writing data, to enable scale+offset controls !
+        for attrname, attr in var.attributes.items():
+            if attrname != "_FillValue":
+                nc4var.setncattr(attrname, attr.as_python_value())
+
         data = var.data
         if hasattr(data, "compute"):
             da.store(data, nc4var)
         else:
             nc4var[:] = data
-
-        for attrname, attr in var.attributes.items():
-            if attrname != "_FillValue":
-                nc4var.setncattr(attrname, attr.as_python_value())
 
     for attrname, attr in ncdata.attributes.items():
         nc4object.setncattr(attrname, attr.as_python_value())
