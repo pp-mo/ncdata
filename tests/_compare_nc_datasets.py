@@ -36,7 +36,7 @@ def compare_nc_datasets(
     Parameters
     ----------
     dataset_or_path_1, dataset_or_path_2 : str or Path or netCDF4.Dataset or NcData
-        two datasets to compare
+        two datasets to compare, either NcData or netCDF4
     check_dims_order, check_vars_order, check_attrs_order, check_groups_order : bool, default True
         If False, no error results from the same contents in a different order,
         however unless `suppress_warnings` is True, the error string is issued as a warning.
@@ -122,6 +122,7 @@ def _compare_attributes(
     elemname,
     attrs_order=True,
     suppress_warnings=False,
+    force_first_attrnames=None
 ):
     """
     Compare attribute name lists.
@@ -132,6 +133,15 @@ def _compare_attributes(
         obj.attributes.keys() if _isncdata(obj) else obj.ncattrs()
         for obj in (obj1, obj2)
     ]
+    if attrs_order and force_first_attrnames:
+        def fix_orders(attrlist):
+            for name in force_first_attrnames[::-1]:
+                if name in attrlist:
+                    attrlist = [name] + [n for n in attrlist if n != name]
+            return attrlist
+
+        attrnames = fix_orders(attrnames)
+        attrnames2 = fix_orders(attrnames2)
 
     _compare_name_lists(
         errs,
@@ -164,14 +174,13 @@ def _compare_attributes(
         ]
 
         if dtype != dtype2:
-            # If values match (only then), compare datatypes
             msg = (
                 f'{elemname} "{attrname}" attribute datatypes differ : '
                 f"{dtype!r} != {dtype2!r}"
             )
             errs.append(msg)
-
         else:
+            # If values match (only then), compare datatypes
             # Cast attrs, which might be strings, to arrays for comparison
             arr, arr2 = [np.asarray(attr) for attr in (attr, attr2)]
             if arr.shape != arr2.shape or not np.all(arr == arr2):
@@ -266,33 +275,78 @@ def _compare_nc_groups(
             var_id_string,
             attrs_order=attrs_order,
             suppress_warnings=suppress_warnings,
+            force_first_attrnames=['_FillValue']  # for some reason, this doesn't always list consistently
         )
 
+        # dtypes
         dtype, dtype2 = [
             v.dtype if _isncdata(v) else v.datatype for v in (v1, v2)
         ]
-
         if dtype != dtype2:
             msg = f"{var_id_string} datatypes differ : {dtype!r} != {dtype2!r}"
             errs.append(msg)
 
         # data values
-        if data_equality:
+        is_str, is_str2 = (dt.kind in ('U', 'S') for dt in (dtype, dtype2))
+        # TODO: is this correct check to allow compare between different dtypes?
+        if data_equality and dims == dims2 and is_str == is_str2:
+            # N.B. don't check shapes here: we already checked dimensions.
             # NOTE: no attempt to use laziness here.  Could be improved.
-            data, data2 = [
-                v.data.compute() if _isncdata(v) else v[:] for v in (v1, v2)
-            ]
+            def getdata(var):
+                if _isncdata(var):
+                    data = var.data
+                    if hasattr(data, 'compute'):
+                        data = data.compute()
+                else:
+                    # expect var to be an actual netCDF4.Variable
+                    # (check for obscure property NOT provided by mimics)
+                    assert hasattr(var, 'use_nc_get_vars')
+                    data = var[:]
+                # Return 0D as 1D, as this makes results simpler to interpret.
+                if data.ndim == 0:
+                    data = data.flatten()
+                    assert data.shape == (1,)
+                return data
 
-            # Since netCDF4 > 1.4, data should always be masked arrays.
-            mask, mask2 = (array.mask for array in (data, data2))
-            n_diffs = np.count_nonzero(mask != mask2)
-            bothvalid = ~mask & ~mask2
-            if np.any(bothvalid):
-                n_diffs += np.count_nonzero(
-                    data[bothvalid] != data2[bothvalid]
-                )
+            data, data2 = (getdata(v) for v in (v1, v2))
+            flatdata, flatdata2 = (np.asanyarray(arr).flatten() for arr in (data, data2))
+
+            # For simpler checking, use flat versions
+            flat_diff_inds = []  # NB *don't* make this an array, it causes problems
+            if any(np.ma.is_masked(arr) for arr in (data, data2)):
+                # If data is masked, count mask mismatches and skip those points
+                mask, mask2 = (np.ma.getmaskarray(array) for array in (flatdata, flatdata2))
+                flat_diff_inds = list(np.where(mask != mask2)[0])
+                # Replace all masked points to exclude them from unmasked-point checks.
+                either_masked = mask | mask2
+                dtype = flatdata.dtype
+                if dtype.kind in ('S', 'U'):
+                    safe_fill_const = ''
+                else:
+                    safe_fill_const = np.zeros((1,), dtype=flatdata.dtype)[0]
+                flatdata[either_masked] = safe_fill_const
+                flatdata2[either_masked] = safe_fill_const
+
+            flat_diff_inds += list(np.where(flatdata != flatdata2)[0])
+            n_diffs = len(flat_diff_inds)
             if n_diffs:
-                msg = f"{var_id_string} data contents differ, at {n_diffs} points."
+                msg = f"{var_id_string} data contents differ, at {n_diffs} points: "
+                ellps = ', ...' if n_diffs > 2 else ''
+                diffinds = flat_diff_inds[:2]
+                diffinds = [
+                    np.unravel_index(ind, shape=data.shape)
+                    for ind in diffinds
+                ]
+                diffinds_str = ', '.join(repr(tuple(x)) for x in diffinds)
+                inds_str = f'[{diffinds_str}{ellps}]'
+                points_lhs_str = ', '.join(repr(data[ind]) for ind in diffinds)
+                points_rhs_str = ', '.join(repr(data2[ind]) for ind in diffinds)
+                points_lhs_str = f'[{points_lhs_str}{ellps}]'
+                points_rhs_str = f'[{points_rhs_str}{ellps}]'
+                msg += (
+                    f'@INDICES{inds_str}'
+                    f' : LHS={points_lhs_str}, RHS={points_rhs_str}'
+                )
                 errs.append(msg)
 
     # Finally, recurse over groups
