@@ -78,7 +78,9 @@ def test_load_direct_vs_viancdata(standard_testcase, tmp_path):
     if not result:
         # FOR NOW: compare with experimental ncdata comparison.
         # I know this is a bit circular, but can use for debugging, for now ...
-        result = compare_nc_datasets(from_iris(iris_cubes), from_iris(iris_ncdata_cubes))
+        result = compare_nc_datasets(
+            from_iris(iris_cubes), from_iris(iris_ncdata_cubes)
+        )
         assert result == []
     # assert iris_cubes == iris_ncdata_cubes
     assert result

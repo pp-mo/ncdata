@@ -284,6 +284,7 @@ for filepath in _netcdf_testfile_paths:
 # TODO: add files from xarray/tests/data AND xarray-data (separate repo)
 #
 
+
 @pytest.fixture(scope="session")
 def session_testdir(tmp_path_factory):
     tmp_dir = tmp_path_factory.mktemp("standard_schema_testfiles")

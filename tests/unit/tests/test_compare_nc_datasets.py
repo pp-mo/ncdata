@@ -407,11 +407,11 @@ class Test_compare_nc_files__api:
         assert result == [
             (
                 'Dataset variable "x" data contents differ, at 2 points: '
-                '@INDICES[(4,), (0,)] : LHS=[masked, 0.12], RHS=[101.23, 102.34]'
+                "@INDICES[(4,), (0,)] : LHS=[masked, 0.12], RHS=[101.23, 102.34]"
             ),
             (
                 'Dataset variable "y" data contents differ, at 3 points: '
-                '@INDICES[(3,), (4,), ...] : '
-                'LHS=[masked, masked, ...], RHS=[202, 203, ...]'
-            )
+                "@INDICES[(3,), (4,), ...] : "
+                "LHS=[masked, masked, ...], RHS=[202, 203, ...]"
+            ),
         ]
