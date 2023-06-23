@@ -5,11 +5,13 @@ Testcases start as netcdf files.
 (1) check equivalence of cubes : iris.load(file) VS iris.load(ncdata(file))
 (2) check equivalence of files : iris -> file VS iris->ncdata->file
 """
-import pytest
 from subprocess import check_output
+from unittest import mock
 
 import dask.array as da
 import iris
+import iris.fileformats.netcdf._thread_safe_nc as iris_threadsafe
+import pytest
 
 from ncdata.netcdf4 import from_nc4, to_nc4
 from tests._compare_nc_datasets import compare_nc_datasets
@@ -74,7 +76,10 @@ def test_load_direct_vs_viancdata(standard_testcase, tmp_path):
     # Check equivalence
     result = iris_cubes == iris_ncdata_cubes
     if not result:
-        pass
+        # FOR NOW: compare with experimental ncdata comparison.
+        # I know this is a bit circular, but can use for debugging, for now ...
+        result = compare_nc_datasets(from_iris(iris_cubes), from_iris(iris_ncdata_cubes))
+        assert result == []
     # assert iris_cubes == iris_ncdata_cubes
     assert result
 
