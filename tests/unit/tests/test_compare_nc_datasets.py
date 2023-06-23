@@ -70,9 +70,14 @@ group: grp_2 {
 _simple_cdl = """
 netcdf test {
 dimensions:
-	x = 2 ;
+	x = 5 ;
 variables:
-	int x(x) ;
+	float x(x) ;
+	int y(x) ;
+
+data:
+  x = 0.12, 1.23, 2.34, _, _ ;
+  y = 1, 2, 3, _, _ ;
 }
 """
 
@@ -374,20 +379,39 @@ class Test_compare_nc_files__api:
     def test_vardata_difference(
         self, samefiles_bothtypes, temp_ncfiles_dir, sourcetype
     ):
-        # Temporary test just to cover problem encountered with masked data differences.
+        # Temporary test for specific problem encountered with masked data differences.
         source1, source2 = samefiles_bothtypes
-        if sourcetype == "InputsFile":
-            # Replace source2 with a modified, renamed file.
-            source2 = temp_ncfiles_dir / "vardiff.nc"
-            shutil.copy(source1, source2)
-            ds = nc.Dataset(source2, "r+")
-            ds.variables["x"][-1] = 1.23
-            ds.close()
-        else:
-            # Source1/2 are NcData : just modify source2
-            source2.variables["x"].data[-1] = 1.23
+        ds = None
+        try:
+            if sourcetype == "InputsFile":
+                # Make a modified, renamed file for the comparison.
+                source2 = temp_ncfiles_dir / "vardiff.nc"
+                shutil.copy(source1, source2)
+                ds = nc.Dataset(source2, "r+")
+                tgtx = ds.variables["x"]
+                tgty = ds.variables["y"]
+            else:
+                # Source1/2 are NcData : just modify source2
+                tgtx = source2.variables["x"].data
+                tgty = source2.variables["y"].data
+
+            tgtx[-1] = 101.23
+            tgtx[0] = 102.34
+            tgty[2:5] = [201, 202, 203]
+
+        finally:
+            if ds is not None:
+                ds.close()
 
         result = compare_nc_datasets(source1, source2)
         assert result == [
-            'Dataset variable "x" data contents differ, at 1 points.'
+            (
+                'Dataset variable "x" data contents differ, at 2 points: '
+                '@INDICES[(4,), (0,)] : LHS=[masked, 0.12], RHS=[101.23, 102.34]'
+            ),
+            (
+                'Dataset variable "y" data contents differ, at 3 points: '
+                '@INDICES[(3,), (4,), ...] : '
+                'LHS=[masked, masked, ...], RHS=[202, 203, ...]'
+            )
         ]
