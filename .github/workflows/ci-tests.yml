@@ -18,7 +18,7 @@ jobs:
         shell: bash -l {0}
 
     env:
-      IRIS_TEST_DATA_VERSION: "2.19"
+      IRIS_TEST_DATA_VERSION: "2.20"
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
