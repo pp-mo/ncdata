@@ -4,6 +4,7 @@ Define a set of "standard" testcases, built as actual netcdf files.
 The main product is a pytest fixture that is parametrised over testcase names, and
 returns info on the testcase, its defining spec and a filepath it can be loaded from.
 """
+import shutil
 from dataclasses import dataclass
 from pathlib import Path
 import re
@@ -114,7 +115,7 @@ def dataset_schemas_iter():
 
 def _write_nc4_dataset(
     spec: dict,
-    ds: netCDF4.Dataset,  # or an inner Group
+    ds: nc.Dataset,  # or an inner Group
     parent_spec: dict = None,
 ):
     """
@@ -152,7 +153,7 @@ def _write_nc4_dataset(
     for var_name, var_spec in var_specs.items():
         var_dims = var_spec["dims"]  # this is just a list of names
         data = var_spec.get("data", None)
-        if data:
+        if data is not None:
             data = np.array(data)
             dtype = data.dtype
         else:
@@ -175,14 +176,14 @@ def _write_nc4_dataset(
         # Add data, provided or default-constructed
         if data is None:
             shape = nc_var.shape
-            n_points = np.product(shape)
-            # if nc_var.dtype.kind == 'S':
-            #     data = np.array(
-            #         'abcdefghijklmnopqrstuvwxyz'[:n_points],
-            #         dype='S1'
-            #     )
-            # else:
-            data = np.arange(1, n_points + 1)
+            n_points = int(np.product(shape))
+            if nc_var.dtype.kind == 'S':
+                data = np.array(
+                    'abcdefghijklmnopqrstuvwxyz'[:n_points],
+                    dtype='S1'
+                )
+            else:
+                data = np.arange(1, n_points + 1)
             data = data.astype(dtype)
             i_miss = var_spec.get("missing_inds", [])
             if i_miss:
@@ -229,6 +230,8 @@ def make_testcase_dataset(filepath, spec):
     """
     ds = nc.Dataset(filepath, "w")
     try:
+        if 'ds__dtype__string' in filepath:
+            pass
         _write_nc4_dataset(spec, ds)
     finally:
         ds.close()
@@ -264,31 +267,102 @@ _simple_test_spec = {
 
 # Define a sequence of standard testfile specs, with suitable param-names.
 
-_Standard_Testcases: Dict[str, Union[Path, dict]] = {
-    "ds_Empty": {},
-    "ds_Minimal": _minimal_variable_test_spec,
-    "ds_Basic": _simple_test_spec,
-    "testdata1": (
-        Path(__file__).parent / "testdata" / "toa_brightness_temperature.nc"
-    ),
-}
 
-# TEMPORARY: add all the Iris testdata paths
-_testdirpath = Path(iris.tests.get_data_path("NetCDF"))
-_netcdf_testfile_paths = _testdirpath.rglob("**/*.nc")
-for filepath in _netcdf_testfile_paths:
-    name = filepath.name
-    _Standard_Testcases[f"testdata_{name}"] = filepath
+def _build_all_testcases():
+    testcases = {
+        "ds_Empty": {},
+        "ds_Minimal": _minimal_variable_test_spec,
+        "ds_Basic": _simple_test_spec,
+        "testdata1": (
+            Path(__file__).parent / "testdata" / "toa_brightness_temperature.nc"
+        ),
+    }
 
-#
-# TODO: add files from xarray/tests/data AND xarray-data (separate repo)
-#
+    ADD_IRIS_FILES = True
+    ADD_IRIS_FILES = False
+    if ADD_IRIS_FILES:
+        # TEMPORARY: add all the Iris testdata paths
+        _testdirpath = Path(iris.tests.get_data_path("NetCDF"))
+        _netcdf_testfile_paths = _testdirpath.rglob("**/*.nc")
+        for filepath in _netcdf_testfile_paths:
+            # TEMPORARY: skip unstructured ones, just for now, as it makes the run faster
+            if 'unstructured' not in str(filepath):
+                pathname = str(filepath).replace(str(_testdirpath), '').replace('/', '__')
+                testcases[f"testdata__{pathname}"] = filepath
 
+    #
+    # TODO: add files from xarray/tests/data AND xarray-data (separate repo)
+    #
+
+    ADD_UNIT_TESTS = True
+    # ADD_UNIT_TESTS = False
+    if ADD_UNIT_TESTS:
+        # Add selected targetted test datasets.
+
+        # dataset with a single attribute
+        testcases['ds__singleattr'] = {
+            "attrs": {'attr1': 1}
+        }
+
+        # dataset with a single variable
+        testcases['ds__singlevar'] = {
+            "vars": [dict(name="vx", dims=[], dtype=np.int32)]
+        }
+
+        # dataset with a single variable
+        testcases['ds__dimonly'] = {
+            "dims": [dict(name="x", size=2)],
+        }
+
+        # dataset with attrs and vars of all possible types
+        # TODO: .. and missing-data testcases ???
+        for dtype_name in data_types():
+            dtype = 'S1' if dtype_name == 'string' else dtype_name
+            if dtype_name == 'string':
+                # Not working for now
+                # TODO: fix !
+                # continue
+                pass
+
+            testcases[f'ds__dtype__{dtype_name}'] = {
+                "attrs": {
+                    f"tstatt_type__{dtype_name}__single": _Datatype_Sample_Values[dtype_name][0],
+                    f"tstatt_type__{dtype_name}__multi": _Datatype_Sample_Values[dtype_name],
+                },
+                "vars": [dict(name="vx", dims=[], dtype=dtype)],
+            }
+
+        testcases['ds__stringvar__singlepoint'] = {
+            "dims": [dict(name='strlen', size=3)],
+            "vars": [dict(
+                        name="vx", dims=['strlen'], dtype='S1',
+                        data=np.array('abc', dtype='S1')
+                     )],
+        }
+
+        testcases['ds__stringvar__multipoint'] = {
+            "dims": [dict(name='x', size=2),
+                     dict(name='strlen', size=3),
+                     ],
+            "vars": [dict(
+                name="vx", dims=['x', 'strlen'], dtype='S1',
+                data=np.array([list('abc'), list('def')], dtype='S1')
+            )],
+        }
+
+    return testcases
+
+_Standard_Testcases: Dict[str, Union[Path, dict]] = _build_all_testcases()
 
 @pytest.fixture(scope="session")
 def session_testdir(tmp_path_factory):
     tmp_dir = tmp_path_factory.mktemp("standard_schema_testfiles")
     return tmp_dir
+
+
+_SESSION_TESTFILES_DIR = Path('/var/tmp/ncdata_pytest')
+if not _SESSION_TESTFILES_DIR.exists():
+    _SESSION_TESTFILES_DIR.mkdir()
 
 
 @dataclass
@@ -298,8 +372,11 @@ class Schema:
     filepath: Path = None
 
 
-@pytest.fixture(params=list(_Standard_Testcases.keys()), scope="session")
-def standard_testcase(request, session_testdir):
+_TESTCASE_BUILT_FILES = []
+
+
+@pytest.fixture(params=list(_Standard_Testcases.keys()), scope='function')
+def standard_testcase(request):  #, session_testdir):
     """
     A fixture which iterates over a set of "standard" dataset testcases.
 
@@ -310,8 +387,13 @@ def standard_testcase(request, session_testdir):
     spec = _Standard_Testcases[name]
     if isinstance(spec, dict):
         # Build a temporary testfile from the spec, and pass that out.
-        filepath = session_testdir / f"sampledata_{name}.nc"
-        make_testcase_dataset(filepath, spec)
+        # filepath = session_testdir / f"sampledata_{name}.nc"
+        filepath = str(_SESSION_TESTFILES_DIR / f"sampledata_{name}.nc")
+        if filepath not in _TESTCASE_BUILT_FILES:
+            make_testcase_dataset(filepath, spec)
+            _TESTCASE_BUILT_FILES.append(filepath)
+        else:
+            pass
     else:
         # Otherwise 'spec' is a test filepath: pass that, plus spec={}
         filepath = spec

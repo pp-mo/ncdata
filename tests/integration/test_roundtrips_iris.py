@@ -25,11 +25,21 @@ standard_testcase, session_testdir
 # _Debug = True
 _Debug = False
 
+import iris.fileformats.netcdf._thread_safe_nc as ifnt
 
-def test_load_direct_vs_viancdata(standard_testcase, tmp_path):
+
+@pytest.fixture(scope='session')
+def use_irislock():
+    tgt = 'ncdata.netcdf4._GLOBAL_NETCDF4_LIBRARY_THREADLOCK'
+    with mock.patch(tgt, new=ifnt._GLOBAL_NETCDF4_LOCK):
+        yield
+
+
+def test_load_direct_vs_viancdata(standard_testcase, use_irislock):
     source_filepath = standard_testcase.filepath
     ncdata = from_nc4(source_filepath)
 
+    _Debug = True
     if _Debug:
         print(f"\ntestcase: {standard_testcase.name}")
         print("spec =")
@@ -93,7 +103,7 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
     # Load the testcase into Iris.
     iris_cubes = iris.load(source_filepath)
 
-    if standard_testcase.name == "ds_Empty":
+    if standard_testcase.name in ("ds_Empty", "ds__singleattr", "ds__dimonly"):
         # Iris can't save an empty dataset.
         return
 
@@ -104,6 +114,7 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
     temp_ncdata_savepath = tmp_path / "temp_save_iris_via_ncdata.nc"
     to_nc4(from_iris(iris_cubes), temp_ncdata_savepath)
 
+    _Debug = True
     if _Debug:
         print(f"\ntestcase: {standard_testcase.name}")
         print("spec =")
