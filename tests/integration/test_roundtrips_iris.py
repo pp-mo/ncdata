@@ -8,6 +8,8 @@ Testcases start as netcdf files.
 from subprocess import check_output
 from unittest import mock
 
+import numpy as np
+
 import dask.array as da
 import iris
 import iris.fileformats.netcdf._thread_safe_nc as iris_threadsafe
@@ -84,7 +86,35 @@ def test_load_direct_vs_viancdata(standard_testcase, use_irislock):
                 )
 
     # Check equivalence
-    result = iris_cubes == iris_ncdata_cubes
+    # result = iris_cubes == iris_ncdata_cubes
+    # note: temporary fix for string-cube comparison.
+    #   Cf. https://github.com/SciTools/iris/issues/5362
+    #   TODO: remove temporary fix
+    def cube_equal(c1, c2):
+        """
+        Cube equality test which works around string-cube equality problem.
+
+        """
+        if (
+                (c1.metadata == c2.metadata)
+                and all(cube.dtype.kind in ('U', 'S') for cube in (c1, c2))
+        ):
+            # cludge comparison for string-type cube data
+            c1, c2 = (cube.copy() for cube in (c1, c2))
+            c1.data = (c1.data == c2.data)
+            c2.data = np.ones(c2.shape, dtype=bool)
+
+        return c1 == c2
+
+    results = [
+        (c1.name(), cube_equal(c1, c2))
+        for c1, c2 in zip(iris_cubes, iris_ncdata_cubes)
+    ]
+    expected = [(cube.name(), True) for cube in iris_cubes]
+    result = results == expected
+
+
+
     if not result:
         # FOR NOW: compare with experimental ncdata comparison.
         # I know this is a bit circular, but can use for debugging, for now ...
