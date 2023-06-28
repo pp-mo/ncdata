@@ -1,8 +1,13 @@
 """
-Define a set of "standard" testcases, built as actual netcdf files.
+Define a set of "standard" test cases, built as actual netcdf files.
 
-The main product is a pytest fixture that is parametrised over testcase names, and
-returns info on the testcase, its defining spec and a filepath it can be loaded from.
+The main product is a pytest fixture `standard_testcase`, which is parametrised over
+testcase names, and returns info on the testcase, its defining spec and a filepath it
+can be loaded from.
+
+These testcases also include various pre-existing testfiles, which are NOT built from
+specs.  This enables us to perform various translation tests on standard testfiles from
+the Iris and Xarray test suites.
 """
 import shutil
 from dataclasses import dataclass
@@ -72,55 +77,15 @@ _Datatype_Sample_Values = {
 assert set(_Datatype_Sample_Values.keys()) == set(data_types())
 
 
-# Define the possible multiplicities of attributes,
-# i.e. value / [1D] / [2D@1, 2D@2, ...]
-Attr_Multiples = ["Single", "Multi"]
-
-
-def attr_schemas():
-    # Produce a sequence of lists of definitions for attribute-sets.
-    for attr_multiple in Attr_Multiples:
-        if attr_multiple == "empty":
-            yield {"attributes": []}
-        for single_attr in (False, True):
-            if single_attr:
-                yield {"attributes": [("test", 1)]}
-            for datatype in data_types():
-                values = _Datatype_Sample_Values[datatype]
-                if attr_multiple == "scalar":
-                    pass
-
-
-def dataset_schemas_iter():
-    """Yield a succession of netcdf test data specifications."""
-    # Empty dataset
-    yield {"dataset": "empty"}
-    # Dataset with only dimensions (simple unvarying choice).
-    yield {"dataset": "dimensions_only"}
-    # Dataset with only attributes - test against all attribute options
-    for attr_schema in attr_schemas():
-        yield {"dataset": "attrs_only", "global-attrs": attr_schema}
-
-    # Ideas
-    for attr_spec in attr_specs():
-        yield {"attrs": attr_spec}
-    for dim_spec in dim_specs():
-        yield {"dims": dim_spec}
-    for var_spec in var_specs():
-        dims = get_all_dims(var_spec)
-        yield {"vars": var_spec}
-    for group_spec in group_specs():
-        yield {"groups": group_spec}
-
-
 def _write_nc4_dataset(
     spec: dict,
     ds: nc.Dataset,  # or an inner Group
     parent_spec: dict = None,
 ):
     """
-    Inner routine for ``make_testcase_dataset``.
+    Create a netcdf test file from a 'testcase spec'.
 
+    Inner routine for ``make_testcase_dataset``.
     Separated for recursion and to keep dataset open/close in separate wrapper routine.
     """
 
@@ -215,11 +180,12 @@ def make_testcase_dataset(filepath, spec):
         'dims': [ *{'name':str, size:int [, 'unlim':True]} ]
         'attrs': {'name':str, 'value':array}
         'vars': [ *{
-                        'name':str, 'dims':list[str],
+                        'name':str,
+                        'dims':list[str],
                         [, 'attrs': {'name':str, 'value':array}]
                         [, 'dtype':dtype]
                         [, 'data':array]
-                        [, 'missing_inds': list(int)]  # NB flat indexes
+                        [, 'missing_inds': list(int)]  # NB **flat** indexes
                     }
                 ]
         'groups': list of group_spec
@@ -266,9 +232,19 @@ _simple_test_spec = {
 }
 
 # Define a sequence of standard testfile specs, with suitable param-names.
+_Standard_Testcases: Dict[str, Union[Path, dict]] = {}
 
 
-def _build_all_testcases():
+# A decorator for spec-generating routines.
+# It automatically **calls** the wrapped function, and adds all the results into the
+# global "_Standard_Testcases" dictionary.
+def standard_testcases_func(func):
+    global _Standard_Testcases
+    _Standard_Testcases.update(func())
+
+
+@standard_testcases_func
+def _define_simple_testcases():
     testcases = {
         "ds_Empty": {},
         "ds_Minimal": _minimal_variable_test_spec,
@@ -277,25 +253,48 @@ def _build_all_testcases():
             Path(__file__).parent / "testdata" / "toa_brightness_temperature.nc"
         ),
     }
+    return testcases
 
-    ADD_IRIS_FILES = True
-    ADD_IRIS_FILES = False
+ADD_IRIS_FILES = True
+# ADD_IRIS_FILES = False
+
+@standard_testcases_func
+def _define_iris_testdata_testcases():
+    testcases = {}
     if ADD_IRIS_FILES:
-        # TEMPORARY: add all the Iris testdata paths
+        # Add all the netcdf files from the Iris testdata paths
         _testdirpath = Path(iris.tests.get_data_path("NetCDF"))
         _netcdf_testfile_paths = _testdirpath.rglob("**/*.nc")
+
+        # optional exclusions for useful speedup in test debugging.
+        # EXCLUDES = [
+        #     '_unstructured_',
+        #     '_volcello_',
+        #     '_GEMS_CO2',
+        #     '_ORCA2__votemper',
+        # ]
+        EXCLUDES = []
         for filepath in _netcdf_testfile_paths:
+            param_name = str(filepath)
+            # remove unwanted path elements
+            param_name = param_name.replace(str(_testdirpath), '')
+            if param_name.endswith('.nc'):
+                param_name = param_name[:-3]
+            # replace path-separators and other awkward chars with dunder
+            for char in ('/', '.', '-'):
+                param_name = param_name.replace(char, '__')
             # TEMPORARY: skip unstructured ones, just for now, as it makes the run faster
-            if 'unstructured' not in str(filepath):
-                pathname = str(filepath).replace(str(_testdirpath), '').replace('/', '__')
-                testcases[f"testdata__{pathname}"] = filepath
+            if not any(key in param_name for key in EXCLUDES):
+                testcases[f"testdata__{param_name}"] = filepath
 
-    #
-    # TODO: add files from xarray/tests/data AND xarray-data (separate repo)
-    #
+    return testcases
 
-    ADD_UNIT_TESTS = True
-    # ADD_UNIT_TESTS = False
+
+ADD_UNIT_TESTS = True
+# ADD_UNIT_TESTS = False
+@standard_testcases_func
+def _define_unit_singleitem_testcases():
+    testcases = {}
     if ADD_UNIT_TESTS:
         # Add selected targetted test datasets.
 
@@ -314,8 +313,15 @@ def _build_all_testcases():
             "dims": [dict(name="x", size=2)],
         }
 
+    return testcases
+
+
+@standard_testcases_func
+def _define_unit_dtype_testcases():
+    testcases = {}
+    if ADD_UNIT_TESTS:
         # dataset with attrs and vars of all possible types
-        # TODO: .. and missing-data testcases ???
+        # TODO: .. and missing-data standard_testcases_func ???
         for dtype_name in data_types():
             dtype = 'S1' if dtype_name == 'string' else dtype_name
             if dtype_name == 'string':
@@ -352,7 +358,6 @@ def _build_all_testcases():
 
     return testcases
 
-_Standard_Testcases: Dict[str, Union[Path, dict]] = _build_all_testcases()
 
 @pytest.fixture(scope="session")
 def session_testdir(tmp_path_factory):
@@ -360,42 +365,37 @@ def session_testdir(tmp_path_factory):
     return tmp_dir
 
 
-_SESSION_TESTFILES_DIR = Path('/var/tmp/ncdata_pytest')
-if not _SESSION_TESTFILES_DIR.exists():
-    _SESSION_TESTFILES_DIR.mkdir()
-
-
 @dataclass
-class Schema:
+class TestcaseSchema:
     name: str = ""
     spec: dict = None
     filepath: Path = None
 
 
-_TESTCASE_BUILT_FILES = []
-
-
-@pytest.fixture(params=list(_Standard_Testcases.keys()), scope='function')
-def standard_testcase(request):  #, session_testdir):
+@pytest.fixture(params=list(_Standard_Testcases.keys()))
+def standard_testcase(request, session_testdir):
     """
     A fixture which iterates over a set of "standard" dataset testcases.
 
-    For each one, build the testfile and return a Schema tuple (name, spec, filepath).
-    Since scope="session", each file gets built only once per session.
+    Some of these are based on a 'testcase spec', from which it builds an actual netcdf
+    testfile : these files are created in a temporary directory provided by pytest
+    ("tmp_path_factory"), are are cached so they only get built once per session.
+    Other testcases are just pre-existing test files.
+
+    For each it returns a TestcaseSchema tuple (parameter-name, spec, filepath).
+    For those not based on a spec, 'spec' is None.
     """
     name = request.param
     spec = _Standard_Testcases[name]
     if isinstance(spec, dict):
         # Build a temporary testfile from the spec, and pass that out.
-        # filepath = session_testdir / f"sampledata_{name}.nc"
-        filepath = str(_SESSION_TESTFILES_DIR / f"sampledata_{name}.nc")
-        if filepath not in _TESTCASE_BUILT_FILES:
-            make_testcase_dataset(filepath, spec)
-            _TESTCASE_BUILT_FILES.append(filepath)
-        else:
-            pass
+        filepath = session_testdir / f"sampledata_{name}.nc"
+        if not filepath.exists():
+            # Cache testcase files so we create only once per session.
+            make_testcase_dataset(str(filepath), spec)
     else:
-        # Otherwise 'spec' is a test filepath: pass that, plus spec={}
+        # Otherwise 'spec' is a pre-existing test file: pass (filepath, spec=None)
         filepath = spec
-        spec = {}
-    return Schema(name=name, spec=spec, filepath=filepath)
+        spec = None
+
+    return TestcaseSchema(name=name, spec=spec, filepath=filepath)
