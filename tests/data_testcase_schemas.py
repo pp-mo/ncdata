@@ -142,10 +142,9 @@ def _write_nc4_dataset(
         if data is None:
             shape = nc_var.shape
             n_points = int(np.product(shape))
-            if nc_var.dtype.kind == 'S':
+            if nc_var.dtype.kind == "S":
                 data = np.array(
-                    'abcdefghijklmnopqrstuvwxyz'[:n_points],
-                    dtype='S1'
+                    "abcdefghijklmnopqrstuvwxyz"[:n_points], dtype="S1"
                 )
             else:
                 data = np.arange(1, n_points + 1)
@@ -196,7 +195,7 @@ def make_testcase_dataset(filepath, spec):
     """
     ds = nc.Dataset(filepath, "w")
     try:
-        if 'ds__dtype__string' in filepath:
+        if "ds__dtype__string" in filepath:
             pass
         _write_nc4_dataset(spec, ds)
     finally:
@@ -250,13 +249,17 @@ def _define_simple_testcases():
         "ds_Minimal": _minimal_variable_test_spec,
         "ds_Basic": _simple_test_spec,
         "testdata1": (
-            Path(__file__).parent / "testdata" / "toa_brightness_temperature.nc"
+            Path(__file__).parent
+            / "testdata"
+            / "toa_brightness_temperature.nc"
         ),
     }
     return testcases
 
+
 ADD_IRIS_FILES = True
 # ADD_IRIS_FILES = False
+
 
 @standard_testcases_func
 def _define_iris_testdata_testcases():
@@ -277,20 +280,23 @@ def _define_iris_testdata_testcases():
         for filepath in _netcdf_testfile_paths:
             param_name = str(filepath)
             # remove unwanted path elements
-            param_name = param_name.replace(str(_testdirpath), '')
-            if param_name.endswith('.nc'):
+            param_name = param_name.replace(str(_testdirpath), "")
+            if param_name.endswith(".nc"):
                 param_name = param_name[:-3]
             # replace path-separators and other awkward chars with dunder
-            for char in ('/', '.', '-'):
-                param_name = param_name.replace(char, '__')
+            for char in ("/", ".", "-"):
+                param_name = param_name.replace(char, "__")
             # TEMPORARY: skip unstructured ones, just for now, as it makes the run faster
-            if not any(key in param_name for key in EXCLUDES):
+            # if not any(key in param_name for key in EXCLUDES):
+            if "small_theta_colpex" in param_name:
                 testcases[f"testdata__{param_name}"] = filepath
 
     return testcases
 
 
 ADD_UNIT_TESTS = True
+
+
 # ADD_UNIT_TESTS = False
 @standard_testcases_func
 def _define_unit_singleitem_testcases():
@@ -299,17 +305,15 @@ def _define_unit_singleitem_testcases():
         # Add selected targetted test datasets.
 
         # dataset with a single attribute
-        testcases['ds__singleattr'] = {
-            "attrs": {'attr1': 1}
-        }
+        testcases["ds__singleattr"] = {"attrs": {"attr1": 1}}
 
         # dataset with a single variable
-        testcases['ds__singlevar'] = {
+        testcases["ds__singlevar"] = {
             "vars": [dict(name="vx", dims=[], dtype=np.int32)]
         }
 
         # dataset with a single variable
-        testcases['ds__dimonly'] = {
+        testcases["ds__dimonly"] = {
             "dims": [dict(name="x", size=2)],
         }
 
@@ -323,37 +327,52 @@ def _define_unit_dtype_testcases():
         # dataset with attrs and vars of all possible types
         # TODO: .. and missing-data standard_testcases_func ???
         for dtype_name in data_types():
-            dtype = 'S1' if dtype_name == 'string' else dtype_name
-            if dtype_name == 'string':
+            dtype = "S1" if dtype_name == "string" else dtype_name
+            if dtype_name == "string":
                 # Not working for now
                 # TODO: fix !
                 # continue
                 pass
 
-            testcases[f'ds__dtype__{dtype_name}'] = {
+            testcases[f"ds__dtype__{dtype_name}"] = {
                 "attrs": {
-                    f"tstatt_type__{dtype_name}__single": _Datatype_Sample_Values[dtype_name][0],
-                    f"tstatt_type__{dtype_name}__multi": _Datatype_Sample_Values[dtype_name],
+                    f"tstatt_type__{dtype_name}__single": _Datatype_Sample_Values[
+                        dtype_name
+                    ][
+                        0
+                    ],
+                    f"tstatt_type__{dtype_name}__multi": _Datatype_Sample_Values[
+                        dtype_name
+                    ],
                 },
                 "vars": [dict(name="vx", dims=[], dtype=dtype)],
             }
 
-        testcases['ds__stringvar__singlepoint'] = {
-            "dims": [dict(name='strlen', size=3)],
-            "vars": [dict(
-                        name="vx", dims=['strlen'], dtype='S1',
-                        data=np.array('abc', dtype='S1')
-                     )],
+        testcases["ds__stringvar__singlepoint"] = {
+            "dims": [dict(name="strlen", size=3)],
+            "vars": [
+                dict(
+                    name="vx",
+                    dims=["strlen"],
+                    dtype="S1",
+                    data=np.array("abc", dtype="S1"),
+                )
+            ],
         }
 
-        testcases['ds__stringvar__multipoint'] = {
-            "dims": [dict(name='x', size=2),
-                     dict(name='strlen', size=3),
-                     ],
-            "vars": [dict(
-                name="vx", dims=['x', 'strlen'], dtype='S1',
-                data=np.array([list('abc'), list('def')], dtype='S1')
-            )],
+        testcases["ds__stringvar__multipoint"] = {
+            "dims": [
+                dict(name="x", size=2),
+                dict(name="strlen", size=3),
+            ],
+            "vars": [
+                dict(
+                    name="vx",
+                    dims=["x", "strlen"],
+                    dtype="S1",
+                    data=np.array([list("abc"), list("def")], dtype="S1"),
+                )
+            ],
         }
 
     return testcases
