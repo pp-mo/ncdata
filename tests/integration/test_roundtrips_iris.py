@@ -23,21 +23,22 @@ from tests.data_testcase_schemas import standard_testcase, session_testdir
 standard_testcase, session_testdir
 
 from ncdata.iris import from_iris, to_iris
+from ncdata.threadlock_sharing import sharing_context
 
-import iris.fileformats.netcdf._thread_safe_nc as ifnt
+# import iris.fileformats.netcdf._thread_safe_nc as ifnt
 
 _FIX_LOCKS = True
 # _FIX_LOCKS = False
 if _FIX_LOCKS:
-    @pytest.fixture(scope='session')
+
+    @pytest.fixture(scope="session")
     def use_irislock():
-        tgt = 'ncdata.netcdf4._GLOBAL_NETCDF4_LIBRARY_THREADLOCK'
-        with mock.patch(tgt, new=ifnt._GLOBAL_NETCDF4_LOCK):
+        with sharing_context(iris=True):
             yield
 
 
 _TINY_CHUNKS = True
-# _TINY_CHUNKS = False
+_TINY_CHUNKS = False
 if _TINY_CHUNKS:
     # Note: from experiment, the test most likely to fail due to thread-safety is
     #   "test_load_direct_vs_viancdata[testdata____testing__small_theta_colpex]"
@@ -46,10 +47,12 @@ if _TINY_CHUNKS:
     # The following _CHUNKSIZE_SPEC makes it fail ~70% of runs (run as a single test)
     # HOWEVER, the overall test runs get a LOT slower (e.g. 110sec --> )
     _CHUNKSIZE_SPEC = "20Kib"
+
     # HOWEVER, the above '_FIX_LOCKS' operation seems to prevent this.
-    @pytest.fixture(scope='session', autouse=True)
+    @pytest.fixture(scope="session", autouse=True)
     def force_tiny_chunks():
         import dask.config as dcfg
+
         with dcfg.set({"array.chunk-size": _CHUNKSIZE_SPEC}):
             yield
 
@@ -116,13 +119,13 @@ def test_load_direct_vs_viancdata(standard_testcase, use_irislock):
 
         """
         if (
-                (c1.metadata == c2.metadata)
-                and (c1.shape == c2.shape)
-                and all(cube.dtype.kind in ('U', 'S') for cube in (c1, c2))
+            (c1.metadata == c2.metadata)
+            and (c1.shape == c2.shape)
+            and all(cube.dtype.kind in ("U", "S") for cube in (c1, c2))
         ):
             # cludge comparison for string-type cube data
             c1, c2 = (cube.copy() for cube in (c1, c2))
-            c1.data = (c1.data == c2.data)
+            c1.data = c1.data == c2.data
             c2.data = np.ones(c2.shape, dtype=bool)
 
         return c1 == c2
