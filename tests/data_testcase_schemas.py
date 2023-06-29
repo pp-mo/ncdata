@@ -9,18 +9,17 @@ These testcases also include various pre-existing testfiles, which are NOT built
 specs.  This enables us to perform various translation tests on standard testfiles from
 the Iris and Xarray test suites.
 """
+import re
 import shutil
 from dataclasses import dataclass
 from pathlib import Path
-import re
-from typing import Iterable, Union, Tuple, Dict
+from typing import Dict, Iterable, Tuple, Union
 
+import iris.tests
 import netCDF4
 import netCDF4 as nc
 import numpy as np
 import pytest
-
-import iris.tests
 
 
 def data_types():
@@ -271,10 +270,10 @@ def _define_iris_testdata_testcases():
 
         # optional exclusions for useful speedup in test debugging.
         EXCLUDES = [
-            '_unstructured_',
-            '_volcello_',
-            '_GEMS_CO2',
-            '_ORCA2__votemper',
+            "_unstructured_",
+            "_volcello_",
+            "_GEMS_CO2",
+            "_ORCA2__votemper",
         ]
         # EXCLUDES = []
         for filepath in _netcdf_testfile_paths:
