@@ -270,13 +270,13 @@ def _define_iris_testdata_testcases():
         _netcdf_testfile_paths = _testdirpath.rglob("**/*.nc")
 
         # optional exclusions for useful speedup in test debugging.
-        # EXCLUDES = [
-        #     '_unstructured_',
-        #     '_volcello_',
-        #     '_GEMS_CO2',
-        #     '_ORCA2__votemper',
-        # ]
-        EXCLUDES = []
+        EXCLUDES = [
+            '_unstructured_',
+            '_volcello_',
+            '_GEMS_CO2',
+            '_ORCA2__votemper',
+        ]
+        # EXCLUDES = []
         for filepath in _netcdf_testfile_paths:
             param_name = str(filepath)
             # remove unwanted path elements
@@ -287,8 +287,8 @@ def _define_iris_testdata_testcases():
             for char in ("/", ".", "-"):
                 param_name = param_name.replace(char, "__")
             # TEMPORARY: skip unstructured ones, just for now, as it makes the run faster
-            # if not any(key in param_name for key in EXCLUDES):
-            if "small_theta_colpex" in param_name:
+            if not any(key in param_name for key in EXCLUDES):
+                # if "small_theta_colpex" in param_name:
                 testcases[f"testdata__{param_name}"] = filepath
 
     return testcases

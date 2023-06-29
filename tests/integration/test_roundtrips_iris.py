@@ -18,9 +18,12 @@ import pytest
 from ncdata.netcdf4 import from_nc4, to_nc4
 from tests._compare_nc_datasets import compare_nc_datasets
 from tests.data_testcase_schemas import standard_testcase, session_testdir
+from tests.integration.roundtrips_utils import (
+    cubes_equal__corrected, set_tiny_chunks, adjust_chunks
+)
 
 # Avoid complaints that imported fixtures are "unused"
-standard_testcase, session_testdir
+standard_testcase, session_testdir, adjust_chunks
 
 from ncdata.iris import from_iris, to_iris
 from ncdata.threadlock_sharing import sharing_context
@@ -37,27 +40,12 @@ if _FIX_LOCKS:
             yield
 
 
-_TINY_CHUNKS = True
-_TINY_CHUNKS = False
-if _TINY_CHUNKS:
-    # Note: from experiment, the test most likely to fail due to thread-safety is
-    #   "test_load_direct_vs_viancdata[testdata____testing__small_theta_colpex]"
-    # Resulting errors vary widely, including netcdf/HDF errors, data mismatches and
-    # segfaults.
-    # The following _CHUNKSIZE_SPEC makes it fail ~70% of runs (run as a single test)
-    # HOWEVER, the overall test runs get a LOT slower (e.g. 110sec --> )
-    _CHUNKSIZE_SPEC = "20Kib"
-
-    # HOWEVER, the above '_FIX_LOCKS' operation seems to prevent this.
-    @pytest.fixture(scope="session", autouse=True)
-    def force_tiny_chunks():
-        import dask.config as dcfg
-
-        with dcfg.set({"array.chunk-size": _CHUNKSIZE_SPEC}):
-            yield
+# _USE_TINY_CHUNKS = True
+_USE_TINY_CHUNKS = False
+set_tiny_chunks(_USE_TINY_CHUNKS)
 
 
-def test_load_direct_vs_viancdata(standard_testcase, use_irislock):
+def test_load_direct_vs_viancdata(standard_testcase, use_irislock, adjust_chunks):
     source_filepath = standard_testcase.filepath
     ncdata = from_nc4(source_filepath)
 
@@ -108,30 +96,8 @@ def test_load_direct_vs_viancdata(standard_testcase, use_irislock):
                     f"{iris_cubes[i_cube].summary(shorten=True)}"
                 )
 
-    # Check equivalence
-    # result = iris_cubes == iris_ncdata_cubes
-    # note: temporary fix for string-cube comparison.
-    #   Cf. https://github.com/SciTools/iris/issues/5362
-    #   TODO: remove temporary fix
-    def cube_equal(c1, c2):
-        """
-        Cube equality test which works around string-cube equality problem.
-
-        """
-        if (
-            (c1.metadata == c2.metadata)
-            and (c1.shape == c2.shape)
-            and all(cube.dtype.kind in ("U", "S") for cube in (c1, c2))
-        ):
-            # cludge comparison for string-type cube data
-            c1, c2 = (cube.copy() for cube in (c1, c2))
-            c1.data = c1.data == c2.data
-            c2.data = np.ones(c2.shape, dtype=bool)
-
-        return c1 == c2
-
     results = [
-        (c1.name(), cube_equal(c1, c2))
+        (c1.name(), cubes_equal__corrected(c1, c2))
         for c1, c2 in zip(iris_cubes, iris_ncdata_cubes)
     ]
     expected = [(cube.name(), True) for cube in iris_cubes]
