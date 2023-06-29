@@ -252,7 +252,7 @@ class Test__compare_attributes:
 
     def test_compare_attributes_values__data_arrays_match(self):
         # Attributes of different value (but matching dtype)
-        array = np.arange(3.)
+        array = np.arange(3.0)
         obj1 = self.Nc4ObjectWithAttrsMimic(a=array)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array)
         errs = []
@@ -261,15 +261,17 @@ class Test__compare_attributes:
 
     def test_compare_attributes_values__data_arrays_dtype_mismatch(self):
         # Attributes of different value (but matching dtype)
-        array = np.arange(3, dtype='f4')
+        array = np.arange(3, dtype="f4")
         obj1 = self.Nc4ObjectWithAttrsMimic(a=array)
-        obj2 = self.Nc4ObjectWithAttrsMimic(a=array.astype('f8'))
+        obj2 = self.Nc4ObjectWithAttrsMimic(a=array.astype("f8"))
         errs = []
         _compare_attributes(errs, obj1, obj2, "<object attributes>")
-        assert errs == [(
-            "<object attributes> \"a\" attribute datatypes differ : "
-            "dtype('float32') != dtype('float64')"
-        )]
+        assert errs == [
+            (
+                '<object attributes> "a" attribute datatypes differ : '
+                "dtype('float32') != dtype('float64')"
+            )
+        ]
 
     def test_compare_attributes_values__data_arrays_shape_mismatch(self):
         # Attributes of different value (but matching dtype)
@@ -278,10 +280,12 @@ class Test__compare_attributes:
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array[:-1])
         errs = []
         _compare_attributes(errs, obj1, obj2, "<object attributes>")
-        assert errs == [(
-            "<object attributes> \"a\" attribute values differ : "
-            "array([0, 1, 2]) != array([0, 1])"
-        )]
+        assert errs == [
+            (
+                '<object attributes> "a" attribute values differ : '
+                "array([0, 1, 2]) != array([0, 1])"
+            )
+        ]
 
     def test_compare_attributes_values__data_arrays_value_mismatch(self):
         # Attributes of different value (but matching dtype)
@@ -291,10 +295,12 @@ class Test__compare_attributes:
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array2)
         errs = []
         _compare_attributes(errs, obj1, obj2, "<object attributes>")
-        assert errs == [(
-            "<object attributes> \"a\" attribute values differ : "
-            "array([1, 2, 3]) != array([  1,   2, 777])"
-        )]
+        assert errs == [
+            (
+                '<object attributes> "a" attribute values differ : '
+                "array([1, 2, 3]) != array([  1,   2, 777])"
+            )
+        ]
 
     def test_compare_attributes_values__data_arrays_nans_match(self):
         # Attributes of different value (but matching dtype)
@@ -307,16 +313,18 @@ class Test__compare_attributes:
 
     def test_compare_attributes_values__data_arrays_nans_mismatch(self):
         # Attributes of different value (but matching dtype)
-        array1 = np.array([1., 2., 3.])
-        array2 = np.array([1., np.nan, 3.])
+        array1 = np.array([1.0, 2.0, 3.0])
+        array2 = np.array([1.0, np.nan, 3.0])
         obj1 = self.Nc4ObjectWithAttrsMimic(a=array1)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array2)
         errs = []
         _compare_attributes(errs, obj1, obj2, "<object attributes>")
-        assert errs == [(
-            "<object attributes> \"a\" attribute values differ : "
-            "array([1., 2., 3.]) != array([ 1., nan,  3.])"
-        )]
+        assert errs == [
+            (
+                '<object attributes> "a" attribute values differ : '
+                "array([1., 2., 3.]) != array([ 1., nan,  3.])"
+            )
+        ]
 
     def test_compare_attributes_values__string_nonstring(self):
         # Attributes of string and non-string types, since we handle that differently

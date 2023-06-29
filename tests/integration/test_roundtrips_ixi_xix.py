@@ -8,26 +8,24 @@ Testcases start as netcdf files.
 from subprocess import check_output
 from unittest import mock
 
-import numpy as np
-
 import dask.array as da
-import xarray
-
 import iris
 import iris.fileformats.netcdf._thread_safe_nc as iris_threadsafe
+import numpy as np
 import pytest
+import xarray
 
-from ncdata.netcdf4 import from_nc4, to_nc4
-from tests._compare_nc_datasets import compare_nc_datasets
-from tests.data_testcase_schemas import standard_testcase, session_testdir
-
-from ncdata.iris_xarray import cubes_to_xarray, cubes_from_xarray
 from ncdata.iris import from_iris
-from ncdata.xarray import from_xarray
-
+from ncdata.iris_xarray import cubes_from_xarray, cubes_to_xarray
+from ncdata.netcdf4 import from_nc4, to_nc4
 from ncdata.threadlock_sharing import sharing_context
+from ncdata.xarray import from_xarray
+from tests._compare_nc_datasets import compare_nc_datasets
+from tests.data_testcase_schemas import session_testdir, standard_testcase
 from tests.integration.roundtrips_utils import (
-    set_tiny_chunks, adjust_chunks, cubes_equal__corrected
+    adjust_chunks,
+    cubes_equal__corrected,
+    set_tiny_chunks,
 )
 
 # Avoid complaints that imported fixtures are "unused"
@@ -55,13 +53,13 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
 
     # Skip cases where there are no data variables for Iris to load.
     if standard_testcase.name in (
-        'ds_Empty',
-        'ds__singleattr',
-        'ds__dimonly',
+        "ds_Empty",
+        "ds__singleattr",
+        "ds__dimonly",
         # Cubes with string data are not cleanly handled at present.
         # (not clear if iris or xarray is behaving wrongly here)
-        'ds__stringvar__singlepoint',
-        'ds__stringvar__multipoint',
+        "ds__stringvar__singlepoint",
+        "ds__stringvar__multipoint",
     ):
         return
 
@@ -88,12 +86,10 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
         for cubes in (iris_cubes, iris_xr_cubes)
     )
 
-
     # N.B. Conventions are not preserved from original, since Iris re-writes them.
     # So for now, just remove them all
     for cube in iris_cubes + iris_xr_cubes:
-        cube.attributes.pop('Conventions', None)
-
+        cube.attributes.pop("Conventions", None)
 
     # # There is also a peculiar problem with cubes that have all-masked data.
     # # Let's error any like that, for now...
@@ -133,7 +129,6 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
     # Check equivalence
     # result = iris_cubes == iris_ncdata_cubes
 
-
     #
     # N.B. this is NOT necessary, since the units equate despite printing differently
     # ?? urrgh ??
@@ -146,10 +141,12 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
             if xr_coord != iris_coord:
                 # Xr strips off 00:00:00 from time units
                 # we expect any differences to relate to that
-                xr_ut, iris_ut = (str(co.units) for co in (xr_coord, iris_coord))
+                xr_ut, iris_ut = (
+                    str(co.units) for co in (xr_coord, iris_coord)
+                )
                 assert xr_ut != iris_ut
-                assert iris_ut.endswith(' 00:00:00')
-                assert ' since ' in iris_ut
+                assert iris_ut.endswith(" 00:00:00")
+                assert " since " in iris_ut
                 assert xr_ut in iris_ut
                 xr_coord.units = iris_ut
 
@@ -178,14 +175,12 @@ def test_roundtrip_xix(standard_testcase, use_irislock, adjust_chunks):
     # Skip some cases
     if standard_testcase.name in (
         # these won't load (either Iris or Xarray)
-        'ds_Empty',
-        'ds__singleattr',
-        'ds__dimonly',
+        "ds_Empty",
+        "ds__singleattr",
+        "ds__dimonly",
         # these are too big to compare ??
-
     ):
         return
-
 
     # _Debug = True
     _Debug = False
@@ -198,7 +193,7 @@ def test_roundtrip_xix(standard_testcase, use_irislock, adjust_chunks):
         print(txt)
 
     # Load the testcase with Xarray.
-    xrds = xarray.open_dataset(source_filepath, chunks='auto')
+    xrds = xarray.open_dataset(source_filepath, chunks="auto")
 
     # Convert to xarray, and back again.
     iris_cubes = cubes_from_xarray(xrds)
@@ -212,11 +207,8 @@ def test_roundtrip_xix(standard_testcase, use_irislock, adjust_chunks):
     if not result:
         # FOR NOW: compare with experimental ncdata comparison.
         # I know this is a bit circular, but it is useful for debugging, for now ...
-        result = compare_nc_datasets(
-            from_xarray(xrds), from_xarray(xrds_iris)
-        )
+        result = compare_nc_datasets(from_xarray(xrds), from_xarray(xrds_iris))
         assert result == []
 
     # assert iris_cubes == iris_ncdata_cubes
     assert result
-

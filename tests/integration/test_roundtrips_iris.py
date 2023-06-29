@@ -8,18 +8,19 @@ Testcases start as netcdf files.
 from subprocess import check_output
 from unittest import mock
 
-import numpy as np
-
 import dask.array as da
 import iris
 import iris.fileformats.netcdf._thread_safe_nc as iris_threadsafe
+import numpy as np
 import pytest
 
 from ncdata.netcdf4 import from_nc4, to_nc4
 from tests._compare_nc_datasets import compare_nc_datasets
-from tests.data_testcase_schemas import standard_testcase, session_testdir
+from tests.data_testcase_schemas import session_testdir, standard_testcase
 from tests.integration.roundtrips_utils import (
-    cubes_equal__corrected, set_tiny_chunks, adjust_chunks
+    adjust_chunks,
+    cubes_equal__corrected,
+    set_tiny_chunks,
 )
 
 # Avoid complaints that imported fixtures are "unused"
@@ -45,7 +46,9 @@ _USE_TINY_CHUNKS = False
 set_tiny_chunks(_USE_TINY_CHUNKS)
 
 
-def test_load_direct_vs_viancdata(standard_testcase, use_irislock, adjust_chunks):
+def test_load_direct_vs_viancdata(
+    standard_testcase, use_irislock, adjust_chunks
+):
     source_filepath = standard_testcase.filepath
     ncdata = from_nc4(source_filepath)
 
