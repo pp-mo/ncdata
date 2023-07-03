@@ -1,5 +1,5 @@
 """
-Test ncdata.iris by checking roundtrips for standard standard_testcases_func.
+Test ncdata.iris by checking roundtrips for standard testcases.
 
 Testcases start as netcdf files.
 (1) check equivalence of cubes : iris.load(file) VS iris.load(ncdata(file))
@@ -27,7 +27,7 @@ from tests.integration.roundtrips_utils import (
 standard_testcase, session_testdir, adjust_chunks
 
 from ncdata.iris import from_iris, to_iris
-from ncdata.threadlock_sharing import sharing_context
+from ncdata.threadlock_sharing import lockshare_context
 
 # import iris.fileformats.netcdf._thread_safe_nc as ifnt
 
@@ -37,7 +37,7 @@ if _FIX_LOCKS:
 
     @pytest.fixture(scope="session")
     def use_irislock():
-        with sharing_context(iris=True):
+        with lockshare_context(iris=True):
             yield
 
 
