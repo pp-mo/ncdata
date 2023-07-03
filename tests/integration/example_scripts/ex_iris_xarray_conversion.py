@@ -75,6 +75,12 @@ def example_from_xr():  # noqa: D103
     # TODO: find out exactly why -- ? in some way, because it is a dim coord ?
     # assert xrds2["x"].data is cube.coord("projection_x_coordinate").core_points()
 
+    # NOTE: This part is an actual data content comparison.
+    # When comparing actual (lazy) array content, we will often need to take extra
+    # measures to ensure thread-safe use of the netcdf library, if data may be fetched
+    # (computed) from both Iris and Xarray lazy data arrays **together**.
+    # In this case, however, the Iris coordinate ".points" is fetched *first*, so no
+    # special care is needed.
     print(
         "np.all(xrds2['x'].data == cube.coord('projection_x_coordinate').points) : ",
         bool(
