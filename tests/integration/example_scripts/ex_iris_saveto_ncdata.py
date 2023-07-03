@@ -17,7 +17,7 @@ def example_ncdata_from_iris():
     filepath = testdata_dir / "toa_brightness_temperature.nc"
     cubes = iris.load(filepath)
     ds = from_iris(cubes)
-    # save to file
+    # show result
     print(ds)
 
 
