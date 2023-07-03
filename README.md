@@ -105,9 +105,9 @@ indexing) may be better done using Iris/Xarray.
 # Code Examples
   * mostly TBD
   * proof-of-concept script for
-    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/tests/integration/ex_ncdata_netcdf_conversion.py)
+    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts/ex_ncdata_netcdf_conversion.py)
   * proof-of-concept script for
-    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/tests/integration/ex_iris_xarray_conversion.py)    
+    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts/ex_iris_xarray_conversion.py)    
 
 # API documentation
   * see the [ReadTheDocs build](https://ncdata.readthedocs.io/en/latest/index.html)

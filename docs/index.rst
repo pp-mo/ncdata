@@ -31,7 +31,7 @@ For now, we don't yet have much documentation beyond this page, and the API note
 
 * Some simple usage examples (scripts) are provided in the codebase.
 
-  * Please see : `Testcode scripts <https://github.com/pp-mo/ncdata/blob/main/tests/integration>`_
+  * Please see : `Testcode scripts <https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts>`_
 
 
 API documentation
