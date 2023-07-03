@@ -5,9 +5,14 @@
 
 ncdata
 ======
-NetCDF data interoperability between Iris and Xarray.
+NetCDF data interoperability.
 
-Ncdata exchanges data between Xarray and Iris as efficently as possible
+Represents generic netcdf data in Python objects, with translation to and from common
+analysis packages, so that netcdf-based data can be freely exchanged between packages
+without data copying, and data storage formatting can be precisely controlled.
+
+In particular Ncdata exchanges data **between Xarray and Iris** as efficiently as
+possible.
 
    "lossless, copy-free and lazy-preserving".
 
@@ -17,7 +22,7 @@ This enables the user to freely mix+match operations from both projects, getting
 
 User Documentation
 ------------------
-For now, we don't yet have documentation beyond the API notes.
+For now, we don't yet have much documentation beyond this page, and the API notes.
 
 * a general project introduction is provide in the project README,
   along with all the current project status information.
@@ -26,7 +31,7 @@ For now, we don't yet have documentation beyond the API notes.
 
 * Some simple usage examples (scripts) are provided in the codebase.
 
-  * Please see : `Testcode scripts <https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration>`_
+  * Please see : `Testcode scripts <https://github.com/pp-mo/ncdata/blob/main/tests/integration>`_
 
 
 API documentation

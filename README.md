@@ -1,7 +1,10 @@
 # ncdata
-NetCDF data interoperability between Iris and Xarray.
+Generic NetCDF data in Python.
 
-Ncdata exchanges data between Xarray and Iris as efficently as possible  
+Provides fast data exchange between analysis packages, and full control of storage
+formatting.
+
+Especially : Ncdata **exchanges data between Xarray and Iris** as efficently as possible  
 > "lossless, copy-free and lazy-preserving".
 
 This enables the user to freely mix+match operations from both projects, getting the
@@ -102,9 +105,9 @@ indexing) may be better done using Iris/Xarray.
 # Code Examples
   * mostly TBD
   * proof-of-concept script for
-    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration/ex_ncdata_netcdf_conversion.py)
+    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/tests/integration/ex_ncdata_netcdf_conversion.py)
   * proof-of-concept script for
-    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/lib/tests/integration/ex_iris_xarray_conversion.py)    
+    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/tests/integration/ex_iris_xarray_conversion.py)    
 
 # API documentation
   * see the [ReadTheDocs build](https://ncdata.readthedocs.io/en/latest/index.html)
