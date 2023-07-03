@@ -19,23 +19,23 @@ so that any and all of them can safely co-operate in parallel operations.
 
 sample code::
 
-    from ncdata.threadlock_sharing import enable_sharing, disable_sharing
+    from ncdata.threadlock_sharing import enable_lockshare, disable_lockshare
     from ncdata.xarray import from_xarray
     from ncdata.iris import from_iris
     from ncdata.netcdf4 import to_nc4
 
-    enable_sharing(iris=True, xarray=True)
+    enable_lockshare(iris=True, xarray=True)
 
     ds = from_xarray(xarray.open_dataset(file1))
     ds2 = from_iris(iris.load(file2))
     ds.variables['x'].data /= ds2.variables['acell'].data
     to_nc4(ds, output_filepath)
 
-    disable_sharing()
+    disable_lockshare()
 
 or::
 
-    with sharing_context(iris=True):
+    with lockshare_context(iris=True):
         ncdata = NcData(source_filepath)
         ncdata.variables['x'].attributes['units'] = 'K'
         cubes = ncdata.iris.to_iris(ncdata)
@@ -54,9 +54,9 @@ _IRIS_TARGET = "iris.fileformats.netcdf._thread_safe_nc._GLOBAL_NETCDF4_LOCK"
 _NCDATA_TARGET = "ncdata.netcdf4._GLOBAL_NETCDF4_LIBRARY_THREADLOCK"
 
 
-def enable_sharing(iris: bool = False, xarray: bool = False):
+def enable_lockshare(iris: bool = False, xarray: bool = False):
     """
-    Begin lock-sharing between ncdata and the requested other packages.
+    Begin lock-sharing between ncdata and the requested other package(s).
 
     Does nothing if an existing sharing is already in place.
 
@@ -69,9 +69,9 @@ def enable_sharing(iris: bool = False, xarray: bool = False):
 
     Notes
     -----
-    If an 'enable_sharing' call was already established, the function does nothing,
+    If an 'enable_lockshare' call was already established, the function does nothing,
     i.e. it is not possible to modify an existing share.  Instead, you must call
-    :func:`disable_sharing` to cancel the current sharing, before you can establish
+    :func:`disable_lockshare` to cancel the current sharing, before you can establish
     a new one.
 
     While sharing with *both* iris and xarray, iris is modified to use the same netcdf
@@ -112,7 +112,7 @@ def enable_sharing(iris: bool = False, xarray: bool = False):
         _SHARE_PATCHES = patches
 
 
-def disable_sharing():
+def disable_lockshare():
     """
     Remove any enabled lock-sharing.
 
@@ -125,7 +125,7 @@ def disable_sharing():
 
 
 @contextmanager
-def sharing_context(iris: bool = False, xarray: bool = False):
+def lockshare_context(iris: bool = False, xarray: bool = False):
     """
     Make a context with lock-sharing between the ncdata and the requested packages.
 
@@ -134,7 +134,7 @@ def sharing_context(iris: bool = False, xarray: bool = False):
 
     """
     try:
-        enable_sharing(iris=iris, xarray=xarray)
+        enable_lockshare(iris=iris, xarray=xarray)
         yield
     finally:
-        disable_sharing()
+        disable_lockshare()

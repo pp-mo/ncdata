@@ -1,5 +1,5 @@
 """
-Test ncdata.xarray by checking roundtrips for standard standard_testcases_func.
+Test ncdata.xarray by checking roundtrips for standard testcases.
 
 Testcases start as netcdf files.
 (1) check equivalence of cubes : xarray.load(file) VS xarray.load(ncdata(file))
@@ -23,7 +23,7 @@ from tests.integration.roundtrips_utils import (
 # Avoid complaints that imported fixtures are "unused"
 standard_testcase, session_testdir, adjust_chunks
 
-from ncdata.threadlock_sharing import sharing_context
+from ncdata.threadlock_sharing import lockshare_context
 from ncdata.xarray import from_xarray, to_xarray
 
 _FIX_LOCKS = True
@@ -32,7 +32,7 @@ if _FIX_LOCKS:
 
     @pytest.fixture(scope="session")
     def use_xarraylock():
-        with sharing_context(xarray=True):
+        with lockshare_context(xarray=True):
             yield
 
 

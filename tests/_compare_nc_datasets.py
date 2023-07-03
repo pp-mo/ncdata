@@ -117,9 +117,9 @@ def _isncdata(obj):
 
 def _array_eq(a1, a2):
     """
-    A suitable local definition of precise array equality.
+    Test equality of array values in attributes.
 
-    Assumes values (attributes) presented as numpy arrays.
+    Assumes values (attributes) are presented as numpy arrays (not lazy).
     Matches any NaNs.
     Does *NOT* handle masked data -- which does not occur in attributes.
     """

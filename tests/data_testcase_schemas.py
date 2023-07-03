@@ -324,7 +324,7 @@ def _define_unit_dtype_testcases():
     testcases = {}
     if ADD_UNIT_TESTS:
         # dataset with attrs and vars of all possible types
-        # TODO: .. and missing-data standard_testcases_func ???
+        # TODO: .. and missing-data testcases ???
         for dtype_name in data_types():
             dtype = "S1" if dtype_name == "string" else dtype_name
             if dtype_name == "string":
