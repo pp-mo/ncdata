@@ -10,6 +10,8 @@ amount.  The structure of an NcData object makes it fairly painless.
 from pathlib import Path
 from typing import AnyStr, Union
 
+import dask.array as da
+import numpy as np
 import xarray as xr
 
 from . import NcAttribute, NcData, NcDimension, NcVariable
@@ -102,11 +104,45 @@ class _XarrayNcDataStore:
                 name: NcAttribute(name, value)
                 for name, value in var.attrs.items()
             }
+
+            data = var.data
+            _MakeDataMasked = True
+            # _MakeDataMasked = False
+            if _MakeDataMasked:
+                if data.ndim < 1:
+                    data = data.reshape((1,))
+                # reprocess the data (which has been filled by "encode_cf_variable"), to
+                # produce a masked array, since this mimics how netCDF4 would present it.
+                fv = attrs.get("_FillValue")
+                if fv is not None:
+                    fv = fv.as_python_value()
+                elif var.dtype.itemsize > 1:
+                    from netCDF4 import default_fillvals
+
+                    dtype = var.dtype
+                    kind = dtype.kind
+                    size = 1 if kind in "SUb" else dtype.itemsize
+                    typename = f"{kind}{size}"
+                    fv = default_fillvals[typename]
+                if fv is not None:
+                    # N.B. fv *can* be 'None' here : it means NO fill (for bytes only?)
+                    data = da.ma.getdata(data)
+                    mask = da.ma.getmaskarray(data)
+                    if np.asarray(fv).dtype.kind == "f" and np.isnan(fv):
+                        if data.dtype.kind in ("S", "U", "b"):
+                            pass
+                        # Mask NaN values : N.B. can't use equality, must use "isnan"
+                        mask |= da.isnan(data)
+                    else:
+                        mask |= data == fv
+                    data = da.ma.masked_array(data, mask=mask)
+                data = data.reshape(var.data.shape)
+
             nc_var = NcVariable(
                 name=varname,
                 dimensions=var.dims,
                 attributes=attrs,
-                data=var.data,
+                data=data,
                 group=self.ncdata,
             )
             self.ncdata.variables[varname] = nc_var

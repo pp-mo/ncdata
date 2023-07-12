@@ -115,6 +115,26 @@ def _isncdata(obj):
     return hasattr(obj, "_print_content")
 
 
+def _array_eq(a1, a2):
+    """
+    Test equality of array values in attributes.
+
+    Assumes values (attributes) are presented as numpy arrays (not lazy).
+    Matches any NaNs.
+    Does *NOT* handle masked data -- which does not occur in attributes.
+    """
+    result = True
+    result &= a1.shape == a2.shape
+    result &= a1.dtype == a2.dtype
+    if result:
+        if a1.dtype.kind in ("S", "U", "b"):
+            result = np.all(a1 == a2)
+        else:
+            # array_equal handles possible NaN cases
+            result = np.array_equal(a1, a2, equal_nan=True)
+    return result
+
+
 def _compare_attributes(
     errs,
     obj1,
@@ -168,12 +188,14 @@ def _compare_attributes(
             for obj in (obj1, obj2)
         ]
 
+        # TODO: this still doesn't work well for strings : for those, we should ignore
+        #  exact "type" (including length), and just compare the content.
+        # TODO: get a good testcase going to check this behaviour
         dtype, dtype2 = [
             # Get x.dtype, or fallback on type(x) -- basically, for strings.
             getattr(attr, "dtype", type(attr))
             for attr in (attr, attr2)
         ]
-
         if dtype != dtype2:
             msg = (
                 f'{elemname} "{attrname}" attribute datatypes differ : '
@@ -181,10 +203,11 @@ def _compare_attributes(
             )
             errs.append(msg)
         else:
-            # If values match (only then), compare datatypes
+            # If datatypes match (only then), compare values
             # Cast attrs, which might be strings, to arrays for comparison
             arr, arr2 = [np.asarray(attr) for attr in (attr, attr2)]
-            if arr.shape != arr2.shape or not np.all(arr == arr2):
+            if not _array_eq(arr, arr2):
+                # N.B. special comparison to handle strings and NaNs
                 msg = (
                     f'{elemname} "{attrname}" attribute values differ : '
                     f"{attr!r} != {attr2!r}"
