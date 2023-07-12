@@ -269,13 +269,13 @@ def _define_iris_testdata_testcases():
         _netcdf_testfile_paths = _testdirpath.rglob("**/*.nc")
 
         # optional exclusions for useful speedup in test debugging.
-        EXCLUDES = [
-            "_unstructured_",
-            "_volcello_",
-            "_GEMS_CO2",
-            "_ORCA2__votemper",
-        ]
-        # EXCLUDES = []
+        # EXCLUDES = [
+        #     "_unstructured_",
+        #     "_volcello_",
+        #     "_GEMS_CO2",
+        #     "_ORCA2__votemper",
+        # ]
+        EXCLUDES = []
         for filepath in _netcdf_testfile_paths:
             param_name = str(filepath)
             # remove unwanted path elements
@@ -294,9 +294,9 @@ def _define_iris_testdata_testcases():
 
 
 ADD_UNIT_TESTS = True
-
-
 # ADD_UNIT_TESTS = False
+
+
 @standard_testcases_func
 def _define_unit_singleitem_testcases():
     testcases = {}
@@ -417,3 +417,25 @@ def standard_testcase(request, session_testdir):
         spec = None
 
     return TestcaseSchema(name=name, spec=spec, filepath=filepath)
+
+
+# Some testcases that are known not to load or save correctly, due to limitations or
+# errors in the data handling packages
+BAD_LOADSAVE_TESTCASES = {
+    "iris": {
+        # We think Iris can load ~anything (maybe returning nothing)
+        "load": [],
+        # Iris can't save data with no data-variables.
+        "save": ["ds_Empty", "ds__singleattr", "ds__dimonly"],
+    },
+    "xarray": {
+        # We think Iris can load ~anything (maybe returning nothing)
+        "load": [
+            "testdata____label_and_climate__small_FC_167_mon_19601101",
+            "testdata____unstructured_grid__lfric_surface_mean",
+            "testdata____rotated__xyt__small_rotPole_precipitation",
+        ],
+        # Iris can't save data with no data-variables.
+        "save": [],
+    },
+}

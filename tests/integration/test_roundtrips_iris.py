@@ -33,12 +33,15 @@ from ncdata.threadlock_sharing import lockshare_context
 
 _FIX_LOCKS = True
 # _FIX_LOCKS = False
-if _FIX_LOCKS:
 
-    @pytest.fixture(scope="session")
-    def use_irislock():
+
+@pytest.fixture(scope="session")
+def use_irislock():
+    if _FIX_LOCKS:
         with lockshare_context(iris=True):
             yield
+    else:
+        yield
 
 
 # _USE_TINY_CHUNKS = True
@@ -74,31 +77,6 @@ def test_load_direct_vs_viancdata(
         for cubes in (iris_cubes, iris_ncdata_cubes)
     )
 
-    # There is also a peculiar problem with cubes that have all-masked data.
-    # Let's just skip any like that, for now...
-    def all_maskeddata_cube(cube):
-        return da.all(da.ma.getmaskarray(cube.core_data())).compute()
-
-    if len(iris_cubes) == len(iris_ncdata_cubes):
-        i_ok = [
-            i
-            for i in range(len(iris_cubes))
-            if not all_maskeddata_cube(iris_cubes[i])
-            and not all_maskeddata_cube(iris_ncdata_cubes[i])
-        ]
-        iris_cubes, iris_ncdata_cubes = (
-            [cube for i, cube in enumerate(cubes) if i in i_ok]
-            for cubes in (iris_cubes, iris_ncdata_cubes)
-        )
-
-        n_cubes = len(iris_cubes)
-        for i_cube in range(n_cubes):
-            if i_cube not in i_ok:
-                print(
-                    f'\nSKIPPED testcase @"{source_filepath}" : cube #{i_cube}/{n_cubes} with all-masked data : '
-                    f"{iris_cubes[i_cube].summary(shorten=True)}"
-                )
-
     results = [
         (c1.name(), cubes_equal__corrected(c1, c2))
         for c1, c2 in zip(iris_cubes, iris_ncdata_cubes)
@@ -127,7 +105,7 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
 
     if standard_testcase.name in ("ds_Empty", "ds__singleattr", "ds__dimonly"):
         # Iris can't save an empty dataset.
-        return
+        pytest.skip("excluded testcase")
 
     # Re-save from iris
     temp_iris_savepath = tmp_path / "temp_save_iris.nc"
