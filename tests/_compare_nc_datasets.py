@@ -188,12 +188,14 @@ def _compare_attributes(
             for obj in (obj1, obj2)
         ]
 
+        # TODO: this still doesn't work well for strings : for those, we should ignore
+        #  exact "type" (including length), and just compare the content.
+        # TODO: get a good testcase going to check this behaviour
         dtype, dtype2 = [
             # Get x.dtype, or fallback on type(x) -- basically, for strings.
             getattr(attr, "dtype", type(attr))
             for attr in (attr, attr2)
         ]
-
         if dtype != dtype2:
             msg = (
                 f'{elemname} "{attrname}" attribute datatypes differ : '
