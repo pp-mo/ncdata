@@ -106,8 +106,8 @@ class _XarrayNcDataStore:
             }
 
             data = var.data
-            _MakeDataMasked = True
-            # _MakeDataMasked = False
+            # _MakeDataMasked = True
+            _MakeDataMasked = False
             if _MakeDataMasked:
                 if data.ndim < 1:
                     data = data.reshape((1,))
@@ -150,6 +150,9 @@ class _XarrayNcDataStore:
     def close(self):
         pass
 
+    def get_encoding(self):
+        return {}
+
     #
     # This interface supports conversion to+from an xarray "Dataset".
     # N.B. using the "AbstractDataStore" interface preserves variable contents, being
@@ -168,8 +171,12 @@ class _XarrayNcDataStore:
         dataset_or_file.dump_to_store(nc_data, **xr_load_kwargs)
         return nc_data
 
-    def to_xarray(self, **xr_save_kwargs) -> xr.Dataset:
-        ds = xr.Dataset.load_store(self, **xr_save_kwargs)
+    def to_xarray(self, **xr_load_kwargs) -> xr.Dataset:
+        # ds = xr.Dataset.load_store(self, **xr_save_kwargs)
+        from xarray.backends.store import StoreBackendEntrypoint
+
+        store_entrypoint = StoreBackendEntrypoint()
+        ds = store_entrypoint.open_dataset(self, **xr_load_kwargs)
         return ds
 
 
