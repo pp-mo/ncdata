@@ -181,7 +181,7 @@ def _compare_attributes(
 
         attr, attr2 = [
             (
-                obj.attributes[attrname].value
+                obj.attributes[attrname].as_python_value()
                 if _isncdata(obj)
                 else obj.getncattr(attrname)
             )
@@ -196,6 +196,11 @@ def _compare_attributes(
             getattr(attr, "dtype", type(attr))
             for attr in (attr, attr2)
         ]
+        if all(
+            isinstance(dt, np.dtype) and dt.kind in 'SUb'
+            for dt in (dtype, dtype2)
+        ):
+            dtype = dtype2 = 'string'
         if dtype != dtype2:
             msg = (
                 f'{elemname} "{attrname}" attribute datatypes differ : '

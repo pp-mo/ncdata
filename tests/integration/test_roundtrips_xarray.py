@@ -112,43 +112,43 @@ def test_load_direct_vs_viancdata(
     for ds in (xr_ds, xr_ncdata_ds):
         fix_xarray_scalar_data(ds)
 
-    # Fix converted result for extra entries in the 'coordinates' attributes.
-    for varname in xr_ncdata_ds.variables.keys():
-        var, var_orig = (ds.variables[varname] for ds in (xr_ncdata_ds, xr_ds))
-        newattrs, orig_attrs = (v.attrs.copy() for v in (var, var_orig))
-        if newattrs != orig_attrs:
-            # Does not work : del var.attrs['coordinates']
-            # Demonstrate that change consists of extra names in 'coordinates'
-            attrs1, attrs2 = (aa.copy() for aa in (newattrs, orig_attrs))
-            for aa in (attrs1, attrs2):
-                aa.pop("coordinates", None)
-            assert attrs1 == attrs2
-            # Demonstrate that coords got extended + fix it.
-            coords, orig_coords = (
-                aa.get("coordinates", None) for aa in (newattrs, orig_attrs)
-            )
-            coords, orig_coords = [
-                [] if cc is None else cc.split(" ")
-                for cc in (coords, orig_coords)
-            ]
-            assert set(coords) > set(orig_coords)
-            newcoords = [co for co in coords if co in orig_coords]
-            if len(newcoords) == 0:
-                newattrs.pop("coordinates", None)
-            else:
-                newattrs["coordinates"] = " ".join(newcoords)
-            newvar = xarray.Variable(
-                dims=var.dims,
-                data=var.data,
-                attrs=newattrs,
-                encoding=var.encoding,
-            )
-            xr_ncdata_ds[varname] = newvar
-
-        attrs, orig_attrs = (
-            ds.variables[varname].attrs for ds in (xr_ncdata_ds, xr_ds)
-        )
-        assert attrs == orig_attrs
+    # # Fix converted result for extra entries in the 'coordinates' attributes.
+    # for varname in xr_ncdata_ds.variables.keys():
+    #     var, var_orig = (ds.variables[varname] for ds in (xr_ncdata_ds, xr_ds))
+    #     newattrs, orig_attrs = (v.attrs.copy() for v in (var, var_orig))
+    #     if newattrs != orig_attrs:
+    #         # Does not work : del var.attrs['coordinates']
+    #         # Demonstrate that change consists of extra names in 'coordinates'
+    #         attrs1, attrs2 = (aa.copy() for aa in (newattrs, orig_attrs))
+    #         for aa in (attrs1, attrs2):
+    #             aa.pop("coordinates", None)
+    #         assert attrs1 == attrs2
+    #         # Demonstrate that coords got extended + fix it.
+    #         coords, orig_coords = (
+    #             aa.get("coordinates", None) for aa in (newattrs, orig_attrs)
+    #         )
+    #         coords, orig_coords = [
+    #             [] if cc is None else cc.split(" ")
+    #             for cc in (coords, orig_coords)
+    #         ]
+    #         assert set(coords) > set(orig_coords)
+    #         newcoords = [co for co in coords if co in orig_coords]
+    #         if len(newcoords) == 0:
+    #             newattrs.pop("coordinates", None)
+    #         else:
+    #             newattrs["coordinates"] = " ".join(newcoords)
+    #         newvar = xarray.Variable(
+    #             dims=var.dims,
+    #             data=var.data,
+    #             attrs=newattrs,
+    #             encoding=var.encoding,
+    #         )
+    #         xr_ncdata_ds[varname] = newvar
+    #
+    #     attrs, orig_attrs = (
+    #         ds.variables[varname].attrs for ds in (xr_ncdata_ds, xr_ds)
+    #     )
+    #     assert attrs == orig_attrs
 
     xr_compare = xr_ds.identical(xr_ncdata_ds)
 
@@ -160,13 +160,13 @@ def test_load_direct_vs_viancdata(
     xr_ds.to_netcdf(temp_xr_path)
     xr_ncdata_ds.to_netcdf(temp_xr_ncdata_path)
     ds_diffs = compare_nc_datasets(
-        temp_xr_path, temp_xr_ncdata_path, check_var_data=False
+        temp_xr_path, temp_xr_ncdata_path,
+        check_dims_order=False,
+        # check_var_data=False
     )
-    ds_compare = ds_diffs == []
-    # The answers ought at least to match
-    assert ds_compare == xr_compare
+    print('\nDATASET COMPARE RESULTS:\n' + '\n'.join(ds_diffs))
     # Even if so, they ought both to say "ok".
-    assert ds_diffs == []
+    assert (xr_compare, ds_diffs) == (True, [])
 
 
 def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
@@ -210,5 +210,8 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
         print(txt)
 
     # Check equivalence
-    results = compare_nc_datasets(temp_direct_savepath, temp_ncdata_savepath)
+    results = compare_nc_datasets(
+        temp_direct_savepath, temp_ncdata_savepath,
+        check_dims_order=False
+    )
     assert results == []

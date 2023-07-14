@@ -280,7 +280,7 @@ def test_roundtrip_xix(
                 FIXED_GRIDMAPPING_DTYPE = np.dtype("i4")
                 var.dtype = FIXED_GRIDMAPPING_DTYPE
                 var.data = var.data.astype(FIXED_GRIDMAPPING_DTYPE)
-                # Remove and coordinates of grid-mapping variables : Xarray adds these.
+                # Remove any coordinates of grid-mapping variables : Xarray adds these.
                 var.attributes.pop("coordinates", None)
             fv = var.attributes.pop("_FillValue", None)
             if fv is None:
@@ -303,10 +303,13 @@ def test_roundtrip_xix(
                         "calendar", "standard"
                     )
 
-    result = compare_nc_datasets(
+    # Check equivalence, in Xarray terms
+    xr_result = xrds_iris.equals(xrds)
+    ncd_result = compare_nc_datasets(
         ncds_xr, ncds_xr_iris
     )  # , check_var_data=False)
-    assert result == []
+    print('\nDATASET COMPARE RESULTS:\n' + '\n'.join(ncd_result))
+    assert (xr_result, ncd_result) == (True, [])
 
     # # assert iris_cubes == iris_ncdata_cubes
     # assert result
