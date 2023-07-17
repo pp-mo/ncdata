@@ -13,11 +13,12 @@ from typing import AnyStr, Union
 import dask.array as da
 import numpy as np
 import xarray as xr
+from xarray.backends import AbstractDataStore
 
 from . import NcAttribute, NcData, NcDimension, NcVariable
 
 
-class _XarrayNcDataStore:
+class _XarrayNcDataStore(AbstractDataStore):
     """
     An adapter class presenting ncdata as an xarray datastore.
 
@@ -46,9 +47,6 @@ class _XarrayNcDataStore:
             xr_var = xr.Variable(
                 v.dimensions, v.data, attrs, getattr(v, "encoding", {})
             )
-            # TODO: ?possibly? need to apply usual Xarray "encodings" to convert raw
-            #  cf-encoded data into 'normal', interpreted xr.Variables.
-            xr_var = xr.conventions.decode_cf_variable(k, xr_var)
             variables[k] = xr_var
         attributes = {
             name: attr.as_python_value()
@@ -129,8 +127,6 @@ class _XarrayNcDataStore:
                     data = da.ma.getdata(data)
                     mask = da.ma.getmaskarray(data)
                     if np.asarray(fv).dtype.kind == "f" and np.isnan(fv):
-                        if data.dtype.kind in ("S", "U", "b"):
-                            pass
                         # Mask NaN values : N.B. can't use equality, must use "isnan"
                         mask |= da.isnan(data)
                     else:

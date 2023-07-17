@@ -197,10 +197,10 @@ def _compare_attributes(
             for attr in (attr, attr2)
         ]
         if all(
-            isinstance(dt, np.dtype) and dt.kind in 'SUb'
+            isinstance(dt, np.dtype) and dt.kind in "SUb"
             for dt in (dtype, dtype2)
         ):
-            dtype = dtype2 = 'string'
+            dtype = dtype2 = "string"
         if dtype != dtype2:
             msg = (
                 f'{elemname} "{attrname}" attribute datatypes differ : '

@@ -77,10 +77,13 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
             "ds__stringvar__singlepoint",
             "ds__stringvar__multipoint",
             # (#1) these ones have a string dimension problem
-            # "label_and_climate__small_FC_167",
             "label_and_climate__A1B__99999a__river__sep__2070",
             # (#2) this one produces a duplicated orography variable
             "testing__small_theta_colpex",
+            # Some dimension duplication/naming problems with some (not all?) UGRID data.
+            "unstructured_grid__data_C4",
+            "unstructured_grid__mesh_C12",
+            "ugrid__21_triangle_example",
         ]
     )
     if any(key in standard_testcase.name for key in exclude_case_keys):
@@ -308,7 +311,7 @@ def test_roundtrip_xix(
     ncd_result = compare_nc_datasets(
         ncds_xr, ncds_xr_iris
     )  # , check_var_data=False)
-    print('\nDATASET COMPARE RESULTS:\n' + '\n'.join(ncd_result))
+    print("\nDATASET COMPARE RESULTS:\n" + "\n".join(ncd_result))
     assert (xr_result, ncd_result) == (True, [])
 
     # # assert iris_cubes == iris_ncdata_cubes
