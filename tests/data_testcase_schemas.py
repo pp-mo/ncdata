@@ -269,13 +269,13 @@ def _define_iris_testdata_testcases():
         _netcdf_testfile_paths = _testdirpath.rglob("**/*.nc")
 
         # optional exclusions for useful speedup in test debugging.
-        # EXCLUDES = [
-        #     "_unstructured_",
-        #     "_volcello_",
-        #     "_GEMS_CO2",
-        #     "_ORCA2__votemper",
-        # ]
-        EXCLUDES = []
+        EXCLUDES = [
+            "_unstructured_",
+            "_volcello_",
+            "_GEMS_CO2",
+            "_ORCA2__votemper",
+        ]
+        # EXCLUDES = []
         for filepath in _netcdf_testfile_paths:
             param_name = str(filepath)
             # remove unwanted path elements

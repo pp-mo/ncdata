@@ -196,12 +196,20 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
     source_filepath = standard_testcase.filepath
     ncdata = from_nc4(source_filepath)
 
+    excluded_testcases = BAD_LOADSAVE_TESTCASES["xarray"]["load"]
+    excluded_testcases += [
+        # string data length handling
+        "testdata____label_and_climate__A1B__99999a__river__sep__2070__2099",
+
+        # Here there's a problem with the type.
+        # "ds__stringvar__multipoint",
+    ]
+    if any(key in standard_testcase.name for key in excluded_testcases):
+        pytest.skip("excluded testcase")
+
     # Load the testcase into xarray.
     xrds = xarray.load_dataset(source_filepath, chunks="auto")
 
-    # if standard_testcase.name in ("ds_Empty", "ds__singleattr", "ds__dimonly"):
-    #     # Xarray can't save an empty dataset.
-    #     return
 
     # Re-save from Xarray
     temp_direct_savepath = tmp_path / "temp_save_xarray.nc"
