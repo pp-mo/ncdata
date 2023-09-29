@@ -1,0 +1,19 @@
+name: ncdata
+
+channels:
+  - conda-forge
+
+dependencies:
+  - netCDF4>=1.4
+  - iris
+  - xarray
+  - filelock
+  - iris-sample-data
+  - pytest
+  - sphinx
+  - sphinxcontrib-napoleon
+  - pydata-sphinx-theme
+  - pre-commit
+  - pydocstyle
+  - black
+  - isort
