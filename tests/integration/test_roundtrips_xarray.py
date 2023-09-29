@@ -218,25 +218,25 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
     temp_ncdata_savepath = tmp_path / "temp_save_xarray_via_ncdata.nc"
     to_nc4(from_xarray(xrds), temp_ncdata_savepath)
 
-    # _Debug = True
-    _Debug = False
+    _Debug = True
+    # _Debug = False
     if _Debug:
         print(f"\ntestcase: {standard_testcase.name}")
-        print("spec =")
-        print(standard_testcase.spec)
-        print("\nncdata =")
-        print(ncdata)
+        # print("spec =")
+        # print(standard_testcase.spec)
+        # print("\nncdata =")
+        # print(ncdata)
         print("\nncdump ORIGINAL TESTCASE SOURCEFILE =")
-        txt = check_output([f"ncdump {source_filepath}"], shell=True).decode()
+        txt = check_output([f"ncdump -h {source_filepath}"], shell=True).decode()
         print(txt)
         print("\nncdump DIRECT FROM XARRAY =")
         txt = check_output(
-            [f"ncdump {temp_direct_savepath}"], shell=True
+            [f"ncdump -h {temp_direct_savepath}"], shell=True
         ).decode()
         print(txt)
         print("\nncdump VIA NCDATA =")
         txt = check_output(
-            [f"ncdump {temp_ncdata_savepath}"], shell=True
+            [f"ncdump -h {temp_ncdata_savepath}"], shell=True
         ).decode()
         print(txt)
 

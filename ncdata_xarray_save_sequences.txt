@@ -1,0 +1,310 @@
+CURRENT ERRORS ANALYSIS
+=======================
+
+On "ix_roundtrip_tests_plus", 
+    6cc11a6 (HEAD -> ix_roundtrip_tests_plus) Small tweaks, re-focussing on xarray roundtrips (NOT PASSING).
+
+(mostly with reduced-form realfile testing, 
+    in data_testcase_schemas._define_iris_testdata_testcases
+    enabled "EXCLUDES" to avoid slow ones
+)
+
+Probing  "integration.test_roundtrips_xarray.test_save_direct_vs_viancdata"
+At this point, various of those fail.
+Via:
+    /home/h05/itpp/git/ncdata
+    itpp@vld321 $ PYTHONPATH=./tests:$PYTHONPATH pytest -v ./tests/integration/test_roundtrips_xarray.py::test_save_direct_vs_viancdata
+
+Summary
+    ::test_save_direct_vs_viancdata[ds_Empty] PASSED                                                                                                   [  2%]
+    ::test_save_direct_vs_viancdata[ds_Minimal] PASSED                                                                                                 [  4%]
+    ::test_save_direct_vs_viancdata[ds_Basic] PASSED                                                                                                   [  7%]
+    ::test_save_direct_vs_viancdata[testdata1] PASSED                                                                                                  [  9%]
+    ::test_save_direct_vs_viancdata[testdata____transverse_mercator__projection_origin_attributes] PASSED                                              [ 11%]
+    ::test_save_direct_vs_viancdata[testdata____transverse_mercator__tmean_1910_1910] PASSED                                                           [ 14%]
+    ::test_save_direct_vs_viancdata[testdata____stereographic__toa_brightness_temperature] PASSED                                                      [ 16%]
+    ::test_save_direct_vs_viancdata[testdata____mercator__toa_brightness_temperature] PASSED                                                           [ 19%]
+    ::test_save_direct_vs_viancdata[testdata____mercator__non_unit_scale_factor_merc] PASSED                                                           [ 21%]
+    ::test_save_direct_vs_viancdata[testdata____mercator__false_east_north_merc] FAILED                                                                [ 23%]
+    ::test_save_direct_vs_viancdata[testdata____label_and_climate__small_FC_167_mon_19601101] SKIPPED (excluded testcase)                              [ 26%]
+    ::test_save_direct_vs_viancdata[testdata____label_and_climate__A1B__99999a__river__sep__2070__2099] SKIPPED (excluded testcase)                    [ 28%]
+    ::test_save_direct_vs_viancdata[testdata____polar__toa_brightness_temperature] PASSED                                                              [ 30%]
+    ::test_save_direct_vs_viancdata[testdata____lambert_azimuthal_equal_area__euro_air_temp] PASSED                                                    [ 33%]
+    ::test_save_direct_vs_viancdata[testdata____lambert_conformal__test_lcc] FAILED                                                                    [ 35%]
+    ::test_save_direct_vs_viancdata[testdata____regrid__regrid_xyt] FAILED                                                                             [ 38%]
+    ::test_save_direct_vs_viancdata[testdata____regrid__regrid_template_global_latlon] PASSED                                                          [ 40%]
+    ::test_save_direct_vs_viancdata[testdata____rotated__xyt__small_rotPole_precipitation] SKIPPED (excluded testcase)                                 [ 42%]
+    ::test_save_direct_vs_viancdata[testdata____rotated__xy__rotPole_landAreaFraction] FAILED                                                          [ 45%]
+    ::test_save_direct_vs_viancdata[testdata____testing__small_theta_colpex] PASSED                                                                    [ 47%]
+    ::test_save_direct_vs_viancdata[testdata____testing__units] PASSED                                                                                 [ 50%]
+    ::test_save_direct_vs_viancdata[testdata____testing__cell_methods] PASSED                                                                          [ 52%]
+    ::test_save_direct_vs_viancdata[testdata____testing__test_monotonic_coordinate] PASSED                                                             [ 54%]
+    ::test_save_direct_vs_viancdata[testdata____ugrid__21_triangle_example] PASSED                                                                     [ 57%]
+    ::test_save_direct_vs_viancdata[testdata____global__xyt__SMALL_total_column_co2] FAILED                                                            [ 59%]
+    ::test_save_direct_vs_viancdata[testdata____global__xyt__SMALL_hires_wind_u_for_ipcc4] FAILED                                                      [ 61%]
+    ::test_save_direct_vs_viancdata[ds__singleattr] PASSED                                                                                             [ 64%]
+    ::test_save_direct_vs_viancdata[ds__singlevar] PASSED                                                                                              [ 66%]
+    ::test_save_direct_vs_viancdata[ds__dimonly] PASSED                                                                                                [ 69%]
+    ::test_save_direct_vs_viancdata[ds__dtype__u1] PASSED                                                                                              [ 71%]
+    ::test_save_direct_vs_viancdata[ds__dtype__u2] PASSED                                                                                              [ 73%]
+    ::test_save_direct_vs_viancdata[ds__dtype__u4] PASSED                                                                                              [ 76%]
+    ::test_save_direct_vs_viancdata[ds__dtype__u8] PASSED                                                                                              [ 78%]
+    ::test_save_direct_vs_viancdata[ds__dtype__i1] PASSED                                                                                              [ 80%]
+    ::test_save_direct_vs_viancdata[ds__dtype__i2] PASSED                                                                                              [ 83%]
+    ::test_save_direct_vs_viancdata[ds__dtype__i4] PASSED                                                                                              [ 85%]
+    ::test_save_direct_vs_viancdata[ds__dtype__i8] PASSED                                                                                              [ 88%]
+    ::test_save_direct_vs_viancdata[ds__dtype__f4] PASSED                                                                                              [ 90%]
+    ::test_save_direct_vs_viancdata[ds__dtype__f8] PASSED                                                                                              [ 92%]
+    ::test_save_direct_vs_viancdata[ds__dtype__string] FAILED                                                                                          [ 95%]
+    ::test_save_direct_vs_viancdata[ds__stringvar__singlepoint] FAILED                                                                                 [ 97%]
+    ::test_save_direct_vs_viancdata[ds__stringvar__multipoint] FAILED                                                                                  [100%]
+    ---
+    FAILED test_save_direct_vs_viancdata[testdata____mercator__false_east_north_merc] - assert ["Dataset dim... 'calendar']"] == []
+    FAILED test_save_direct_vs_viancdata[testdata____lambert_conformal__test_lcc] - assert ["Dataset var... 'calendar']"] == []
+    FAILED test_save_direct_vs_viancdata[testdata____regrid__regrid_xyt] - assert ["Dataset var... 'calendar']"] == []
+    FAILED test_save_direct_vs_viancdata[testdata____rotated__xy__rotPole_landAreaFraction] - assert ["Dataset dim...on', 'rlat']"] == []
+    FAILED test_save_direct_vs_viancdata[testdata____global__xyt__SMALL_total_column_co2] - assert ['Dataset var...808274, ...]'] == []
+    FAILED test_save_direct_vs_viancdata[testdata____global__xyt__SMALL_hires_wind_u_for_ipcc4] - assert ["Dataset var... 'calendar']"] == []
+    FAILED test_save_direct_vs_viancdata[ds__dtype__string] - assert ["Dataset dim...ing1'] != []"] == []
+    FAILED test_save_direct_vs_viancdata[ds__stringvar__singlepoint] - AttributeError: 'netCDF4._netCDF4.VLType' object has no attribute 'kind'
+    FAILED test_save_direct_vs_viancdata[ds__stringvar__multipoint] - AttributeError: 'netCDF4._netCDF4.VLType' object has no attribute 'kind'
+    ---
+Failures ...
+    testdata____mercator__false_east_north_merc
+        "Dataset dimension lists do not match: ['time', 'string1', 'y', 'x', 'bnds'] != ['time', 'y', 'x', 'bnds']"
+        "Dataset variable "time_bnds" attribute lists do not match: [\'_FillValue\'] != ['_FillValue', 'units', 'calendar']"
+            NOTE : LHS=xarray-save-direct, RHS=via-ncdata
+                lhs=extra 'string1', not present in via-ncdata
+                rhs=units for bounds-var, not present in xarray-direct
+        
+            time = UNLIMITED ; // (1 currently)
+            double time_bnds(time, bnds) ;
+            ORIGINAL :          char crs ;
+            XARRAY-DIRECT :     char crs(string1) ;
+            VIA-NCDATA :        char crs ;
+            ----
+            ORIGINAL :          double time(time) ;
+		                            time:long_name = "time" ;
+		                            time:standard_name = "time" ;
+		                            time:units = "days since 1949-12-01 00:00:00" ;
+		                            time:calendar = "proleptic_gregorian" ;
+		                            time:bounds = "time_bnds" ;
+	                            double time_bnds(time, bnds) ;  ((====NO ATTRS AT ALL===))
+
+            XARRAY-DIRECT :     double time(time) ;
+		                            time:_FillValue = NaN ;
+		                            time:long_name = "time" ;
+		                            time:standard_name = "time" ;
+		                            time:bounds = "time_bnds" ;
+		                            time:units = "days since 1949-12-01" ;
+		                            time:calendar = "proleptic_gregorian" ;
+	                            double time_bnds(time, bnds) ;
+		                            time_bnds:_FillValue = NaN ;
+
+            VIA-NCDATA :        double time(time) ;
+		                            time:_FillValue = NaN ;
+		                            time:long_name = "time" ;
+		                            time:standard_name = "time" ;
+		                            time:bounds = "time_bnds" ;
+		                            time:units = "days since 1949-12-01" ;
+		                            time:calendar = "proleptic_gregorian" ;
+	                            double time_bnds(time, bnds) ;
+		                            time_bnds:_FillValue = NaN ;
+		                            time_bnds:units = "days since 1949-12-01" ;
+		                            time_bnds:calendar = "proleptic_gregorian" ;
+            
+
+    testdata____lambert_conformal__test_lcc
+        "Dataset variable "time_bnds" attribute lists do not match: [\'_FillValue\'] != [\'_FillValue\', \'units\', \'calendar\']"
+            time = UNLIMITED ; // (12 currently)
+            double time_bnds(time, bnds) ;
+            int lambert_conformal_conic ;  ((==OK==))
+        "Dataset variable "time_bnds" attribute lists do not match: [\'_FillValue\'] != ['_FillValue', 'units', 'calendar']"
+
+    testdata____regrid__regrid_xyt
+        "Dataset variable "time_bnds" attribute lists do not match: [\'_FillValue\', "'coordinates'] != ['_FillValue', 'coordinates', 'units', 'calendar']"
+            time = 60 ;
+            double time_bnds(time, bnds) ;
+            int latitude_longitude ; ((==OK--))
+
+    testdata____rotated__xy__rotPole_landAreaFraction
+        ""Dataset dimension lists do not match: ['string1', 'rlon', 'rlat'] != "['rlon', 'rlat']"
+            ORIGINAL :          char rotated_pole ;
+            XARRAY-DIRECT :     char rotated_pole(string1) ;
+            VIA-NCDATA :        char rotated_pole ;
+        
+    testdata____global__xyt__SMALL_total_column_co2
+        "Dataset variable "tcco2" data contents differ, at 1597120 points:
+            @INDICES[(0, 0, 0), (0, 0, 1), ...] : 
+            LHS=[390.8163968058127, '390.8163968058127, ...],
+            RHS=[379.74392064808274, 379.74392064808274, ...]',
+        "
+            ORIGINAL :          short tcco2(time, latitude, longitude) ;
+            XARRAY-DIRECT :     short tcco2(time, latitude, longitude) ;
+            VIA-NCDATA :        short tcco2(time, latitude, longitude) ;
+
+    testdata____global__xyt__SMALL_hires_wind_u_for_ipcc4
+        "Dataset variable "time_bnds" attribute lists do not match: [\'_FillValue\', "'coordinates'] != ['_FillValue', 'coordinates', 'units', 'calendar']"
+            time = UNLIMITED ; // (31 currently)
+            ORIGINAL :          double time(time) ;
+		                            time:standard_name = "time" ;
+		                            time:long_name = "time" ;
+		                            time:units = "days since 1850-01-01" ;
+		                            time:axis = "T" ;
+		                            time:calendar = "gregorian" ;
+		                            time:bounds = "time_bnds" ;
+                                double time_bnds(time, bnds) ;
+
+            XARRAY-DIRECT :     double time(time) ;
+		                            time:_FillValue = NaN ;
+		                            time:standard_name = "time" ;
+		                            time:long_name = "time" ;
+		                            time:axis = "T" ;
+		                            time:bounds = "time_bnds" ;
+		                            time:units = "days since 1850-01-01" ;
+		                            time:calendar = "gregorian" ;
+                                double time_bnds(time, bnds) ;
+		                            time_bnds:_FillValue = NaN ;
+		                            time_bnds:coordinates = "height" ;
+            VIA-NCDATA :        double time(time) ;
+		                            time:_FillValue = NaN ;
+		                            time:standard_name = "time" ;
+		                            time:long_name = "time" ;
+		                            time:axis = "T" ;
+		                            time:bounds = "time_bnds" ;
+		                            time:units = "days since 1850-01-01" ;
+		                            time:calendar = "gregorian" ;
+	                            double time_bnds(time, bnds) ;
+		                            time_bnds:_FillValue = NaN ;
+		                            time_bnds:coordinates = "height" ;
+		                            time_bnds:units = "days since 1850-01-01" ;
+		                            time_bnds:calendar = "gregorian" ;
+
+    ds__dtype__string
+        "Dataset dimension lists do not match: ['string1'] != []"
+            ORIGINAL :          char vx ;
+
+            XARRAY-DIRECT :     string1 = 1 ;
+                            	char vx(string1) ;
+
+            VIA-NCDATA :        char vx ;
+
+
+    ds__stringvar__singlepoint
+        >   is_str, is_str2 = (dt.kind in "SUb" for dt in (dtype, dtype2))
+        E   AttributeError: 'netCDF4._netCDF4.VLType' object has no attribute 'kind'
+        ../_compare_nc_datasets.py:321: AttributeError
+            ORIGINAL :          strlen = 3 ;
+                            	char vx(strlen) ;
+
+            XARRAY-DIRECT :     strlen = 3 ;
+                            	char vx(strlen) ;
+                                
+            VIA-NCDATA :        string vx ;
+
+    ds__stringvar__multipoint
+        >   is_str, is_str2 = (dt.kind in "SUb" for dt in (dtype, dtype2))
+        E   AttributeError: 'netCDF4._netCDF4.VLType' object has no attribute 'kind'
+        ../_compare_nc_datasets.py:321: AttributeError  ((===SAME===))
+
+            ORIGINAL :          x = 2 ;
+	                            strlen = 3 ;
+	                            char vx(x, strlen) ;
+
+            XARRAY-DIRECT :     x = 2 ;
+	                            strlen = 3 ;
+	                            char vx(x, strlen) ;
+
+            VIA-NCDATA :        x = 2 ;
+	                            string vx(x) ;
+
+
+=======================
+
+SAVE CALL SEQUENCES
+===================
+Consider the first error cass above "testdata____mercator__false_east_north_merc"
+    - as this shows evidence of "different call paths" for direct and via-ncdata
+    - specifically relating to the "time_bnds" variable
+        - via-ncdata route : has been "fiddled with" as if xarray regarded it a "normal" variable, assigning it time units + calendar
+            - although the original var itself does not have them
+            - POSSIBLY units_calendar have been inferred somehow from "time" var
+            - WHEREAS in "direct" route, xarray somehow *avoided* doing that ????
+
+
+consider the dataset ".encoding" records, and call control keywords passed down
+consider the state of the stored variables
+
+from "direct" save ...
+    xrds.to_netcdf
+        ( defaults : mode='w', format=None, group=None, engine=None, encoding=None, unlimited_dims=None, compute=True, invalid_netcdf=False )
+    --> xarray.backends.api.to_netcdf
+    to_netcdf(path, mode='w', format=None, group=None, engine=None, encoding={}, unlimited_dims=None, compute=True, multifile=False, invalid_netcdf=False)
+        . engine = _get_default_engine(path) --> 'netcdf4'
+        . _validate_dataset_names()  [[UNIMPORTANT]]
+        . _validate_attrs()    [[UNIMPORTANT]]
+        . store_open = <bound method NetCDF4DataStore.open of <class 'xarray.backends.netCDF4_.NetCDF4DataStore'>>
+        . scheduler = "threaded"  (a default, effectively)
+        . have_chunks = False  ((all the vars have real data, probably that's why ??))
+        . autoclose = False  ((requires distributged/multiprocessing scheduler anyway??))
+        . target = path
+        . kwargs = {}
+        . store = backends.netCDF4_.NetCDF4DataStore.open(target, mode, format, group, **kwargs)
+            NetCDF4DataStore.open(filename=path, mode="w", format=None, group-None, clobber=True, diskless=False, persist=False, lock-None, lock_maker=None, autoclose=False)
+                . format = "NETCDF4"
+                . lock = combine_locks(NETCDF4_PYTHON_LOCK, get_write_lock(filename))
+                . kwargs = {'clobber': True, 'diskless': False, 'persist': False, 'format': 'NETCDF4'}
+                . manager = CachingFileManager(netCDF4.Dataset<method-ptr>, filename, mode="w", kwargs=kwargs)
+                    CachingFileManager(opener=netCDF4.Dataset, *args=[filename], mode="w", kwargs=kwargs, lock=None, cache=None, manager_id=Mone, ref_counts=None)
+                        . self._lock = threading.Lock()  (((???this is NOT the file lock, but a separate "manager lock" ???)))
+                . (return) "result" = NetCDF4DataStore(manager=manager, group=None, mode="w", lock=lock, autoclose=False)
+                    NetCDF4DataStore(...)  [[basically just stores the bits]]
+                        . self.is_remote = False
+        . store = <NetCDF4DataStore[[_manager/_mode/_group/_filename/format/is_remote/lock/autoclose]]>
+        . unlimited_dims = unlimited_dims or dataset.encoding.get('unlimited_dims', None)
+        . unlimited_dims = ['time']
+        . writer = ArrayWriter()
+        --> xarray.backends.api.dump_to_store(dataset, store, writer, encoding=encoding, unlimited_dims=unlimited_dims)
+            dump_to_store(dataset, store=<NetCDF4DataStore>, writer=<ArrayWriter>, encoder=None, encoding={}, unlimited_dims=['time'])
+                . variables, attrs = xarray.conventions.encode_dataset_coordinates(dataset)
+                    encode_dataset_coordinates(dataset)
+                    . non_dim_coord_names = set(dataset.coords) - set(dataset.dims)
+                        = set()
+                    {result} = xarray.conventions._encode_coordinates(dataset._variables, dataset.attrs, non_dim_coord_names=non_dim_coord_names)
+                        _encode_coordinates(dataset._variables, dataset.attrs, non_dim_coord_names=non_dim_coord_names)
+                        . ((remove+warn non-dim coords with invalid names))
+                        . global_coordinates = non_dim_coord_names.copy()
+                            = set()
+                        . variable_coordinates = defaultdict(set)
+                            = defaultdict(set, {})
+                        . ((( validate + fixup global_coordinates/not_technically_coordinates == NOTHING IN THIS CASE )))
+                        . variables = {k: v.copy(deep=False) for k, v in variables.items()}
+                        . (( N.B. IN THIS CASE, variables.keys() == ['crs', 'psl', 'time', 'time_bnds', 'x', 'y'] ))
+                        . (( fiddle with coordinates
+                                - creating "coordinates" attrs from either var.attrs or var.encoding entries
+                                - deal with dataset.coords which are not dataset.dims
+                          ))
+                        . (( IN THIS CASE: nosig -- just return dataset.variables, dataset.attributes ))
+                   . return variables, attrs
+                . (from encode_dataset_coordinates)
+                    variables, attrs = dataset.variables, dataset.attrs  (( IN THIS CASE ))
+                . store<NetCDF4DataStore>.store(variables, attrs, check_encoding=set(), writer=<ArrayWriter>, unlimited_dims=['time'])
+                    store(variables, attrs, check_encoding_set=set(), writer=<ArrayWriter>, unlimited_dims=['time'])
+                    . self<NetCDF4DataStore>.encode(variables, attributes)
+                        --> WritableCFDataStore.encode(variables, attributes)
+                        . variables, attributes = xarray.conventions.cf_encoder(variables, attributes)
+                            cf_encoder(variables, attributes)
+                            . xarray.conventions._update_bounds_encoding(variables)
+                                _update_bounds_encoding(variables)
+
+                                    *** WIP HERE ***
+
+
+                        . variables = {k: self.encode_variable(v) for k, v in variables.items()}
+                        . attributes = {k: self.encode_attribute(v) for k, v in attributes.items()}
+                        . <return> variables, attributes
+
+
+
+
+

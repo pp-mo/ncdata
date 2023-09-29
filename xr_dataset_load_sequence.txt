@@ -1,0 +1,42 @@
+xr.open_dataset
+->  xarray.backends.api.open_dataset
+    - engine = plugins.guess_engine(filename_or_obj)  ==> 'netcdf4'
+    - backend = plugins.get_backend(engine)  ==> xarray.backends.netCDF4_.NetCDF4BackendEntrypoint
+    - decoders = _resolve_decoders(...)  ==> {} (in absence of control kwargs)
+    - backend_ds = backend.open_dataset(filename, drop_variables, **decoders, **kwargs)
+    --> xarray.backends.netCDF4_.NetCDF4BackendEntrypoint.open_dataset
+        - store = NetCDF4DataStore.open(...) ==> 
+        --> xarray.backends.netCDF4_.NetCDF4DataStore.open
+            - lock = 
+            - manager = xarray.backends.file_manager.CachingFileManager(...)
+            - return cls(manager, ..., lock)
+    	==> store = NetCDF4DataStore
+        - store_entrypoint = StoreBackendEntrypoint() ## xarray.backends.store.StoreBackendEntrypoint
+        - ds = store_entrypoint.open_dataset(store ...)
+    	--> xarray.backends.store.StoreBackendEntrypoint.open_dataset(store ...)
+            - vars, attrs = <store>.load()  ## internally 'store' is oddly named 'filename_or_obj'
+            - encoding = <store>.get_encoding()
+            --> xarray.backends.common.AbstractDataStore.get_encoding
+            ==> {'unlimited_dims': set(['y'])}
+            - vars, attrs, coord_names = conventions.decode_cf_variables...
+                (vars, attrs, **controls)  ## controls like 'mask_and_scale', 'decode_times' etc
+            --> xarray.conventions.decode_cf_variables
+                - ***COMPLICATED!!***
+            ==> (new-vars, modded-attributes, coord_names)
+            - ds = Dataset(vars, attrs=attrs)
+            - ds = ds.set_coords(coord_names.intersection(vars))
+            - ds.set_close(filename_or_obj.close)
+            - ds.encoding = encoding
+            - return ds
+        ==> ds = Dataset
+        - return ds
+    ==> backend_ds = Dataset
+    - ds = _dataset_from_backend_dataset(backend_ds ...)
+        ## but this seems to handle chunking and ds-level encoding,
+        ## == NOT variable encoding
+    - return ds
+    ==> ds = Dataset
+
+
+=====================
+Our own attempt, in
