@@ -131,13 +131,13 @@ class TestNcVariable__str__repr:
     def test_nameonly(self):
         var = NcVariable("varname")
         result = str(var)
-        expected = "<NcVariable: varname()>"
+        expected = "<NcVariable(<no-dtype>): varname()>"
         assert result == expected
 
     def test_dimsnoargs(self):
         var = NcVariable("var_w_dims", ["dim0", "dim1"])
         result = str(var)
-        expected = "<NcVariable: var_w_dims(dim0, dim1)>"
+        expected = "<NcVariable(<no-dtype>): var_w_dims(dim0, dim1)>"
         assert result == expected
 
     def test_oneattr(self):
@@ -146,7 +146,11 @@ class TestNcVariable__str__repr:
         )
         result = str(var)
         expected = "\n".join(
-            ["<NcVariable: var_w_attrs()", "    var_w_attrs:a1 = 1", ">"]
+            [
+                "<NcVariable(<no-dtype>): var_w_attrs()",
+                "    var_w_attrs:a1 = 1",
+                ">",
+            ]
         )
         assert result == expected
 
@@ -161,7 +165,7 @@ class TestNcVariable__str__repr:
         result = str(var)
         expected = "\n".join(
             [
-                "<NcVariable: var_multi()",
+                "<NcVariable(<no-dtype>): var_multi()",
                 "    var_multi:a1 = 1",
                 "    var_multi:a2 = ['one', 'three']",
                 ">",
@@ -169,7 +173,17 @@ class TestNcVariable__str__repr:
         )
         assert result == expected
 
-    def test_repr(var):
+    def test_str(self):
+        var = NcVariable(
+            "var",
+            dimensions=("x", "y"),
+            data=np.ones((2, 3), dtype=np.float32),
+        )
+        result = str(var)
+        expected = "<NcVariable(float32): var(x, y)>"
+        assert result == expected
+
+    def test_repr(self):
         var = NcVariable(
             "var",
             dimensions=("x", "y"),
