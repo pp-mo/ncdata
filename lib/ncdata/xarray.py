@@ -10,14 +10,13 @@ amount.  The structure of an NcData object makes it fairly painless.
 from pathlib import Path
 from typing import AnyStr, Union
 
-import dask.array as da
-import numpy as np
 import xarray as xr
+from xarray.backends import AbstractDataStore
 
 from . import NcAttribute, NcData, NcDimension, NcVariable
 
 
-class _XarrayNcDataStore:
+class _XarrayNcDataStore(AbstractDataStore):
     """
     An adapter class presenting ncdata as an xarray datastore.
 
@@ -46,9 +45,6 @@ class _XarrayNcDataStore:
             xr_var = xr.Variable(
                 v.dimensions, v.data, attrs, getattr(v, "encoding", {})
             )
-            # TODO: ?possibly? need to apply usual Xarray "encodings" to convert raw
-            #  cf-encoded data into 'normal', interpreted xr.Variables.
-            xr_var = xr.conventions.decode_cf_variable(k, xr_var)
             variables[k] = xr_var
         attributes = {
             name: attr.as_python_value()
@@ -106,38 +102,6 @@ class _XarrayNcDataStore:
             }
 
             data = var.data
-            _MakeDataMasked = True
-            # _MakeDataMasked = False
-            if _MakeDataMasked:
-                if data.ndim < 1:
-                    data = data.reshape((1,))
-                # reprocess the data (which has been filled by "encode_cf_variable"), to
-                # produce a masked array, since this mimics how netCDF4 would present it.
-                fv = attrs.get("_FillValue")
-                if fv is not None:
-                    fv = fv.as_python_value()
-                elif var.dtype.itemsize > 1:
-                    from netCDF4 import default_fillvals
-
-                    dtype = var.dtype
-                    kind = dtype.kind
-                    size = 1 if kind in "SUb" else dtype.itemsize
-                    typename = f"{kind}{size}"
-                    fv = default_fillvals[typename]
-                if fv is not None:
-                    # N.B. fv *can* be 'None' here : it means NO fill (for bytes only?)
-                    data = da.ma.getdata(data)
-                    mask = da.ma.getmaskarray(data)
-                    if np.asarray(fv).dtype.kind == "f" and np.isnan(fv):
-                        if data.dtype.kind in ("S", "U", "b"):
-                            pass
-                        # Mask NaN values : N.B. can't use equality, must use "isnan"
-                        mask |= da.isnan(data)
-                    else:
-                        mask |= data == fv
-                    data = da.ma.masked_array(data, mask=mask)
-                data = data.reshape(var.data.shape)
-
             nc_var = NcVariable(
                 name=varname,
                 dimensions=var.dims,
@@ -146,6 +110,9 @@ class _XarrayNcDataStore:
                 group=self.ncdata,
             )
             self.ncdata.variables[varname] = nc_var
+
+    def get_encoding(self):
+        return {}
 
     def close(self):
         pass
@@ -168,8 +135,11 @@ class _XarrayNcDataStore:
         dataset_or_file.dump_to_store(nc_data, **xr_load_kwargs)
         return nc_data
 
-    def to_xarray(self, **xr_save_kwargs) -> xr.Dataset:
-        ds = xr.Dataset.load_store(self, **xr_save_kwargs)
+    def to_xarray(self, **xr_load_kwargs) -> xr.Dataset:
+        from xarray.backends.store import StoreBackendEntrypoint
+
+        store_entrypoint = StoreBackendEntrypoint()
+        ds = store_entrypoint.open_dataset(self, **xr_load_kwargs)
         return ds
 
 
