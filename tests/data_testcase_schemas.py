@@ -140,7 +140,7 @@ def _write_nc4_dataset(
         # Add data, provided or default-constructed
         if data is None:
             shape = nc_var.shape
-            n_points = int(np.product(shape))
+            n_points = int(np.prod(shape))
             if nc_var.dtype.kind == "S":
                 data = np.array(
                     "abcdefghijklmnopqrstuvwxyz"[:n_points], dtype="S1"
