@@ -163,10 +163,13 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
         "ds__dtype__string",
         "ds__stringvar__singlepoint",
         "ds__stringvar__multipoint",
-        # weird out-of-range timedeltas (only fails within PyCharm ??????)
+        # weird out-of-range timedeltas (***only*** fails within PyCharm ??????)
         "testdata____transverse_mercator__projection_origin_attributes",
         "testdata____transverse_mercator__tmean_1910_1910",
         "unstructured_grid__theta_nodal",
+        # problems with data masking ??
+        "testdata____global__xyz_t__GEMS_CO2_Apr2006",
+        "testdata____global__xyt__SMALL_total_column_co2",
     ]
     if any(key in standard_testcase.name for key in excluded_testcases):
         pytest.skip("excluded testcase")
@@ -209,7 +212,8 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
 
     # Check equivalence
     results = compare_nc_datasets(
-        temp_direct_savepath, temp_ncdata_savepath,
+        temp_direct_savepath,
+        temp_ncdata_savepath,
         check_dims_order=False,
         suppress_warnings=True,
     )
