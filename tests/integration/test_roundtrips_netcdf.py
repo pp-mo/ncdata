@@ -3,10 +3,9 @@ Test ncdata.netcdf by checking load-save roundtrips for standard testcases.
 """
 from subprocess import check_output
 
-from tests._compare_nc_datasets import compare_nc_datasets
-from tests.data_testcase_schemas import standard_testcase, session_testdir
-
 from ncdata.netcdf4 import from_nc4, to_nc4
+from tests._compare_nc_datasets import compare_nc_datasets
+from tests.data_testcase_schemas import session_testdir, standard_testcase
 
 # Avoid complaints that the imported fixtures are "unused"
 standard_testcase, session_testdir

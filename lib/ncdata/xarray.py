@@ -11,11 +11,12 @@ from pathlib import Path
 from typing import AnyStr, Union
 
 import xarray as xr
+from xarray.backends import NetCDF4DataStore
 
 from . import NcAttribute, NcData, NcDimension, NcVariable
 
 
-class _XarrayNcDataStore:
+class _XarrayNcDataStore(NetCDF4DataStore):
     """
     An adapter class presenting ncdata as an xarray datastore.
 
@@ -25,9 +26,16 @@ class _XarrayNcDataStore:
 
     This requires some knowledge of Xarray, but it is very small.
 
-    This code originated from @TomekTrzeciak.
+    This approach originated from @TomekTrzeciak.
     See https://gist.github.com/TomekTrzeciak/b00ff6c9dc301ed6f684990e400d1435
     """
+
+    # This property ensures that variables are adjusted for netCDF4 output
+    # (rather than netCDF3) in the call to
+    # "xarray.backends.netCDF4_.NetCDF4DataStore.encode_variable".
+    # This 'encode_variable' routine is invoked by "self.encode"
+    # -- which is actually "xarray.backends.common.WritableCFDataStore.encode".
+    format = "NETCDF4"
 
     def __init__(self, ncdata: NcData = None):
         if ncdata is None:
@@ -35,6 +43,12 @@ class _XarrayNcDataStore:
         self.ncdata = ncdata
 
     def load(self):
+        """
+        Return Xarray variables + attributes representing the contained 'self.ncdata'.
+
+        Called, indirectly, by :meth:`to_xarray` via
+        :meth:`xarray.backends.store.StoreBackendEntrypoint.open_dataset`.
+        """
         variables = {}
         for k, v in self.ncdata.variables.items():
             attrs = {
@@ -44,9 +58,6 @@ class _XarrayNcDataStore:
             xr_var = xr.Variable(
                 v.dimensions, v.data, attrs, getattr(v, "encoding", {})
             )
-            # TODO: ?possibly? need to apply usual Xarray "encodings" to convert raw
-            #  cf-encoded data into 'normal', interpreted xr.Variables.
-            xr_var = xr.conventions.decode_cf_variable(k, xr_var)
             variables[k] = xr_var
         attributes = {
             name: attr.as_python_value()
@@ -62,29 +73,24 @@ class _XarrayNcDataStore:
         writer=None,
         unlimited_dims=None,
     ):
-        for attrname, v in attributes.items():
-            if (
-                attrname in self.ncdata.attributes
-            ):  # and self.attributes[k] != v:
-                msg = (
-                    f're-setting of attribute "{attrname}" : '
-                    f"was={self.ncdata.attributes[attrname]}, now={v}"
-                )
-                raise ValueError(msg)
-            else:
-                self.ncdata.attributes[attrname] = NcAttribute(attrname, v)
+        """
+        Populate the stored `self.ncdata` from given Xarray variables + attributes.
 
+        Called, indirectly, by :meth:`from_xarray` via
+        :meth:`xr.Dataset.dump_to_store`.
+        """
+        # Encode the xarray data as-if-for netcdf4 output, so we convert internal forms
+        # (such as strings and timedates) to file-relevant forms.
+        variables, attributes = self.encode(variables, attributes)
+
+        # Install (global) attributes into self.
+        for attrname, v in attributes.items():
+            self.ncdata.attributes[attrname] = NcAttribute(attrname, v)
+
+        # Install variables, creating dimensions as we go.
         for varname, var in variables.items():
             if varname in self.ncdata.variables:
                 raise ValueError(f'duplicate variable : "{varname}"')
-
-            # An xr.Variable : remove all the possible Xarray encodings
-            # These are all the ones potentially used by
-            # :func:`xr.conventions.decode_cf_variable`, in the order in which they
-            # would be applied.
-            var = xr.conventions.encode_cf_variable(
-                var, name=varname, needs_copy=False
-            )
 
             for dim_name, size in zip(var.dims, var.shape):
                 if dim_name in self.ncdata.dimensions:
@@ -102,14 +108,19 @@ class _XarrayNcDataStore:
                 name: NcAttribute(name, value)
                 for name, value in var.attrs.items()
             }
+
+            data = var.data
             nc_var = NcVariable(
                 name=varname,
                 dimensions=var.dims,
                 attributes=attrs,
-                data=var.data,
+                data=data,
                 group=self.ncdata,
             )
             self.ncdata.variables[varname] = nc_var
+
+    def get_encoding(self):
+        return {}
 
     def close(self):
         pass
@@ -132,8 +143,11 @@ class _XarrayNcDataStore:
         dataset_or_file.dump_to_store(nc_data, **xr_load_kwargs)
         return nc_data
 
-    def to_xarray(self, **xr_save_kwargs) -> xr.Dataset:
-        ds = xr.Dataset.load_store(self, **xr_save_kwargs)
+    def to_xarray(self, **xr_load_kwargs) -> xr.Dataset:
+        from xarray.backends.store import StoreBackendEntrypoint
+
+        store_entrypoint = StoreBackendEntrypoint()
+        ds = store_entrypoint.open_dataset(self, **xr_load_kwargs)
         return ds
 
 

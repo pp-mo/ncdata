@@ -216,7 +216,8 @@ class NcVariable:
     def _print_content(self):
         global _indent
         dimstr = ", ".join(self.dimensions)
-        hdr = f"<NcVariable: {self.name}({dimstr})"
+        typestr = str(self.dtype) if self.dtype else "<no-dtype>"
+        hdr = f"<NcVariable({typestr}): {self.name}({dimstr})"
         if not self.attributes:
             hdr += ">"
             lines = [hdr]

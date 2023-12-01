@@ -115,6 +115,26 @@ def _isncdata(obj):
     return hasattr(obj, "_print_content")
 
 
+def _array_eq(a1, a2):
+    """
+    Test equality of array values in attributes.
+
+    Assumes values (attributes) are presented as numpy arrays (not lazy).
+    Matches any NaNs.
+    Does *NOT* handle masked data -- which does not occur in attributes.
+    """
+    result = True
+    result &= a1.shape == a2.shape
+    result &= a1.dtype == a2.dtype
+    if result:
+        if a1.dtype.kind in ("S", "U", "b"):
+            result = np.all(a1 == a2)
+        else:
+            # array_equal handles possible NaN cases
+            result = np.array_equal(a1, a2, equal_nan=True)
+    return result
+
+
 def _compare_attributes(
     errs,
     obj1,
@@ -161,19 +181,26 @@ def _compare_attributes(
 
         attr, attr2 = [
             (
-                obj.attributes[attrname].value
+                obj.attributes[attrname].as_python_value()
                 if _isncdata(obj)
                 else obj.getncattr(attrname)
             )
             for obj in (obj1, obj2)
         ]
 
+        # TODO: this still doesn't work well for strings : for those, we should ignore
+        #  exact "type" (including length), and just compare the content.
+        # TODO: get a good testcase going to check this behaviour
         dtype, dtype2 = [
             # Get x.dtype, or fallback on type(x) -- basically, for strings.
             getattr(attr, "dtype", type(attr))
             for attr in (attr, attr2)
         ]
-
+        if all(
+            isinstance(dt, np.dtype) and dt.kind in "SUb"
+            for dt in (dtype, dtype2)
+        ):
+            dtype = dtype2 = "string"
         if dtype != dtype2:
             msg = (
                 f'{elemname} "{attrname}" attribute datatypes differ : '
@@ -181,10 +208,11 @@ def _compare_attributes(
             )
             errs.append(msg)
         else:
-            # If values match (only then), compare datatypes
+            # If datatypes match (only then), compare values
             # Cast attrs, which might be strings, to arrays for comparison
             arr, arr2 = [np.asarray(attr) for attr in (attr, attr2)]
-            if arr.shape != arr2.shape or not np.all(arr == arr2):
+            if not _array_eq(arr, arr2):
+                # N.B. special comparison to handle strings and NaNs
                 msg = (
                     f'{elemname} "{attrname}" attribute values differ : '
                     f"{attr!r} != {attr2!r}"
@@ -290,7 +318,7 @@ def _compare_nc_groups(
             errs.append(msg)
 
         # data values
-        is_str, is_str2 = (dt.kind in ("U", "S") for dt in (dtype, dtype2))
+        is_str, is_str2 = (dt.kind in "SUb" for dt in (dtype, dtype2))
         # TODO: is this correct check to allow compare between different dtypes?
         if data_equality and dims == dims2 and is_str == is_str2:
             # N.B. don't check shapes here: we already checked dimensions.
