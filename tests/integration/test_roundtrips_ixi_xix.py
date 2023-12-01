@@ -183,9 +183,6 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
         )
         assert result == []
 
-    # assert iris_cubes == iris_ncdata_cubes
-    assert result
-
 
 def test_roundtrip_xix(
     standard_testcase, use_irislock, adjust_chunks, tmp_path
