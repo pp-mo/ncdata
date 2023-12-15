@@ -429,13 +429,9 @@ BAD_LOADSAVE_TESTCASES = {
         "save": ["ds_Empty", "ds__singleattr", "ds__dimonly"],
     },
     "xarray": {
-        # We think Iris can load ~anything (maybe returning nothing)
-        "load": [
-            "testdata____label_and_climate__small_FC_167_mon_19601101",
-            "testdata____unstructured_grid__lfric_surface_mean",
-            "testdata____rotated__xyt__small_rotPole_precipitation",
-        ],
-        # Iris can't save data with no data-variables.
+        # We think Xarray can load ~anything (maybe returning nothing)
+        "load": [],
+        # Xarray can save ~anything
         "save": [],
     },
 }
