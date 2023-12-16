@@ -158,16 +158,16 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
         # string data length handling
         "testdata____label_and_climate__A1B__99999a__river__sep__2070__2099",
         # string data generally doesn't work yet  (variety of problems?)
-        "ds__dtype__string",
-        "ds__stringvar__singlepoint",
-        "ds__stringvar__multipoint",
+        # "ds__dtype__string",
+        # "ds__stringvar__singlepoint",
+        # "ds__stringvar__multipoint",
         # weird out-of-range timedeltas (***only*** fails within PyCharm ??????)
         "testdata____transverse_mercator__projection_origin_attributes",
         "testdata____transverse_mercator__tmean_1910_1910",
         "unstructured_grid__theta_nodal",
         # problems with data masking ??
         "testdata____global__xyz_t__GEMS_CO2_Apr2006",
-        "testdata____global__xyt__SMALL_total_column_co2",
+        # "testdata____global__xyt__SMALL_total_column_co2",
     ]
     if any(key in standard_testcase.name for key in excluded_testcases):
         pytest.skip("excluded testcase")
@@ -186,25 +186,25 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
     temp_ncdata_savepath = tmp_path / "temp_save_xarray_via_ncdata.nc"
     to_nc4(from_xarray(xrds), temp_ncdata_savepath)
 
-    # _Debug = True
-    _Debug = False
+    _Debug = True
+    # _Debug = False
     if _Debug:
-        print(f"\ntestcase: {standard_testcase.name}")
-        print("spec =")
-        print(standard_testcase.spec)
-        print("\nncdata =")
-        print(ncdata)
-        print("\nncdump ORIGINAL TESTCASE SOURCEFILE =")
-        txt = check_output([f"ncdump {source_filepath}"], shell=True).decode()
-        print(txt)
-        print("\nncdump DIRECT FROM XARRAY =")
-        txt = check_output(
-            [f"ncdump {temp_direct_savepath}"], shell=True
+        txt = f"""
+        testcase: {standard_testcase.name}
+        spec = {standard_testcase.spec}
+        ncdata = ...
+        {ncdata}
+        
+        ncdump ORIGINAL TESTCASE SOURCEFILE =
+        """
+        txt += check_output([f"ncdump -h {source_filepath}"], shell=True).decode()
+        txt += "\nncdump DIRECT FROM XARRAY ="
+        txt += check_output(
+            [f"ncdump -h {temp_direct_savepath}"], shell=True
         ).decode()
-        print(txt)
-        print("\nncdump VIA NCDATA =")
-        txt = check_output(
-            [f"ncdump {temp_ncdata_savepath}"], shell=True
+        txt += "\nncdump VIA NCDATA ="
+        txt += check_output(
+            [f"ncdump -h {temp_ncdata_savepath}"], shell=True
         ).decode()
         print(txt)
 
