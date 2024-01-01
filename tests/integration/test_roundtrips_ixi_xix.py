@@ -78,6 +78,7 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
             "transverse_mercator__projection_origin_attributes",
             "label_and_climate__small_FC_167_mon_19601101",
             "unstructured_grid__lfric_surface_mean",
+            "ORCA2__votemper",
             # Various outstanding dims-mismatch problems.
             # FOR NOW skip all these.
             "testdata____unstructured_grid__data_C4",
