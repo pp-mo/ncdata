@@ -58,20 +58,6 @@ def test_load_direct_vs_viancdata(
     if standard_testcase.name in BAD_LOADSAVE_TESTCASES["xarray"]["load"]:
         pytest.skip("excluded testcase (xarray cannot load)")
 
-    if any(
-        key in standard_testcase.name
-        for key in [
-            # ??? masking in regular data variables
-            # "testdata____global__xyz_t__GEMS_CO2_Apr2006",
-            # "testdata____global__xyt__SMALL_total_column_co2",
-            # # weird out-of-range timedeltas (only fails within PyCharm ??????)
-            # "testdata____transverse_mercator__projection_origin_attributes",
-            # "testdata____transverse_mercator__tmean_1910_1910",
-            # # "unstructured_grid__theta_nodal",
-        ]
-    ):
-        pytest.skip("excluded testcase -- FOR NOW cannot convert ncdata->xr")
-
     # _Debug = True
     _Debug = False
     if _Debug:
@@ -86,47 +72,8 @@ def test_load_direct_vs_viancdata(
 
     # Load the testcase with Xarray.
     xr_ds = xarray.open_dataset(source_filepath, chunks=-1)
-    t = 0
     # Load same, via ncdata
     xr_ncdata_ds = to_xarray(ncdata)
-
-    # _FIX_SCALARS = True
-    _FIX_SCALARS = False
-    if _FIX_SCALARS:
-
-        def fix_dask_scalars(darray):
-            # replace a dask array with one "safe" to compare, since there are bugs
-            # causing exceptions when comparing np.ma.masked/np.nan scalars in dask.
-            # In those cases, replace the array with the computed numpy value instead.
-            if darray.ndim == 0:
-                # Replace with a numpy 0 scalar, of the correct dtype.
-                # This also bypasses problems with masked scalars (FOR NOW!)
-                darray = np.array(0, dtype=darray.dtype)
-            return darray
-
-        def fix_xarray_scalar_data(xrds):
-            fix_applied = False
-            for varname, var in xrds.variables.items():
-                if var.ndim == 0:
-                    data = var.data
-                    newdata = fix_dask_scalars(data)
-                    if newdata is not data:
-                        fix_applied = True
-                        # Replace the variable with a new one based on the new data.
-                        # For some reason, "var.data = newdata" does not do this.
-                        newvar = xarray.Variable(
-                            dims=var.dims,
-                            data=newdata,
-                            attrs=var.attrs,
-                            encoding=var.encoding,
-                        )
-                        xrds[varname] = newvar
-            return fix_applied
-
-        for ds, name in zip((xr_ds, xr_ncdata_ds), ("xr-direct", "xr-via-nc")):
-            fixed = fix_xarray_scalar_data(ds)
-            if fixed:
-                print(f"\nSCALAR FOUND+FIXED : {name}")
 
     # Xarray dataset (variable) comparison is problematic
     # result = xr_ncdata_ds.identical(xr_ds)
@@ -171,10 +118,6 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
 
     # Load the testcase into xarray.
     xrds = xarray.load_dataset(source_filepath, chunks=-1)
-
-    # if standard_testcase.name in ("ds_Empty", "ds__singleattr", "ds__dimonly"):
-    #     # Xarray can't save an empty dataset.
-    #     return
 
     # Re-save from Xarray
     temp_direct_savepath = tmp_path / "temp_save_xarray.nc"
