@@ -59,6 +59,7 @@ class _XarrayNcDataStore(NetCDF4DataStore):
                 v.dimensions, v.data, attrs, getattr(v, "encoding", {})
             )
             variables[k] = xr_var
+
         attributes = {
             name: attr.as_python_value()
             for name, attr in self.ncdata.attributes.items()

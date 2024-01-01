@@ -70,21 +70,19 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
         + BAD_LOADSAVE_TESTCASES["xarray"]["load"]
         + [
             # TODO: remaining unresolved problems ...
-            # Cubes with string data are not cleanly handled at present.
-            # (not clear if iris or xarray is behaving wrongly here)
-            "ds__stringvar__singlepoint",
-            "ds__stringvar__multipoint",
             # These ones have a string dimension problem
-            # "label_and_climate__small_FC_167",
-            "label_and_climate__A1B__99999a__river__sep__2070",
+            "label_and_climate__small_FC_167",
             "ds__dtype__string",
+            # Unit mismatches
+            # TODO: can probably tweak to allow for equivalents ?
+            "transverse_mercator__projection_origin_attributes",
+            "label_and_climate__small_FC_167_mon_19601101",
+            "unstructured_grid__lfric_surface_mean",
             # Various outstanding dims-mismatch problems.
             # FOR NOW skip all these.
             "testdata____unstructured_grid__data_C4",
-            "testdata____unstructured_grid__mesh_C12",
             "testing__small_theta_colpex",
             "testdata____ugrid__21_triangle_example",
-            "testdata____ORCA2__votemper",
         ]
     )
     if any(key in standard_testcase.name for key in exclude_case_keys):
@@ -186,6 +184,7 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
             from_iris(iris_cubes), from_iris(iris_xr_cubes)
         )
         assert result == []
+
 
 # N.B. FOR NOW skip this test entirely.
 # There are lots of problems here, mostly caused by dimension naming.

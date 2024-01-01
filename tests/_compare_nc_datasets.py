@@ -348,8 +348,18 @@ def _compare_nc_groups(
             flat_diff_inds = (
                 []
             )  # NB *don't* make this an array, it causes problems
+
+            # Work out whether string : N.B. array type does not ALWAYS match the
+            # variable type, because apparently the scalar content of a *masked* scalar
+            # string variable has a numeric type (!! yuck !!)
+            is_string_data = flatdata.dtype.kind in ("S", "U")
+            if is_string_data:
+                safe_fill_const = ""
+            else:
+                safe_fill_const = np.zeros((1,), dtype=flatdata.dtype)[0]
+
+            # Where data is masked, count mask mismatches and skip those points
             if any(np.ma.is_masked(arr) for arr in (data, data2)):
-                # If data is masked, count mask mismatches and skip those points
                 mask, mask2 = (
                     np.ma.getmaskarray(array)
                     for array in (flatdata, flatdata2)
@@ -357,15 +367,25 @@ def _compare_nc_groups(
                 flat_diff_inds = list(np.where(mask != mask2)[0])
                 # Replace all masked points to exclude them from unmasked-point checks.
                 either_masked = mask | mask2
-                dtype = flatdata.dtype
-                if dtype.kind in ("S", "U"):
-                    safe_fill_const = ""
-                else:
-                    safe_fill_const = np.zeros((1,), dtype=flatdata.dtype)[0]
                 flatdata[either_masked] = safe_fill_const
                 flatdata2[either_masked] = safe_fill_const
 
+            # Where data has NANs, count mismatches and skip (as for masked)
+            if not is_string_data:
+                isnans, isnans2 = (
+                    np.isnan(arr) for arr in (flatdata, flatdata2)
+                )
+                if np.any(isnans) or np.any(isnans2):
+                    nandiffs = np.where(isnans != isnans2)[0]
+                    if nandiffs:
+                        flat_diff_inds += list(nandiffs)
+                    anynans = isnans | isnans2
+                    flatdata[anynans] = safe_fill_const
+                    flatdata2[anynans] = safe_fill_const
+
             flat_diff_inds += list(np.where(flatdata != flatdata2)[0])
+            # Order the nonmatching indices :  We report just the first few ...
+            flat_diff_inds = sorted(flat_diff_inds)
             n_diffs = len(flat_diff_inds)
             if n_diffs:
                 msg = f"{var_id_string} data contents differ, at {n_diffs} points: "

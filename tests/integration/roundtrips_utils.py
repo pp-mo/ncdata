@@ -21,6 +21,8 @@ def cubes_equal__corrected(c1, c2):
     instead of True (which would be more useful for our purpose.
     Note: this problem also applies to COORDINATES - both points and bounds arrays.
 
+    (3) arrange that arrays with matching NaNs compare equal.
+
     """
     if c1.shape != c2.shape:
         # This shortcuts us out of a problem whereby cubes with string-type data don't
@@ -37,7 +39,7 @@ def cubes_equal__corrected(c1, c2):
             c1.data = c1.data == c2.data
             c2.data = np.ones(c2.shape, dtype=bool)
         else:
-            # Correct comparison of all-masked arrays.
+            # Correct comparison of all-masked arrays, and arrays with NaNs.
             # NOTE: this problem DOES apply to coordinate data also.
             def fix_arrays(a1, a2):
                 """
@@ -45,6 +47,8 @@ def cubes_equal__corrected(c1, c2):
 
                 Return either the original arrays, or arrays of the same shape which
                 reproduce the correct result : np.all(all-masked==all-masked) --> True.
+
+                ALSO replace *matching* NaN points with safe values (zeros).
                 """
                 if a1 is not None and a2 is not None:
                     allmasked_1, allmasked_2 = (
@@ -56,6 +60,16 @@ def cubes_equal__corrected(c1, c2):
                         # considered equal, i.e. 'True'
                         a1 = np.zeros(a1.shape, dtype=bool)
                         a2 = a1
+
+                    # replace *matching* NaN points with zeros.
+                    if a1.dtype.kind == "f" and a2.dtype.kind == "f":
+                        bothnan = np.isnan(a1) & np.isnan(a2)
+                        if np.any(bothnan):
+                            # N.B. must make copies here, to ensure writeability
+                            a1, a2 = a1[:], a2[:]
+                            a1[bothnan] = 0
+                            a2[bothnan] = 0
+
                 return a1, a2
 
             # Fix matching of cube data arrays
@@ -159,6 +173,7 @@ try:
         nn[0] for nn in inspect.getmembers(v) if not nn[0].startswith("_")
     ]
     # print('\n'.join(_NCVAR_PROPERTY_NAMES))
+    ds.close()
 finally:
     shutil.rmtree(dirpath)
 

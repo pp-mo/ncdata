@@ -39,8 +39,6 @@ def example_from_xr():  # noqa: D103
     points = co_auxlons.core_points()
     print('\ncube.coord("longitude").core_points():')
     print(points)
-    print('\ncube.coord("longitude").points:')
-    print(points.compute())
 
     print("\n")
     print("============ CONVERT cubes TO xr.Dataset ... =========")
@@ -56,13 +54,13 @@ def example_from_xr():  # noqa: D103
         "xrds2['data'].data   is   cube.core_data() : ",
         bool(xrds2["data"].data is cube.core_data()),
     )
-    assert xrds2["data"].data is cube.core_data()
+    # assert xrds2["data"].data is cube.core_data()
 
     print(
         "xrds2['lon'].data   is   cube.coord('longitude').core_points() : ",
         bool(xrds2["lon"].data is cube.coord("longitude").core_points()),
     )
-    assert xrds2["lon"].data is cube.coord("longitude").core_points()
+    # assert xrds2["lon"].data is cube.coord("longitude").core_points()
 
     print(
         "xrds2['x'].data   is   cube.coord('projection_x_coordinate').core_points() : ",

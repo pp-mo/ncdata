@@ -480,14 +480,18 @@ class Test_compare_nc_files__api:
                 ds.close()
 
         result = compare_nc_datasets(source1, source2)
+        # N.B. ncdata comparison bypasses the masked+scaled view of data, hence the
+        # message differs.  Could fix this?
+        mask1 = "masked" if sourcetype == "InputsFile" else "9.96921e+36"
+        mask2 = "masked" if sourcetype == "InputsFile" else "-2147483647"
         assert result == [
             (
                 'Dataset variable "x" data contents differ, at 2 points: '
-                "@INDICES[(4,), (0,)] : LHS=[masked, 0.12], RHS=[101.23, 102.34]"
+                f"@INDICES[(0,), (4,)] : LHS=[0.12, {mask1}], RHS=[102.34, 101.23]"
             ),
             (
                 'Dataset variable "y" data contents differ, at 3 points: '
-                "@INDICES[(3,), (4,), ...] : "
-                "LHS=[masked, masked, ...], RHS=[202, 203, ...]"
+                "@INDICES[(2,), (3,), ...] : "
+                f"LHS=[3, {mask2}, ...], RHS=[201, 202, ...]"
             ),
         ]
