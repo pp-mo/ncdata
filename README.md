@@ -14,13 +14,14 @@ This enables the user to freely mix+match operations from both projects, getting
   * [Motivation](#motivation)
     * [Primary Use](#primary-use)
     * [Secondary Uses](#secondary-uses)
+  * [Principles](#principles)
   * [Working Usage Examples](#code-examples) 
   * [API documentation](#api-documentation)
+  * [Installation](#installation)
   * [Project Status](#project-status)
     * [Code stability](#code-stability)
     * [Iris and Xarray version compatibility](#iris-and-xarray-compatibility)
     * [Current Limitations](#known-limitations)
-  * [Principles](#principles)
   * [References](#references)
   * [Developer Notes](#developer-notes)
 
@@ -102,45 +103,6 @@ This could be added in future, but it is also true that many such operations (li
 indexing) may be better done using Iris/Xarray.
 
 
-# Code Examples
-  * mostly TBD
-  * proof-of-concept script for
-    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts/ex_ncdata_netcdf_conversion.py)
-  * proof-of-concept script for
-    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts/ex_iris_xarray_conversion.py)    
-
-# API documentation
-  * see the [ReadTheDocs build](https://ncdata.readthedocs.io/en/latest/index.html)
-
-# Project Status
-## Code Stability
-
-Code here is all still experimental.   
-Current APIs are unsupported and not stable.  
-There is no release yet.
-
-## Iris and Xarray Compatibility
-### Iris
-  * **currently** functions with a test branch of Iris
-    * branch in pp-mo fork : https://github.com/pp-mo/iris/tree/bridge_support , *or*
-    * this PR in main Iris repo : https://github.com/SciTools/iris/pull/5216
-  * **in future** the necessary changes should be included and released with
-    (planned) [Iris 3.7](https://github.com/SciTools/iris/discussions/5209).
-### Xarray
-  * appears working against 'current' Xarray at time of writing
-    * [v2023.03.0 (March 22, 2023)](https://docs.xarray.dev/en/latest/whats-new.html#v2023-03-0-march-22-2023)
-
-## Known limitations
-Unsupported features : not planned 
- * user-defined datatypes are not supported
-   * this includes compound and variable-length types
-
-Unsupported features : planned for future release 
- * groups (not yet fully supported)
- * unlimited dimensions (not yet fully supported)
- * file compression and encoding options
- * file output chunking control
-
 # Principles
   * ncdata represents NetCDF data as Python objects
   * ncdata objects can be freely manipulated, independent of any data file
@@ -156,6 +118,57 @@ Unsupported features : planned for future release
     data or computing of lazy data
   * ncdata exchanges lazy arrays with files using Dask 'streaming', thus allowing
     transfer of arrays larger than memory  
+
+
+# Code Examples
+  * mostly TBD
+  * proof-of-concept script for
+    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts/ex_ncdata_netcdf_conversion.py)
+  * proof-of-concept script for
+    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts/ex_iris_xarray_conversion.py)    
+
+
+# API documentation
+  * see the [ReadTheDocs build](https://ncdata.readthedocs.io/en/latest/index.html)
+
+
+# Installation
+Not yet building as a package, or uploading to PyPI / conda-forge.  Though this is planned for future "proper" releases.
+
+Code is pure Python.  Download and add repo>/lib to PYTHONPATH.  
+An installation process will be provided shortly (Jan 2024) ...
+
+# Project Status
+## Code Stability
+We intend to follow [PEP 440](https://peps.python.org/pep-0440/) or (older) [SemVer](https://semver.org/) versioning principles.
+
+Release version is at **"v0.0.1"**.  
+This is a first complete implementation, with functional operational of all public APIs.  
+A **release "v0.1.0"** will follow when build and deployment mechanisms are sorted out.  
+The code is however still experimental, and APIs are not stable (hence no major version yet).  
+
+## Iris and Xarray Compatibility
+### Iris
+  * tested working with latest Iris
+  * compatible with iris >= v3.7.0
+    * see : [support added in v3.7.0](https://scitools-iris.readthedocs.io/en/stable/whatsnew/3.7.html#internal)
+### Xarray
+  * appears working against 'current' Xarray at time of writing
+    * [v2023.11.0 (November 16, 2023)](https://docs.xarray.dev/en/latest/whats-new.html#v2023-11-0-nov-16-2023)
+
+## Known limitations
+Unsupported features : not planned 
+ * user-defined datatypes are not supported
+   * this includes compound and variable-length types
+
+Unsupported features : planned for future release 
+ * groups (not yet fully supported ?)
+ * file output chunking control
+
+Untested features : probably done, pending test
+ * unlimited dimensions (not yet fully supported)
+ * file compression and encoding options
+ * iris and xarray load/save keywords generally
 
 # References
   * Iris issue : https://github.com/SciTools/iris/issues/4994
