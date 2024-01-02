@@ -58,20 +58,6 @@ def test_load_direct_vs_viancdata(
     if standard_testcase.name in BAD_LOADSAVE_TESTCASES["xarray"]["load"]:
         pytest.skip("excluded testcase (xarray cannot load)")
 
-    if any(
-        key in standard_testcase.name
-        for key in [
-            # ??? masking in regular data variables
-            "testdata____global__xyz_t__GEMS_CO2_Apr2006",
-            "testdata____global__xyt__SMALL_total_column_co2",
-            # weird out-of-range timedeltas (only fails within PyCharm ??????)
-            "testdata____transverse_mercator__projection_origin_attributes",
-            "testdata____transverse_mercator__tmean_1910_1910",
-            "unstructured_grid__theta_nodal",
-        ]
-    ):
-        pytest.skip("excluded testcase -- FOR NOW cannot convert ncdata->xr")
-
     # _Debug = True
     _Debug = False
     if _Debug:
@@ -85,50 +71,9 @@ def test_load_direct_vs_viancdata(
         print(txt)
 
     # Load the testcase with Xarray.
-    xr_ds = xarray.open_dataset(source_filepath, chunks="auto")
-    t = 0
+    xr_ds = xarray.open_dataset(source_filepath, chunks=-1)
     # Load same, via ncdata
     xr_ncdata_ds = to_xarray(ncdata)
-
-    _FIX_SCALARS = True
-    # _FIX_SCALARS = False
-    if _FIX_SCALARS:
-
-        def fix_dask_scalars(darray):
-            # replace a dask array with one "safe" to compare, since there are bugs
-            # causing exceptions when comparing np.ma.masked/np.nan scalars in dask.
-            # In those cases, replace the array with the computed numpy value instead.
-            if (
-                # hasattr(darray, 'compute')
-                1
-                and darray.ndim == 0
-                # and darray.compute() in (np.ma.masked, np.nan)
-            ):
-                # x
-                # # Simply replace with the computed numpy array.
-
-                # Replace with a numpy 0 scalar, of the correct dtype.
-                darray = np.array(0, dtype=darray.dtype)
-            return darray
-
-        def fix_xarray_scalar_data(xrds):
-            for varname, var in xrds.variables.items():
-                if var.ndim == 0:
-                    data = var.data
-                    newdata = fix_dask_scalars(data)
-                    if newdata is not data:
-                        # Replace the variable with a new one based on the new data.
-                        # For some reason, "var.data = newdata" does not do this.
-                        newvar = xarray.Variable(
-                            dims=var.dims,
-                            data=newdata,
-                            attrs=var.attrs,
-                            encoding=var.encoding,
-                        )
-                        xrds[varname] = newvar
-
-        for ds in (xr_ds, xr_ncdata_ds):
-            fix_xarray_scalar_data(ds)
 
     # Xarray dataset (variable) comparison is problematic
     # result = xr_ncdata_ds.identical(xr_ds)
@@ -138,6 +83,18 @@ def test_load_direct_vs_viancdata(
     temp_xr_ncdata_path = tmp_path / "tmp_out_xr_ncdata.nc"
     xr_ds.to_netcdf(temp_xr_path)
     xr_ncdata_ds.to_netcdf(temp_xr_ncdata_path)
+
+    if _Debug:
+        print("\n\n-----\nResult ncdump : 'DIRECT' nc4 -> xr -> nc4 ... ")
+        txt = check_output([f"ncdump {temp_xr_path}"], shell=True).decode()
+        print(txt)
+        print(
+            "\n\n-----\nResult ncdump : 'INDIRECT'' nc4 -> ncdata-> xr -> nc4 ... "
+        )
+        txt = check_output(
+            [f"ncdump {temp_xr_ncdata_path}"], shell=True
+        ).decode()
+        print(txt)
 
     # FOR NOW: compare with experimental ncdata comparison.
     # I know this is a bit circular, but it is useful for debugging, for now ...
@@ -156,57 +113,43 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
     ncdata = from_nc4(source_filepath)
 
     excluded_testcases = BAD_LOADSAVE_TESTCASES["xarray"]["load"]
-    excluded_testcases += [
-        # string data length handling
-        "testdata____label_and_climate__A1B__99999a__river__sep__2070__2099",
-        # string data generally doesn't work yet  (variety of problems?)
-        "ds__dtype__string",
-        "ds__stringvar__singlepoint",
-        "ds__stringvar__multipoint",
-        # weird out-of-range timedeltas (***only*** fails within PyCharm ??????)
-        "testdata____transverse_mercator__projection_origin_attributes",
-        "testdata____transverse_mercator__tmean_1910_1910",
-        "unstructured_grid__theta_nodal",
-        # problems with data masking ??
-        "testdata____global__xyz_t__GEMS_CO2_Apr2006",
-        "testdata____global__xyt__SMALL_total_column_co2",
-    ]
     if any(key in standard_testcase.name for key in excluded_testcases):
         pytest.skip("excluded testcase")
 
     # Load the testcase into xarray.
-    xrds = xarray.load_dataset(source_filepath, chunks="auto")
-
-    # if standard_testcase.name in ("ds_Empty", "ds__singleattr", "ds__dimonly"):
-    #     # Xarray can't save an empty dataset.
-    #     return
+    xrds = xarray.load_dataset(source_filepath, chunks=-1)
 
     # Re-save from Xarray
     temp_direct_savepath = tmp_path / "temp_save_xarray.nc"
     xrds.to_netcdf(temp_direct_savepath)
     # Save same, via ncdata
     temp_ncdata_savepath = tmp_path / "temp_save_xarray_via_ncdata.nc"
-    to_nc4(from_xarray(xrds), temp_ncdata_savepath)
+    ncds_fromxr = from_xarray(xrds)
+    to_nc4(ncds_fromxr, temp_ncdata_savepath)
 
-    # _Debug = True
-    _Debug = False
+    _Debug = True
+    # _Debug = False
     if _Debug:
-        print(f"\ntestcase: {standard_testcase.name}")
-        print("spec =")
-        print(standard_testcase.spec)
-        print("\nncdata =")
-        print(ncdata)
-        print("\nncdump ORIGINAL TESTCASE SOURCEFILE =")
-        txt = check_output([f"ncdump {source_filepath}"], shell=True).decode()
-        print(txt)
-        print("\nncdump DIRECT FROM XARRAY =")
-        txt = check_output(
-            [f"ncdump {temp_direct_savepath}"], shell=True
+        ncdump_opts = "-h"
+        # ncdump_opts = ""
+        txt = f"""
+        testcase: {standard_testcase.name}
+        spec = {standard_testcase.spec}
+        ncdata = ...
+        {ncdata}
+        
+        ncdump ORIGINAL TESTCASE SOURCEFILE =
+        """
+        txt += check_output(
+            [f"ncdump {ncdump_opts} {source_filepath}"], shell=True
         ).decode()
-        print(txt)
-        print("\nncdump VIA NCDATA =")
-        txt = check_output(
-            [f"ncdump {temp_ncdata_savepath}"], shell=True
+        txt += "\nncdump DIRECT FROM XARRAY ="
+        txt += check_output(
+            [f"ncdump {ncdump_opts} {temp_direct_savepath}"], shell=True
+        ).decode()
+        txt += "\nncdump VIA NCDATA ="
+        txt += check_output(
+            [f"ncdump {ncdump_opts} {temp_ncdata_savepath}"], shell=True
         ).decode()
         print(txt)
 

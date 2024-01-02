@@ -25,6 +25,8 @@ this may need to be extended, in future, to support other such uses.
 """
 from typing import Dict, List
 
+import dask.array as da
+import netCDF4
 import numpy as np
 
 from . import NcAttribute, NcData, NcDimension, NcVariable
@@ -186,6 +188,16 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     The core NcData content, 'self._ncdata', is a :class:`NcVariable`.
     This completely defines the parent object state.
 
+    The property "_data_array" is detected by Iris to do direct data transfer
+    (copy-free and lazy-preserving).
+    At present, this object emulates only the *default* read/write behaviour of a
+    netCDF4 Variable, i.e. the underlying NcVariable contains a 'raw' data array, and
+    the _data_array property interface applies/removes any scaling and masking as it is
+    "seen" from the outside.
+    That suits how *Iris* reads netCFD4 data, but it won't work if the user wants to
+    control the masking/saving behaviour, as you can do in netCDF4.
+    Thus, at present, we do *not* provide any of set_auto_mask/scale/maskandscale.
+
     """
 
     _local_instance_props = ("_ncdata", "name", "datatype", "_data_array")
@@ -196,12 +208,21 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         # Note: datatype must be known at creation, which may be before an actual data
         #  array is assigned on the ncvar.
         self.datatype = np.dtype(datatype)
-        if ncvar.data is None:
-            # temporary empty data (to support never-written scalar values)
+
+        # Fix the direct array content.
+        array = ncvar.data
+        if array is None:
+            # temporary empty data (to correctly support never-written content)
             # NOTE: significantly, does *not* allocate an actual full array in memory
-            array = np.zeros(self.shape, self.datatype)
-            ncvar.data = array
-        self._data_array = ncvar.data
+            array = np.ma.masked_array(
+                np.zeros(self.shape, self.datatype), np.ones(self.shape, bool)
+            )
+
+        # Convert from "inner" raw form to masked-and-scaled, and re-assign it.
+        # This ensures that our inner data contains the appropriate fill-value, as
+        # determined from our attributes and the netCDF4 default fill-values.
+        array = self._maskandscale_inner_to_apparent(array)
+        self._data_array = array
 
     @classmethod
     def _from_ncvariable(cls, ncvar: NcVariable, dtype: np.dtype = None):
@@ -213,16 +234,130 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         )
         return self
 
-    # Label this as an 'emulated' netCDF4.Variable, containing an actual (possibly
-    #  lazy) array, which can be directly read/written.
+    def _get_scaling(self):
+        """
+        Determine any scaling settings from attributes.
+
+        Notes
+        -----
+        * this must be checked dynamically, as the attributes could change.
+        """
+        scale_factor, add_offset = (
+            self.getncattr(attr) if attr in self.ncattrs() else None
+            for attr in ("scale_factor", "add_offset")
+        )
+        is_scaled = scale_factor is not None or add_offset is not None
+        if is_scaled:
+            if scale_factor is None:
+                scale_factor = np.array(1, dtype=self.dtype)
+            if add_offset is None:
+                add_offset = np.array(0, dtype=self.dtype)
+        return is_scaled, scale_factor, add_offset
+
+    def _get_fillvalue(self):
+        """
+        Calculate any applicable fill-value from attributes and netCDF4 defaults.
+
+        Notes
+        -----
+        * this must be checked dynamically, as the attributes could change.
+        * for byte data, there is no netCDF default fill, so the result can be None.
+        """
+        fv = self._ncdata.attributes.get("_FillValue", None)
+        if fv is not None:
+            fv = fv.as_python_value()
+        else:
+            if self.dtype.itemsize != 1:
+                # NOTE: single-byte types have NO default fill-value
+                dtype_code = self.dtype.str[1:]
+                fv = netCDF4.default_fillvals[dtype_code]
+        return fv
+
+    def _maskandscale_inner_to_apparent(self, array):
+        """
+        Convert raw data values to masked+scaled.
+
+        This replicates the netCDF4 default auto-scaling procedure.
+        """
+        # N.B. fill-value matches the internal raw (unscaled) values and dtype
+        fv = self._get_fillvalue()
+        if fv is not None:
+            array = np.ma.masked_equal(array, fv)
+
+        is_scaled, scale_factor, add_offset = self._get_scaling()
+        if is_scaled:
+            # Scale the array, which may result in a type change.
+            array = array * scale_factor + add_offset
+
+        return array
+
+    @staticmethod
+    def _fill_masked(array, fv):
+        """
+        Fill any masked numpy data with a fill-value.
+
+        This is applied lazily so that it can test whether actual data values are
+        masked or not, since ordinary ndarrays do not provide a ".filled()" method.
+        """
+        if np.ma.isMaskedArray(array):
+            array = array.filled(fv)
+        return array
+
+    def _maskandscale_apparent_to_inner(self, array):
+        """
+        Convert masked+scaled data to raw values.
+
+        This replicates the netCDF4 default auto-scaling procedure.
+        """
+        is_scaled, scale_factor, add_offset = self._get_scaling()
+        if is_scaled:
+            # "Un-scale" the array, which may include a type change.
+            array = (array - add_offset) / scale_factor
+            if self.datatype.kind in "iu":
+                array = np.round(array)
+            array = array.astype(self.datatype)
+
+        # N.B. fill-value matches the internal raw (unscaled) values and dtype
+        fv = self._get_fillvalue()
+        if fv is not None:
+            # convert from masked to filled data, but in a lazy fashion
+            meta_sample = array.flatten()[:0]
+            if not isinstance(array, da.Array):
+                # Surprisingly, this is required to ensure that array shape is
+                # replicated in the map_blocks result.
+                array = da.from_array(array, chunks="auto", meta=meta_sample)
+            array = da.map_blocks(
+                self._fill_masked, array, fv, meta=meta_sample
+            )
+
+        return array
+
+    # Providing a "_data_array" property labels this as an 'emulated' netCDF4.Variable,
+    # containing an actual (possibly lazy) array, which can be directly read/written.
     @property
     def _data_array(self):
-        return self._ncdata.data
+        """
+        Fetch the data from the underlying NcVariable.
+
+        We also convert the 'raw' values into a masked-and-scaled form, possibly with
+        a promoted dtype, to emulate the *default* read behaviour of a netCFD4 Variable.
+        """
+        array = self._ncdata.data
+        array = self._maskandscale_inner_to_apparent(array)
+        return array
 
     @_data_array.setter
     def _data_array(self, data):
+        """
+        Save data to the underlying NcVariable.
+
+        We also convert the given values from a masked-and-scaled form into 'raw' data
+        values, possibly of  a different dtype, to emulate the *default* write
+        behaviour of a
+        netCFD4 Variable.
+        """
+        data = self._maskandscale_apparent_to_inner(data)
         self._ncdata.data = data
-        self.datatype = data.dtype
 
     def group(self):  # noqa: D102
         return self._ncdata.group
@@ -233,23 +368,23 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
 
     #
     # "Normal" data access is via indexing.
-    # N.B. we do still need to support this, e.g. for DimCoords ?
+    # N.B. we must still support this, e.g. for Iris coordinate loading.
     #
     def __getitem__(self, keys):  # noqa: D105
+        # For now, only support whole-array fetches.
+        # This restriction is probably unnecessary, but it is all that Iris requires.
         if keys != slice(None):
             raise IndexError(keys)
-        if self.ndim == 0:
-            return self._ncdata.data
-        array = self._ncdata.data[keys]
+
+        array = self._data_array
         if hasattr(array, "compute"):
-            # When accessed as a data variable, we must realise lazy data.
+            # When directly accessed as a data variable, realise any lazy content.
             array = array.compute()
         return array
 
     # The __setitem__ is not required for normal saving.
     # The saver will assign ._data_array instead
     # TODO: might need to support this for future non-Iris usage ?
-    #
     # def __setitem__(self, keys, data):
     #     if keys != slice(None):
     #         raise IndexError(keys)
@@ -261,8 +396,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     #             f"{data.shape} instead of {self.shape}"
     #         )
     #         raise ValueError(msg)
-    #     self._ncdata.data = data
-    #     self.datatype = data.dtype
+    #     self._data_array = data
 
     @property
     def dtype(self):  # noqa: D102

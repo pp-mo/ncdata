@@ -23,7 +23,8 @@ def test_basic(standard_testcase, tmp_path):
     # Re-save
     to_nc4(ncdata, intermediate_filepath)
 
-    _Debug = True
+    # _Debug = True
+    _Debug = False
     if _Debug:
         print(f"\ntestcase: {standard_testcase.name}")
         print("spec =")

@@ -65,6 +65,9 @@ def _to_nc4_group(
             fill_value=fill_value,
             **kwargs,
         )
+        # As for loading, the ncdata variables must represent actual 'raw' netcdf
+        # variables, of the internal data type, i.e. *not* scaled data.
+        nc4var.set_auto_maskandscale(False)
 
         # Assign attributes.
         # N.B. must be done before writing data, to enable scale+offset controls !
@@ -123,6 +126,9 @@ class _NetCDFDataProxy:
         #  times by Dask. Use _GLOBAL_NETCDF4_LOCK directly instead.
         with _GLOBAL_NETCDF4_LIBRARY_THREADLOCK:
             dataset = nc.Dataset(self.path)
+            # Always yield raw variable data of the declared variable dtype
+            # i.e. *not* scaled+offset values (where enabled)
+            dataset.set_auto_maskandscale(False)
             ds_or_group = dataset
             try:
                 for group_name in self.group_names_path:

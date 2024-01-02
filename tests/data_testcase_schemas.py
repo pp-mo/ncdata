@@ -153,6 +153,9 @@ def _write_nc4_dataset(
                 data = np.ma.masked_array(data)
                 data[i_miss] = np.ma.masked
             data = data.reshape(shape)
+
+        # provided data is raw values (not scaled)
+        nc_var.set_auto_maskandscale(False)
         nc_var[:] = data
 
     # Finally, recurse over sub-groups
@@ -194,8 +197,6 @@ def make_testcase_dataset(filepath, spec):
     """
     ds = nc.Dataset(filepath, "w")
     try:
-        if "ds__dtype__string" in filepath:
-            pass
         _write_nc4_dataset(spec, ds)
     finally:
         ds.close()
@@ -207,7 +208,6 @@ _minimal_variable_test_spec = {
 
 
 _simple_test_spec = {
-    "name": "",
     "dims": [dict(name="x", size=3), dict(name="y", size=2)],
     "attrs": {"ga1": 2.3, "gas2": "this"},
     "vars": [dict(name="vx", dims=["x"], dtype=np.int32)],
@@ -229,6 +229,71 @@ _simple_test_spec = {
     ],
 }
 
+_scaleoffset_test_spec = {
+    "dims": [dict(name="x", size=3)],
+    "vars": [
+        dict(
+            name="vx",
+            dims=["x"],
+            data=np.array([2, 7, 10], dtype=np.int16),
+            attrs={
+                "scale_factor": np.array(0.01, dtype=np.float32),
+                "add_offset": 12.34,
+            },
+        )
+    ],
+}
+
+_masked_floats_test_spec = {
+    "dims": [dict(name="x", size=3)],
+    "vars": [
+        dict(
+            name="vx",
+            dims=["x"],
+            data=np.ma.array([2, 7, 10], mask=[0, 1, 0], dtype=np.float32),
+        )
+    ],
+}
+
+_masked_withnans_test_spec = {
+    "dims": [dict(name="x", size=4)],
+    "vars": [
+        dict(
+            name="vx",
+            dims=["x"],
+            data=np.ma.array(
+                [2.0, 7.0, 10, np.nan], mask=[0, 1, 0, 0], dtype=np.float32
+            ),
+        )
+    ],
+}
+
+_masked_ints_test_spec = {
+    "dims": [dict(name="x", size=3)],
+    "vars": [
+        dict(
+            name="vx",
+            dims=["x"],
+            data=np.ma.array([2, 7, 10], mask=[0, 1, 0], dtype=np.int16),
+        )
+    ],
+}
+
+_masked_scaled_ints_test_spec = {
+    "dims": [dict(name="x", size=3)],
+    "vars": [
+        dict(
+            name="vx",
+            dims=["x"],
+            data=np.ma.array([2, 7, 10], mask=[0, 1, 0], dtype=np.int16),
+            attrs={
+                "scale_factor": np.array(0.01, dtype=np.float32),
+                "add_offset": 12.34,
+            },
+        )
+    ],
+}
+
 # Define a sequence of standard testfile specs, with suitable param-names.
 _Standard_Testcases: Dict[str, Union[Path, dict]] = {}
 
@@ -247,11 +312,16 @@ def _define_simple_testcases():
         "ds_Empty": {},
         "ds_Minimal": _minimal_variable_test_spec,
         "ds_Basic": _simple_test_spec,
-        "testdata1": (
+        "ds_testdata1": (
             Path(__file__).parent
             / "testdata"
             / "toa_brightness_temperature.nc"
         ),
+        "ds_scaleoffset": _scaleoffset_test_spec,
+        "ds_masked_floats": _masked_floats_test_spec,
+        "ds_masked_ints": _masked_ints_test_spec,
+        "ds_masked_withnans": _masked_withnans_test_spec,
+        "ds_masked_scaled_ints": _masked_scaled_ints_test_spec,
     }
     return testcases
 
@@ -429,13 +499,9 @@ BAD_LOADSAVE_TESTCASES = {
         "save": ["ds_Empty", "ds__singleattr", "ds__dimonly"],
     },
     "xarray": {
-        # We think Iris can load ~anything (maybe returning nothing)
-        "load": [
-            "testdata____label_and_climate__small_FC_167_mon_19601101",
-            "testdata____unstructured_grid__lfric_surface_mean",
-            "testdata____rotated__xyt__small_rotPole_precipitation",
-        ],
-        # Iris can't save data with no data-variables.
+        # We think Xarray can load ~anything (maybe returning nothing)
+        "load": [],
+        # Xarray can save ~anything
         "save": [],
     },
 }

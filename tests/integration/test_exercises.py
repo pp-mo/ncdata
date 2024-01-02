@@ -10,7 +10,9 @@ TODO: deal with possible thread safety issues, not in the scripts themselves ?
 
 
 def test_ex_dataset_print():
-    from tests.integration.example_scripts.ex_dataset_print import sample_printout
+    from tests.integration.example_scripts.ex_dataset_print import (
+        sample_printout,
+    )
 
     sample_printout()
 
@@ -24,7 +26,9 @@ def test_ex_iris_saveto_ncdata():
 
 
 def test_ex_iris_xarray_conversion():
-    from tests.integration.example_scripts.ex_iris_xarray_conversion import example_from_xr
+    from tests.integration.example_scripts.ex_iris_xarray_conversion import (
+        example_from_xr,
+    )
 
     example_from_xr()
 

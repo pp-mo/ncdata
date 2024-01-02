@@ -68,23 +68,20 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
         + BAD_LOADSAVE_TESTCASES["iris"]["save"]
         # unloadable by xarray
         + BAD_LOADSAVE_TESTCASES["xarray"]["load"]
+        # TODO: remaining unresolved problems ...
         + [
-            # TODO: remaining unresolved problems ...
-            # Cubes with string data are not cleanly handled at present.
-            # (not clear if iris or xarray is behaving wrongly here)
-            "ds__stringvar__singlepoint",
-            "ds__stringvar__multipoint",
-            # These ones have a string dimension problem
-            # "label_and_climate__small_FC_167",
-            "label_and_climate__A1B__99999a__river__sep__2070",
+            # string dimension problem
             "ds__dtype__string",
-            # Various outstanding dims-mismatch problems.
-            # FOR NOW skip all these.
-            "testdata____unstructured_grid__data_C4",
-            "testdata____unstructured_grid__mesh_C12",
+
+            # outstanding dims-mismatch problems.
             "testing__small_theta_colpex",
+
+            # coordinate attributes on mesh coordinate variables
+            "testdata____unstructured_grid__data_C4",
             "testdata____ugrid__21_triangle_example",
-            "testdata____ORCA2__votemper",
+
+            # Problem with units on time bounds
+            "label_and_climate__small_FC_167",
         ]
     )
     if any(key in standard_testcase.name for key in exclude_case_keys):
@@ -123,7 +120,6 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
 
     # Convert to xarray, and back again.
     ds = cubes_to_xarray(iris_cubes)
-    # iris_xr_cubes = cubes_from_xarray(ds)
     ncds_fromxr = from_xarray(ds)
     from ncdata.iris import to_iris
 
@@ -141,22 +137,20 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
     for cube in iris_cubes + iris_xr_cubes:
         cube.attributes.pop("Conventions", None)
 
-    #
-    # N.B. this is actually NOT necessary, since the differing units DO in fact equate,
-    # despite printing differently.  YUCK!!
-    #
-    #     correct for xarray handling of time units.
-    #     not entirely clear yet where this happens,
-    #      - probably in the loading phase, which therefore can maybe be controlled ??
-    # _UNIFY_TIME_UNITS = True
-    _UNIFY_TIME_UNITS = False
-    # Not actually neccessary, this was a diversion ??
+    # correct for xarray handling of time units.
+    # not entirely clear yet where this happens,
+    #  - probably in the loading phase, which therefore can maybe be controlled ??
+    _UNIFY_TIME_UNITS = True
+    # _UNIFY_TIME_UNITS = False
     if _UNIFY_TIME_UNITS:
         for iris_cube, iris_xr_cube in zip(iris_cubes, iris_xr_cubes):
             for xr_coord in iris_xr_cube.coords():
-                if xr_coord.var_name == "time_counter":
-                    found = xr_coord
-                iris_coord = iris_cube.coord(xr_coord.name())
+                iris_coords = iris_cube.coords(xr_coord.name())
+                if len(iris_coords) != 1:
+                    # Coords don't match, which is nasty!
+                    # Just skip out + let the test fail
+                    break;
+                (iris_coord,) = iris_coords
                 # Detecting differently constructed time units is awkward,
                 # because you can have unit1==unit2, but still str(unit1) != str(unit2)
                 xr_ut, iris_ut = (co.units for co in (xr_coord, iris_coord))
@@ -182,10 +176,9 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
     if not result:
         # FOR NOW: compare with experimental ncdata comparison.
         # I know this is a bit circular, but it is useful for debugging, for now ...
-        result = compare_nc_datasets(
-            from_iris(iris_cubes), from_iris(iris_xr_cubes)
-        )
+        result = compare_nc_datasets(from_iris(iris_cubes), from_iris(iris_xr_cubes))
         assert result == []
+
 
 # N.B. FOR NOW skip this test entirely.
 # There are lots of problems here, mostly caused by dimension naming.
