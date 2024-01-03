@@ -23,9 +23,10 @@ copyright = "2023, pp-mo"
 author = "pp-mo"
 
 # The complete version, including alpha/beta/rc tags
-release = ".".join(version_tuple)
+version_parts = [str(part) for part in version_tuple]
+release = ".".join(version_parts)
 # The major version string.
-version = "ncdata-" + ".".join(version_tuple[:2])
+version = ".".join(version_parts[:2])
 
 # -- General configuration ---------------------------------------------------
 
