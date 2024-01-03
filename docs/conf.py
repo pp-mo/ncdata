@@ -14,7 +14,7 @@
 # import os
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
-
+from ncdata._version import version_tuple
 
 # -- Project information -----------------------------------------------------
 
@@ -22,9 +22,10 @@ project = "ncdata"
 copyright = "2023, pp-mo"
 author = "pp-mo"
 
-# The full version, including alpha/beta/rc tags
-release = "0.01"
-
+# The complete version, including alpha/beta/rc tags
+release = ".".join(version_tuple)
+# The major version string.
+version = "ncdata-" + ".".join(version_tuple[:2])
 
 # -- General configuration ---------------------------------------------------
 
