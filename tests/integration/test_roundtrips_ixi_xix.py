@@ -72,14 +72,11 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
         + [
             # string dimension problem
             "ds__dtype__string",
-
             # outstanding dims-mismatch problems.
             "testing__small_theta_colpex",
-
             # coordinate attributes on mesh coordinate variables
             "testdata____unstructured_grid__data_C4",
             "testdata____ugrid__21_triangle_example",
-
             # Problem with units on time bounds
             "label_and_climate__small_FC_167",
         ]
@@ -149,7 +146,7 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
                 if len(iris_coords) != 1:
                     # Coords don't match, which is nasty!
                     # Just skip out + let the test fail
-                    break;
+                    break
                 (iris_coord,) = iris_coords
                 # Detecting differently constructed time units is awkward,
                 # because you can have unit1==unit2, but still str(unit1) != str(unit2)
@@ -176,7 +173,9 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
     if not result:
         # FOR NOW: compare with experimental ncdata comparison.
         # I know this is a bit circular, but it is useful for debugging, for now ...
-        result = compare_nc_datasets(from_iris(iris_cubes), from_iris(iris_xr_cubes))
+        result = compare_nc_datasets(
+            from_iris(iris_cubes), from_iris(iris_xr_cubes)
+        )
         assert result == []
 
 
