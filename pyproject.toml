@@ -1,3 +1,79 @@
+[build-system]
+# Defined by PEP 518
+requires = [
+  "setuptools>=64",
+  "setuptools_scm[toml]>=7.0",
+  "wheel",
+]
+# Defined by PEP 517
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ncdata"
+authors = [
+    {name = "Patrick Peglar", email = "patrick.peglar@metoffice.gov.uk"},
+]
+description = "Abstract NetCDF data objects, providing fast data transfer between analysis packages."
+requires-python = ">=3.7"
+keywords = [
+    "cf-metadata",
+    "data-analysis",
+    "netcdf",
+    "iris",
+    "xarray",
+]
+license = {text = "BSD-3-Clause"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Natural Language :: English",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Unix",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering",
+]
+dynamic = [
+    "readme",
+    "version",
+]
+# Strictly, dask + netcdf are not core dependencies.
+# But almost *any* conceivable use will need them.
+# For now, this works in place of a dependencies file, so 'dependencies' is NOT dynamic.
+dependencies = ["numpy", "dask", "netCDF4"]
+
+
+[project.urls]
+Code = "https://github.com/pp-mo/ncdata"
+Discussions = "https://github.com/pp-mo/ncdata/discussions"
+Documentation = "https://ncdata.readthedocs.io"
+Issues = "https://github.com/pp-mo/ncdata/issues"
+
+
+[tool.setuptools]
+license-files = ["LICENSE"]
+
+[tool.setuptools.dynamic]
+readme = {file = "README.md", content-type = "text/markdown"}
+
+[tool.setuptools.packages.find]
+include = ["ncdata*"]
+where = ["lib"]
+
+[tool.setuptools_scm]
+version_file = "lib/ncdata/_version.py"
+local_scheme = "dirty-tag"
+version_scheme = "release-branch-semver"
+
+
 [tool.black]
 line-length = 79
 target-version = ['py310']
