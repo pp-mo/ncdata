@@ -14,6 +14,8 @@ from iris.cube import CubeList
 from .iris import from_iris, to_iris
 from .xarray import from_xarray, to_xarray
 
+__all__ = ["cubes_from_xarray", "cubes_to_xarray"]
+
 
 def cubes_from_xarray(
     xrds: xarray.Dataset, xr_save_kwargs=None, iris_load_kwargs=None

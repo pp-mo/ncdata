@@ -17,6 +17,8 @@ from iris.cube import Cube, CubeList
 from . import NcData
 from .dataset_like import Nc4DatasetLike
 
+__all__ = ["from_iris", "to_iris"]
+
 #
 # The primary conversion interfaces
 #
