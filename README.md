@@ -33,19 +33,19 @@ This allows the user to mix+match features from either package in code.
 
 For example:
 ``` python
-from ncdata.iris_xarray import dataset_to_cubes, cubes_to_dataset
+from ncdata.iris_xarray import cubes_to_xarray, cubes_from_xarray
 
 # Apply Iris regridder to xarray data
 dataset = xarray.open_dataset('file1.nc')
-cube, = dataset_to_cubes(dataset)
+cube, = cubes_from_xarray(dataset)
 cube2 = cube.regrid(grid_cube, iris.analysis.PointInCell)
-dataset2 = cubes_to_dataset(cube2)
+dataset2 = cubes_to_xarray(cube2)
 
 # Apply Xarray statistic to Iris data
 cubes = iris.load('file1.nc')
-dataset = cubes_to_dataset(cubes)
+dataset = cubes_to_xarray(cubes)
 dataset2 = dataset.group_by('time.dayofyear').argmin()
-cubes2 = dataset_to_cubes(dataset2)
+cubes2 = cubes_from_xarray(dataset2)
 ``` 
   * data conversion is equivalent to writing to a file with one library, and reading it
     back with the other ..
@@ -68,13 +68,14 @@ dimension control.
 For example:
 ``` python
 from ncdata.xarray import from_xarray
-from ncdata.iris import to_cubes
+from ncdata.iris import to_iris
 from ncdata.netcdf4 import to_nc4, from_nc4
 
 # Rename a dimension in xarray output
 dataset = xr.open_dataset('file1.nc')
 xr_ncdata = from_xarray(dataset)
 dim = xr_ncdata.dimensions.pop('dim0')
+dim.name = 'newdim'
 xr_ncdata.dimensions['newdim'] = dim
 for var in xr_ncdata.variables.values():
     var.dimensions = [
@@ -90,7 +91,7 @@ for var in ncdata.variables:
         100.e6 if dim == 'dim0' else -1
         for dim in var.dimensions
     )
-cubes = to_cubes(ncdata)
+cubes = to_iris(ncdata)
 ``` 
 
 ### Manipulation of data
