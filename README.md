@@ -36,7 +36,7 @@ For example:
 from ncdata.iris_xarray import cubes_to_xarray, cubes_from_xarray
 
 # Apply Iris regridder to xarray data
-dataset = xarray.open_dataset('file1.nc')
+dataset = xarray.open_dataset('file1.nc', chunks='auto')
 cube, = cubes_from_xarray(dataset)
 cube2 = cube.regrid(grid_cube, iris.analysis.PointInCell)
 dataset2 = cubes_to_xarray(cube2)
@@ -87,6 +87,7 @@ to_nc4(ncdata, 'file_2a.nc')
 # Fix chunking in Iris input
 ncdata = from_nc4('file1.nc')
 for var in ncdata.variables:
+    # custom chunking() mimics the file chunks we want
     var.chunking = lambda: (
         100.e6 if dim == 'dim0' else -1
         for dim in var.dimensions
@@ -134,10 +135,15 @@ indexing) may be better done using Iris/Xarray.
 
 
 # Installation
-Not yet building as a package, or uploading to PyPI / conda-forge.  Though this is planned for future "proper" releases.
+Install from conda-forge with conda
+```
+conda install ncdata
+```
 
-Code is pure Python.  Download and add repo>/lib to PYTHONPATH.  
-An installation process will be provided shortly (Jan 2024) ...
+Or from PyPI with pip
+```
+pip install ncdata
+```
 
 # Project Status
 ## Code Stability
@@ -149,24 +155,20 @@ A **release "v0.1.0"** will follow when build and deployment mechanisms are sort
 The code is however still experimental, and APIs are not stable (hence no major version yet).  
 
 ## Iris and Xarray Compatibility
-### Iris
-  * tested working with latest Iris
-  * compatible with iris >= v3.7.0
-    * see : [support added in v3.7.0](https://scitools-iris.readthedocs.io/en/stable/whatsnew/3.7.html#internal)
-### Xarray
-  * appears working against 'current' Xarray at time of writing
-    * [v2023.11.0 (November 16, 2023)](https://docs.xarray.dev/en/latest/whats-new.html#v2023-11-0-nov-16-2023)
+* C.I. tests GitHub PRs and merges, against latest releases of Iris and Xarray
+* compatible with iris >= v3.7.0
+  * see : [support added in v3.7.0](https://scitools-iris.readthedocs.io/en/stable/whatsnew/3.7.html#internal)
 
 ## Known limitations
-Unsupported features : not planned 
+Unsupported features : _not planned_ 
  * user-defined datatypes are not supported
    * this includes compound and variable-length types
 
-Unsupported features : planned for future release 
+Unsupported features : _planned for future release_ 
  * groups (not yet fully supported ?)
  * file output chunking control
 
-Untested features : probably done, pending test
+Untested features : _probably done, pending test_
  * unlimited dimensions (not yet fully supported)
  * file compression and encoding options
  * iris and xarray load/save keywords generally
@@ -178,6 +180,30 @@ Untested features : probably done, pending test
 
 
 # Developer Notes
-  * for a full docs-build, a simple `make html` will do for now.  
-    * the ``docs/Makefile`` wipes the API docs and invokes sphinx-apidoc for a full rebuild
-    * results are then available at ``docs/_build/html/index.html``
+## Documentation build
+  * For a full docs-build, a simple `make html` will do for now.  
+    * The ``docs/Makefile`` wipes the API docs and invokes sphinx-apidoc for a full rebuild
+    * Results are then available at ``docs/_build/html/index.html``
+  * The above is just for _local testing_ if required :
+    We have automatic builds for releases and PRs via [ReadTheDocs](https://readthedocs.org/projects/ncdata/) 
+
+## Release actions
+   1. Cut a release on GitHub : this triggers a new docs version on [ReadTheDocs](https://readthedocs.org/projects/ncdata/) 
+   1. Build the distribution
+      1. if needed, get [build](https://github.com/pypa/build)
+      2. run `python -m build`
+   2. Push to PyPI
+      1. if needed, get [twine](https://github.com/pypa/twine)
+      2. run `python -m twine --repository testpypi upload dist/*`
+         * this uploads to TestPyPI
+      3. if that checks OK, _remove_ `--repository testpypi` _and repeat_
+         * --> uploads to "real" PyPI
+      4. check that `pip install ncdata` can now find the new version
+   3. Update conda to source the new version from PyPI
+      1. create a PR on the [ncdata feedstock](https://github.com/conda-forge/ncdata-feedstock)
+      1. update :
+         * [version number](https://github.com/conda-forge/ncdata-feedstock/blob/3f6b35cbdffd2ee894821500f76f2b0b66f55939/recipe/meta.yaml#L2) 
+         * [SHA](https://github.com/conda-forge/ncdata-feedstock/blob/3f6b35cbdffd2ee894821500f76f2b0b66f55939/recipe/meta.yaml#L10)
+         * Note : the [PyPI reference](https://github.com/conda-forge/ncdata-feedstock/blob/3f6b35cbdffd2ee894821500f76f2b0b66f55939/recipe/meta.yaml#L9) will normally look after itself
+         * Also : make any required changes to [dependencies](https://github.com/conda-forge/ncdata-feedstock/blob/3f6b35cbdffd2ee894821500f76f2b0b66f55939/recipe/meta.yaml#L17-L29) -- normally _no change required_
+      1. get PR merged ; wait a few hours ; check the new version appears in `conda search ncdata`
