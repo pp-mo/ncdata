@@ -23,7 +23,7 @@ It *should* be possible to use these objects with other packages expecting a
 this may need to be extended, in future, to support other such uses.
 
 """
-from typing import Dict, List
+from typing import Any, Dict, List
 
 import dask.array as da
 import netCDF4
@@ -133,7 +133,8 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         varname: str,
         datatype: np.dtype,
         dimensions: List[str] = (),
-        **encoding: Dict[str, str],
+        fill_value=None,
+        **kwargs: Dict[str, Any],
     ):  # noqa: D102
         if varname in self.variables:
             msg = f'creating duplicate variable "{varname}".'
@@ -157,6 +158,10 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
             data=initial_allmasked_data,
             group=self._ncdata,
         )
+        if fill_value is not None:
+            ncvar.attributes["_FillValue"] = NcAttribute(
+                "_FillValue", fill_value
+            )
         # Note: no valid data is initially assigned, since that is how the netCDF4 API
         # does it.
         self._ncdata.variables[varname] = ncvar
