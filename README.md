@@ -13,11 +13,11 @@ This enables the user to freely mix+match operations from both projects, getting
   > import ncdata.iris_xarray as nci
   > import iris.quickplot as qplt
   >  
-  > da = xarray.open_dataset(filepath)  
-  > da = da.rolling(time=3).mean()  
-  > cubes = nci.cubes_from_xarray(dataset_resample)  
-  > temp = cubes.extract_cube("air_temperature")  
-  > qplt.contourf(temp[0])
+  > ds = xarray.open_dataset(filepath)  
+  > ds_resample = ds.rolling(time=3).mean()  
+  > cubes = nci.cubes_from_xarray(ds_resample)  
+  > temp_cube = cubes.extract_cube("air_temperature")  
+  > qplt.contourf(temp_cube[0])
 
 ## Contents
   * [Motivation](#motivation)
