@@ -6,7 +6,7 @@ Converts :class:`ncdata.NcData` to and from :class:`netCDF4.Dataset` objects.
 """
 from pathlib import Path
 from threading import Lock
-from typing import Any, AnyStr, Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
 import dask.array as da
 import netCDF4 as nc
@@ -19,13 +19,13 @@ __all__ = ["from_nc4", "to_nc4"]
 
 # The variable arguments which are 'claimed' by the existing to_nc4 code, and
 # therefore not valid to appear in the 'var_kwargs' parameter.
-_Forbidden_Variable_Kwargs = ["data", "dimensions", "datatype", "_FillValue"]
+_Forbidden_Variable_Kwargs = ["data", "dimensions", "datatype", "fill_value"]
 
 
 def _to_nc4_group(
     ncdata: NcData,
     nc4object: Union[nc.Dataset, nc.Group],
-    var_kwargs: Optional[Dict[NcVariable, Any]] = None,
+    var_kwargs: Optional[Dict[str, Dict]] = None,
 ) -> None:
     """
     Inner routine supporting ``to_nc4``, and recursive calls for sub-groups.
@@ -48,16 +48,14 @@ def _to_nc4_group(
         else:
             fill_value = None
 
-        kwargs = var_kwargs.get(var, {})
-        forbidden_keys = [
-            kwarg in _Forbidden_Variable_Kwargs for kwarg in kwargs
-        ]
+        kwargs = var_kwargs.get(varname, {})
+        forbidden_keys = set(_Forbidden_Variable_Kwargs) & set(kwargs)
         if forbidden_keys:
             msg = (
                 f"additional `var_kwargs` for variable {var} included key(s) "
-                f"{forbidden_keys}, which are disallowed since they are amongst those "
-                "controlled by the ncdata.netcdf interface itself : "
-                f"{_Forbidden_Variable_Kwargs!r}."
+                f"{list(forbidden_keys)!r}, which are disallowed since they are amongst"
+                f"those controlled by the ncdata.netcdf interface itself : "
+                f"{list(_Forbidden_Variable_Kwargs)!r}."
             )
             raise ValueError(msg)
 
@@ -92,7 +90,7 @@ def _to_nc4_group(
         _to_nc4_group(
             ncdata=group,
             nc4object=nc4group,
-            var_kwargs=var_kwargs.get(groupname, {}),
+            var_kwargs=var_kwargs.get("/" + groupname, {}),
         )
 
 
@@ -161,11 +159,11 @@ class _NetCDFDataProxy:
 
 def to_nc4(
     ncdata: NcData,
-    nc4_dataset_or_file: Union[nc.Dataset, Path, AnyStr],
-    var_kwargs: Dict[str, Any] = None,
+    nc4_dataset_or_file: Union[nc.Dataset, Path, str],
+    var_kwargs: Dict[str, Dict] = None,
 ) -> None:
     """
-    Write an NcData to a provided (writeable) :class:`netCDF4.Dataset`, or filepath.
+    Save NcData to a netCDF file.
 
     Parameters
     ----------
@@ -174,21 +172,25 @@ def to_nc4(
     nc4_dataset_or_file : :class:`netCDF4.Dataset` or :class:`pathlib.Path` or str
         output filepath or :class:`netCDF4.Dataset` to write into
     var_kwargs : dict or None
-        additional keys for variable creation.  If present, ``var_kwargs[<var_name>]``
-        contains additional keywords passed to :meth:`netCDF4.Dataset.createVariable`,
-        for specific variables, such as compression or chunking controls.
-        Controls for vars within groups are contained within a
-        ``var_kwargs['/<group-name>']`` entry, which is itself a dict (recursively).
-        Should **not** include any parameters already controlled by the ``to_nc4``
-        operation itself, that is : ``varname``, ``datatype``, ``dimensions`` or
-        ``fill_value``.
+        additional keys for variable creation.  If present, each entry
+        ``var_kwargs[<var_name>]`` is itself a dictionary, containing entries of the
+        form ``<kwarg_name>: <kwarg_value>``, which specify additional keyword controls
+        passed to :meth:`netCDF4.Dataset.createVariable` for this variable.
+        This allows control of e.g. compression or chunking.
+
+        Keyword controls for variables in a sub-group can be given in a
+        ``var_kwargs['/<group-name>']`` entry, which is itself a ``var_kwargs`` - like
+        dictionary.
+
+        **Note:** this must not include keywords controlled by the ``to_nc4`` operation
+        itself.  That is, any of : ["data", "dimensions", "datatype", "fill_value"].
 
     Returns
     -------
     None
 
-    Note
-    ----
+    Notes
+    -----
     If a filepath is provided, a file is written and closed afterwards.
     If a dataset is provided, it must be writeable and remains open afterward.
 
@@ -208,8 +210,6 @@ def to_nc4(
 
 def _from_nc4_group(
     nc4ds: Union[nc.Dataset, nc.Group],
-    parent_ds: Optional[nc.Dataset] = None,
-    group_names_path: List[str] = None,
 ) -> NcData:
     """
     Inner routine for :func:`from_nc4`.
@@ -217,10 +217,11 @@ def _from_nc4_group(
     See docstring there.
     Provided mainly for recursion into groups, also to keep the dataset open/close separate.
     """
-    if parent_ds is None:
-        parent_ds = nc4ds
-    if group_names_path is None:
-        group_names_path = []
+    parent_ds = nc4ds
+    group_names_path = []
+    while parent_ds.parent is not None:
+        group_names_path = [parent_ds.name] + group_names_path
+        parent_ds = parent_ds.parent
 
     ncdata = NcData(name=nc4ds.name)
 
@@ -256,7 +257,7 @@ def _from_nc4_group(
         proxy = _NetCDFDataProxy(
             shape=shape,
             dtype=var.dtype,
-            filepath=nc4ds.filepath(),
+            filepath=parent_ds.filepath(),
             variable_name=varname,
             group_names_path=group_names_path,
         )
@@ -276,20 +277,16 @@ def _from_nc4_group(
 
     # And finally, groups -- by the magic of recursion ...
     for group_name, group in nc4ds.groups.items():
-        ncdata.groups[group_name] = _from_nc4_group(
-            nc4ds=nc4ds.groups[group_name],
-            parent_ds=parent_ds,
-            group_names_path=group_names_path + [group_name],
-        )
+        ncdata.groups[group_name] = _from_nc4_group(nc4ds.groups[group_name])
 
     return ncdata
 
 
 def from_nc4(
-    nc4_dataset_or_file: Union[nc.Dataset, nc.Group, Path, AnyStr]
+    nc4_dataset_or_file: Union[nc.Dataset, nc.Group, Path, str]
 ) -> NcData:
     """
-    Read an NcData from a provided :class:`netCDF4.Dataset`, or filepath.
+    Load NcData from a :class:`netCDF4.Dataset` or netCDF file.
 
     Parameters
     ----------
