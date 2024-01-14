@@ -163,7 +163,7 @@ def to_nc4(
     var_kwargs: Dict[str, Dict] = None,
 ) -> None:
     """
-    Write an NcData out to a netCDF file.
+    Save NcData to a netCDF file.
 
     Parameters
     ----------
@@ -277,9 +277,7 @@ def _from_nc4_group(
 
     # And finally, groups -- by the magic of recursion ...
     for group_name, group in nc4ds.groups.items():
-        ncdata.groups[group_name] = _from_nc4_group(
-            nc4ds=nc4ds.groups[group_name],
-        )
+        ncdata.groups[group_name] = _from_nc4_group(nc4ds.groups[group_name])
 
     return ncdata
 
@@ -288,7 +286,7 @@ def from_nc4(
     nc4_dataset_or_file: Union[nc.Dataset, nc.Group, Path, str]
 ) -> NcData:
     """
-    Read an NcData from a provided :class:`netCDF4.Dataset`, or netCDF file.
+    Load NcData from a :class:`netCDF4.Dataset` or netCDF file.
 
     Parameters
     ----------

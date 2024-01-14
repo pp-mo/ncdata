@@ -33,12 +33,12 @@ def file_and_ncdata_from_spec(filepath: Path, test_spec: dict) -> NcData:
     return from_nc4(filepath)
 
 
-_targettype_opts = ["str", "path", "file", "group"]
+_sourcetype_opts = ["str", "path", "file", "group"]
 
 
-@pytest.mark.parametrize("targettype", _targettype_opts)
-def test_target_types(targettype, tmp_path):
-    """Check the various ways of specifying the output location."""
+@pytest.mark.parametrize("sourcetype", _sourcetype_opts)
+def test_target_types(sourcetype, tmp_path):
+    """Check the various ways of specifying the input data."""
     # This testcase is a rather complicated, but we need to test with groups, and we
     # may as well also test for variables which map dimensions from multiple levels.
     # In effect, this is also exercising tricky bits of 'compare_nc_datasets' !!
@@ -65,17 +65,17 @@ def test_target_types(targettype, tmp_path):
     original_path = tmp_path / "input.nc"
     make_testcase_dataset(filepath=original_path, spec=test_spec)
 
-    if targettype == "path":
+    if sourcetype == "path":
         source = original_path
-    elif targettype == "str":
+    elif sourcetype == "str":
         source = str(original_path)
-    elif targettype in ("file", "group"):
+    elif sourcetype in ("file", "group"):
         source = nc.Dataset(original_path)
-        if targettype == "group":
+        if sourcetype == "group":
             source = source.groups["inner_group"]
     else:
         raise ValueError(
-            f"unexpected test param : {targettype} not in {_targettype_opts}"
+            f"unexpected test param : {sourcetype} not in {_sourcetype_opts}"
         )
 
     # Read the testcase from the generated netCDF file.
@@ -107,10 +107,8 @@ def test_target_types(targettype, tmp_path):
             )
         },
     )
-    if targettype == "group":
+    if sourcetype == "group":
         ncdata_expected = ncdata_expected.groups["inner_group"]
 
-    diffs = compare_nc_datasets(
-        ncdata, ncdata_expected
-    )  # , check_var_data=False)
+    diffs = compare_nc_datasets(ncdata, ncdata_expected)
     assert diffs == []

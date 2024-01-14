@@ -10,7 +10,7 @@ by the generic 'roundtrip' testcases.  This includes error cases.
 """
 from typing import List
 
-from ncdata import NcData, NcVariable
+from ncdata import NcData
 from pathlib import Path
 
 import netCDF4 as nc
@@ -27,7 +27,7 @@ def file_and_ncdata_from_spec(filepath: Path, test_spec: dict) -> NcData:
     """
     Make a testcase from a 'make_testcase_dataset' type spec.
 
-    Save to a netcdf file at the given path, re-load as ncdata and return that.
+    Save to netcdf at the given path, re-load as ncdata and return that.
     """
     make_testcase_dataset(filepath, test_spec)
     return from_nc4(filepath)
@@ -88,10 +88,11 @@ def fetch_nc_var(nc_file: nc.Dataset, var_path: str or List[str]):
 
 def test_var_kwargs(tmp_path):
     """
-    Create a test-spec including same-named vars in different groups and subgroups.
+    Check the function of the "var_kwargs" argument.
 
-    Effectively, this also tests the use of chunking and compression controls.
+    NOTE: effectively, also tests that you *can* control chunking and compression.
     """
+    # Create a test-spec including same-named vars in different groups and subgroups.
     # N.B. we don't bother to specify data for them
     test_spec = {
         "dims": [dict(name="x", size=4)],
@@ -150,6 +151,7 @@ def test_var_kwargs(tmp_path):
 
 
 def test_var_kwargs__bad_kwarg(tmp_path):
+    """Check that unsuitable var_kwargs entries are errored."""
     # Testcase is a minimal spec with just one scalar variable.
     test_spec = {
         "vars": [dict(name="x", dims=[], dtype=np.float32, data=[1.23])]
