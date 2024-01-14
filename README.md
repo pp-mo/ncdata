@@ -10,9 +10,9 @@ Especially : Ncdata **exchanges data between Xarray and Iris** as efficently as 
 This enables the user to freely mix+match operations from both projects, getting the
 "best of both worlds".
   > import xarray  
-  > import ncdata.iris_xarray as nci
-  > import iris.quickplot as qplt
-  >  
+  > import ncdata.iris_xarray as nci  
+  > import iris.quickplot as qplt  
+  >   
   > ds = xarray.open_dataset(filepath)  
   > ds_resample = ds.rolling(time=3).mean()  
   > cubes = nci.cubes_from_xarray(ds_resample)  
