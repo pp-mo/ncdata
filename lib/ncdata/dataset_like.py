@@ -282,7 +282,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         # N.B. fill-value matches the internal raw (unscaled) values and dtype
         fv = self._get_fillvalue()
         if fv is not None:
-            array = np.ma.masked_equal(array, fv)
+            array = da.ma.masked_equal(array, fv)
 
         is_scaled, scale_factor, add_offset = self._get_scaling()
         if is_scaled:

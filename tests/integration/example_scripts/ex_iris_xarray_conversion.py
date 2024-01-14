@@ -4,7 +4,7 @@ A proof-of-concept example workflow for :mod:`ncdata.iris_xarray`.
 Showing conversion from Xarray to Iris, and back again.
 """
 import iris
-import iris.tests as itsts
+import dask.array as da
 import numpy as np
 import xarray as xr
 
@@ -27,12 +27,15 @@ def example_from_xr():  # noqa: D103
     print("\nCube:")
     print(cube)
 
+    is_lazy = cube.has_lazy_data()
+    print("\nCube data still lazy ?", is_lazy)
+    # It really ought to be!
+    assert is_lazy
+
     data = cube.core_data()
     print("\ncube.core_data():")
     print(data)
-    # match = data is xrds['data'].data
-    # print('\ncube.core_data() is xrds["data"].data:')
-    # print(match)
+
     co_auxlons = cube.coord("longitude")
     print('\ncube.coord("longitude"):')
     print(co_auxlons)
@@ -46,6 +49,11 @@ def example_from_xr():  # noqa: D103
     xrds2 = cubes_to_xarray(cubes)
     print("\nxrds2:\n", xrds2)
     print("\ntime:\n", xrds2["time"])
+
+    is_lazy = isinstance(xrds2["data"].data, da.Array)
+    print("\nMain data variable still lazy ?", is_lazy)
+    # It really ought to be!
+    assert is_lazy
 
     print("\n")
     print("============ Array identity checks ... =========")
