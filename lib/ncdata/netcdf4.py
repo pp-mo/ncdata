@@ -6,7 +6,7 @@ Converts :class:`ncdata.NcData` to and from :class:`netCDF4.Dataset` objects.
 """
 from pathlib import Path
 from threading import Lock
-from typing import Dict, List, Optional, Union
+from typing import Dict, Optional, Union
 
 import dask.array as da
 import netCDF4 as nc
@@ -210,8 +210,6 @@ def to_nc4(
 
 def _from_nc4_group(
     nc4ds: Union[nc.Dataset, nc.Group],
-    parent_ds: Optional[nc.Dataset] = None,
-    group_names_path: List[str] = None,
 ) -> NcData:
     """
     Inner routine for :func:`from_nc4`.
@@ -219,10 +217,11 @@ def _from_nc4_group(
     See docstring there.
     Provided mainly for recursion into groups, also to keep the dataset open/close separate.
     """
-    if parent_ds is None:
-        parent_ds = nc4ds
-    if group_names_path is None:
-        group_names_path = []
+    parent_ds = nc4ds
+    group_names_path = []
+    while parent_ds.parent is not None:
+        group_names_path = [parent_ds.name] + group_names_path
+        parent_ds = parent_ds.parent
 
     ncdata = NcData(name=nc4ds.name)
 
@@ -258,7 +257,7 @@ def _from_nc4_group(
         proxy = _NetCDFDataProxy(
             shape=shape,
             dtype=var.dtype,
-            filepath=nc4ds.filepath(),
+            filepath=parent_ds.filepath(),
             variable_name=varname,
             group_names_path=group_names_path,
         )
@@ -280,8 +279,6 @@ def _from_nc4_group(
     for group_name, group in nc4ds.groups.items():
         ncdata.groups[group_name] = _from_nc4_group(
             nc4ds=nc4ds.groups[group_name],
-            parent_ds=parent_ds,
-            group_names_path=group_names_path + [group_name],
         )
 
     return ncdata

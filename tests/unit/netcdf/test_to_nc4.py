@@ -120,7 +120,7 @@ def test_var_kwargs(tmp_path):
 
     # Save the testcase ncdata to an output file, with var-specific controls
     output_path = tmp_path / "output.nc"
-    # Set up controls to modify e.g. chunking and compression of some varibles.
+    # Set up controls to modify e.g. chunking and compression of some variables.
     var_kwargs = {
         "var_1": dict(compression="zlib", complevel=3),
         "/subgroup_1": {
