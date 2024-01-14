@@ -9,6 +9,15 @@ Especially : Ncdata **exchanges data between Xarray and Iris** as efficently as 
 
 This enables the user to freely mix+match operations from both projects, getting the
 "best of both worlds".
+  > import xarray  
+  > import ncdata.iris_xarray as nci
+  > import iris.quickplot as qplt
+  >  
+  > da = xarray.open_dataset(filepath)  
+  > da = da.rolling(time=3).mean()  
+  > cubes = nci.cubes_from_xarray(dataset_resample)  
+  > temp = cubes.extract_cube("air_temperature")  
+  > qplt.contourf(temp[0])
 
 ## Contents
   * [Motivation](#motivation)
@@ -137,7 +146,7 @@ indexing) may be better done using Iris/Xarray.
 # Installation
 Install from conda-forge with conda
 ```
-conda install ncdata
+conda install -c conda-forge ncdata
 ```
 
 Or from PyPI with pip
@@ -149,9 +158,9 @@ pip install ncdata
 ## Code Stability
 We intend to follow [PEP 440](https://peps.python.org/pep-0440/) or (older) [SemVer](https://semver.org/) versioning principles.
 
-Release version is at **"v0.0.1"**.  
+Release version is at **"v0.1"**.  
 This is a first complete implementation, with functional operational of all public APIs.  
-A **release "v0.1.0"** will follow when build and deployment mechanisms are sorted out.  
+
 The code is however still experimental, and APIs are not stable (hence no major version yet).  
 
 ## Iris and Xarray Compatibility
@@ -168,10 +177,6 @@ Unsupported features : _planned for future release_
  * groups (not yet fully supported ?)
  * file output chunking control
 
-Untested features : _probably done, pending test_
- * unlimited dimensions (not yet fully supported)
- * file compression and encoding options
- * iris and xarray load/save keywords generally
 
 # References
   * Iris issue : https://github.com/SciTools/iris/issues/4994
