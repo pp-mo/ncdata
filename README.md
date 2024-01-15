@@ -31,6 +31,7 @@ This enables the user to freely mix+match operations from both projects, getting
     * [Code stability](#code-stability)
     * [Iris and Xarray version compatibility](#iris-and-xarray-compatibility)
     * [Current Limitations](#known-limitations)
+    * [Known Problems](#known-problems)
   * [References](#references)
   * [Developer Notes](#developer-notes)
 
@@ -177,6 +178,11 @@ Unsupported features : _planned for future release_
  * groups (not yet fully supported ?)
  * file output chunking control
 
+## Known problems
+As-of v0.1
+ * in conversion from iris cubes with [`from_iris`](https://ncdata.readthedocs.io/en/latest/api/ncdata.iris.html#ncdata.iris.from_iris),
+   use of an `unlimited_dims` key currently causes an exception
+   * https://github.com/pp-mo/ncdata/issues/43
 
 # References
   * Iris issue : https://github.com/SciTools/iris/issues/4994
