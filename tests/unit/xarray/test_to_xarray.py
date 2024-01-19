@@ -46,7 +46,11 @@ def test_lazy_nocompute():
     data = xrds.variables["var_x"].data
     assert np.all(data.compute() == real_numpy_data)
     # should have fetched in 2 chunks
-    assert monitored_array._accesses == [(slice(0, 2),), (slice(2, 4),)]
+    # NOTE: order of access is not guaranteed, hence 'sorted'.
+    assert sorted(monitored_array._accesses) == [
+        (slice(0, 2),),
+        (slice(2, 4),)
+    ]
 
 
 def test_real_nocopy():

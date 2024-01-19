@@ -72,7 +72,8 @@ def test_lazy_nocompute():
     # check sameness
     assert np.all(cube.data == real_array)
     # The original data *has* now been accessed, in 2 chunks ..
-    assert monitored_array._accesses == [
+    # NOTE: order of access is not guaranteed, hence 'sorted'.
+    assert sorted(monitored_array._accesses) == [
         (slice(0, 3, None), slice(0, 1, None)),
         (slice(0, 3, None), slice(1, 2, None)),
     ]

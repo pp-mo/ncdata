@@ -67,7 +67,11 @@ def test_lazy_nocompute(tmp_path):
     assert len(monitored_array._accesses) == 0
     # .. then compute, and check again
     assert np.all(var.data.compute() == real_numpy_data)
-    assert monitored_array._accesses == [(slice(0, 2),), (slice(2, 3),)]
+    # NOTE: order of access is not guaranteed, hence 'sorted'.
+    assert sorted(monitored_array._accesses) == [
+        (slice(0, 2),),
+        (slice(2, 3),)
+    ]
 
 
 def test_real_nocopy(tmp_path):

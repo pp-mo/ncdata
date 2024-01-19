@@ -45,7 +45,11 @@ def test_lazy_nocompute():
     assert monitored_array._accesses == []
     real_data = cube_data.compute()
     # should have fetched in 2 chunks
-    assert monitored_array._accesses == [(slice(0, 2),), (slice(2, 4),)]
+    # NOTE: order of access is not guaranteed, hence 'sorted'.
+    assert sorted(monitored_array._accesses) == [
+        (slice(0, 2),),
+        (slice(2, 4),)
+    ]
     assert np.all(real_data == np_data)
 
 
