@@ -325,14 +325,16 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         # N.B. fill-value matches the internal raw (unscaled) values and dtype
         fv = self._get_fillvalue()
         if fv is not None:
-            # convert from masked to filled data, but in a lazy fashion
-            meta_sample = array.flatten()[:0]
+            # convert masked data to a filled array, but in a lazy fashion
             if not isinstance(array, da.Array):
-                # Surprisingly, this is required to ensure that array shape is
-                # replicated in the map_blocks result.
-                array = da.from_array(array, chunks="auto", meta=meta_sample)
+                # To apply map_blocks, we must first have an actual Dask array.
+                # NOTE: da.from_array() performs a trial access meta=array[:0, :0, ...]
+                # to determine the 'meta'.  Normally we might avoid that by passing a
+                # 'meta' argument, but in this case we don't know what 'array' might be,
+                # so we have no (other) generic way to construct a suitable 'meta'.
+                array = da.from_array(array, chunks="auto")
             array = da.map_blocks(
-                self._fill_masked, array, fv, meta=meta_sample
+                self._fill_masked, array, fv, meta=array._meta
             )
 
         return array
