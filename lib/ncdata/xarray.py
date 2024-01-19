@@ -80,6 +80,7 @@ class _XarrayNcDataStore(NetCDF4DataStore):
         Called, indirectly, by :meth:`from_xarray` via
         :meth:`xr.Dataset.dump_to_store`.
         """
+        unlimited_dims = unlimited_dims or []
         # Encode the xarray data as-if-for netcdf4 output, so we convert internal forms
         # (such as strings and timedates) to file-relevant forms.
         variables, attributes = self.encode(variables, attributes)
@@ -102,7 +103,9 @@ class _XarrayNcDataStore(NetCDF4DataStore):
                         )
                 else:
                     self.ncdata.dimensions[dim_name] = NcDimension(
-                        dim_name, size=size
+                        dim_name,
+                        size=size,
+                        unlimited=dim_name in unlimited_dims,
                     )
 
             attrs = {
@@ -152,7 +155,7 @@ class _XarrayNcDataStore(NetCDF4DataStore):
         return ds
 
 
-def to_xarray(ncdata: NcData, **kwargs) -> xr.Dataset:
+def to_xarray(ncdata: NcData, **xarray_load_kwargs) -> xr.Dataset:
     """
     Convert :class:`~ncdata.NcData` to an xarray :class:`~xarray.Dataset`.
 
@@ -170,10 +173,12 @@ def to_xarray(ncdata: NcData, **kwargs) -> xr.Dataset:
         converted data in the form of an Xarray :class:`xarray.Dataset`
 
     """
-    return _XarrayNcDataStore(ncdata).to_xarray(**kwargs)
+    return _XarrayNcDataStore(ncdata).to_xarray(**xarray_load_kwargs)
 
 
-def from_xarray(xrds: Union[xr.Dataset, Path, AnyStr]) -> NcData:
+def from_xarray(
+    xrds: Union[xr.Dataset, Path, AnyStr], **xarray_save_kwargs
+) -> NcData:
     """
     Convert an xarray :class:`xarray.Dataset` to a :class:`NcData`.
 
@@ -192,4 +197,4 @@ def from_xarray(xrds: Union[xr.Dataset, Path, AnyStr]) -> NcData:
         data converted to an :class:`~ncdata.NcData`
 
     """
-    return _XarrayNcDataStore.from_xarray(xrds).ncdata
+    return _XarrayNcDataStore.from_xarray(xrds, **xarray_save_kwargs).ncdata
