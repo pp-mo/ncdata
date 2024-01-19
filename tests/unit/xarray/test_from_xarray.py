@@ -1,5 +1,5 @@
 """
-Tests for :func:`ncdata.iris.from_iris`.
+Tests for :func:`ncdata.xarray.from_xarray`.
 
 Most practical behaviours relating to different types of dataset content are tested in
 :mod:`tests/integration/test_roundtrips_xarray`.  For example, different datatypes,
@@ -9,15 +9,14 @@ This module only tests some specific API and behaviours of the top-level functio
 covered by the generic 'roundtrip' testcases.
 """
 from pathlib import Path
-from unittest import mock
 
 import dask.array as da
 import numpy as np
 import pytest
 import xarray as xr
 
+from tests import MonitoredArray
 from tests.data_testcase_schemas import make_testcase_dataset
-from tests.unit.iris.test_from_iris import MonitoredArray
 
 from ncdata.xarray import from_xarray
 

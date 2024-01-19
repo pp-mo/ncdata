@@ -15,7 +15,7 @@ import numpy as np
 
 from ncdata import NcData, NcDimension, NcVariable
 
-from tests.unit.iris.test_from_iris import MonitoredArray
+from tests import MonitoredArray
 
 from ncdata.iris import to_iris
 

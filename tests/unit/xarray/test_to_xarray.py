@@ -1,22 +1,20 @@
 """
-Tests for :func:`ncdata.iris.to_xarray`.
+Tests for :func:`ncdata.xarray.to_xarray`.
 
 Most practical behaviours relating to different types of dataset content are tested in
-:mod:`tests/integration/test_roundtrips_iris`.  For example, different datatypes,
+:mod:`tests/integration/test_roundtrips_xarray`.  For example, different datatypes,
 the assignment of dimensions and attributes.
 
 This module only tests some specific API and behaviours of the top-level function, not
 covered by the generic 'roundtrip' testcases.
 """
 import dask.array as da
-import pytest
-from iris.cube import CubeList
-from iris import NameConstraint
 import numpy as np
+import pytest
 
 from ncdata import NcData, NcDimension, NcVariable, NcAttribute
 
-from tests.unit.iris.test_from_iris import MonitoredArray
+from tests import MonitoredArray
 
 from ncdata.xarray import to_xarray
 
