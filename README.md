@@ -46,15 +46,15 @@ For example:
 from ncdata.iris_xarray import cubes_to_xarray, cubes_from_xarray
 
 # Apply Iris regridder to xarray data
-dataset = xarray.open_dataset('file1.nc', chunks='auto')
-cube, = cubes_from_xarray(dataset)
+dataset = xarray.open_dataset("file1.nc", chunks="auto")
+(cube,) = cubes_from_xarray(dataset)
 cube2 = cube.regrid(grid_cube, iris.analysis.PointInCell)
 dataset2 = cubes_to_xarray(cube2)
 
 # Apply Xarray statistic to Iris data
-cubes = iris.load('file1.nc')
+cubes = iris.load("file1.nc")
 dataset = cubes_to_xarray(cubes)
-dataset2 = dataset.group_by('time.dayofyear').argmin()
+dataset2 = dataset.group_by("time.dayofyear").argmin()
 cubes2 = cubes_from_xarray(dataset2)
 ``` 
   * data conversion is equivalent to writing to a file with one library, and reading it
@@ -82,26 +82,20 @@ from ncdata.iris import to_iris
 from ncdata.netcdf4 import to_nc4, from_nc4
 
 # Rename a dimension in xarray output
-dataset = xr.open_dataset('file1.nc')
+dataset = xr.open_dataset("file1.nc")
 xr_ncdata = from_xarray(dataset)
-dim = xr_ncdata.dimensions.pop('dim0')
-dim.name = 'newdim'
-xr_ncdata.dimensions['newdim'] = dim
+dim = xr_ncdata.dimensions.pop("dim0")
+dim.name = "newdim"
+xr_ncdata.dimensions["newdim"] = dim
 for var in xr_ncdata.variables.values():
-    var.dimensions = [
-        'newdim' if dim == 'dim0' else dim
-        for dim in var.dimensions
-    ]
-to_nc4(ncdata, 'file_2a.nc')
+    var.dimensions = ["newdim" if dim == "dim0" else dim for dim in var.dimensions]
+to_nc4(ncdata, "file_2a.nc")
 
 # Fix chunking in Iris input
-ncdata = from_nc4('file1.nc')
+ncdata = from_nc4("file1.nc")
 for var in ncdata.variables:
     # custom chunking() mimics the file chunks we want
-    var.chunking = lambda: (
-        100.e6 if dim == 'dim0' else -1
-        for dim in var.dimensions
-    )
+    var.chunking = lambda: (100.0e6 if dim == "dim0" else -1 for dim in var.dimensions)
 cubes = to_iris(ncdata)
 ``` 
 
