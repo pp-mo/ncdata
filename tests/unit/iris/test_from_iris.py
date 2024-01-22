@@ -11,31 +11,14 @@ covered by the generic 'roundtrip' testcases.
 import dask.array as da
 import numpy as np
 import pytest
+from unittest.mock import patch
 
 from iris.coords import DimCoord
 from iris.cube import Cube
 
+from tests import MonitoredArray
+
 from ncdata.iris import from_iris
-
-
-class MonitoredArray:
-    """
-    An array wrapper for monitoring dask deferred accesses.
-
-    Wraps a real array, and can be read (indexed), enabling it to be wrapped with
-    dask.array_from_array.  It then records the read operations performed on it.
-    """
-
-    def __init__(self, data):
-        self.dtype = data.dtype
-        self.shape = data.shape
-        self.ndim = data.ndim
-        self._data = data
-        self._accesses = []
-
-    def __getitem__(self, keys):
-        self._accesses.append(keys)
-        return self._data[keys]
 
 
 def sample_cube(data_array=None):
@@ -55,39 +38,52 @@ def sample_cube(data_array=None):
     return cube
 
 
-def test_single_cube():
-    """
-    Check that we can convert a single Iris cube to ncdata.
-
-    We also check that no lazy data is fetched, as expected.
-    """
-    monitored_array = MonitoredArray(np.arange(6.0).reshape((3, 2)))
+def test_lazy_nocompute():
+    """Check that translation from iris converts lazy data without fetching it."""
+    real_array = np.arange(6.0).reshape((3, 2))
+    monitored_array = MonitoredArray(real_array)
     dask_array = da.from_array(monitored_array, chunks=(3, 1), meta=np.ndarray)
     cube = sample_cube(dask_array)
-    assert cube.has_lazy_data()
-    assert len(monitored_array._accesses) == 0
 
     ncdata = from_iris(cube)
 
-    # make basic tests on the result
-    assert list(ncdata.dimensions.keys()) == ["time", "dim1"]
-    assert all(not dim.unlimited for dim in ncdata.dimensions.values())
-    assert list(ncdata.variables.keys()) == ["air_temperature", "time"]
-
-    # check that the wrapped data array has still not been read (i.e. no compute)
+    # check that the wrapped data array has not yet been read (i.e. no compute)
     assert len(monitored_array._accesses) == 0
-
-    # Check that the variable data matches the cube data ..
-    sameness = da.all(
-        ncdata.variables["air_temperature"].data == cube.core_data()
-    )
-    sameness = sameness.compute()
-    assert sameness == np.array(True)
-
-    # Check that the original data *has* now been accessed, in 2 chunks ..
-    assert len(monitored_array._accesses) == 2
-    # .. but the cube itself has still not been realised
+    # .. and the cube itself has still not been realised
     assert cube.has_lazy_data()
+    # check sameness
+    assert np.all(cube.data == real_array)
+    # The original data *has* now been accessed, in 2 chunks ..
+    # NOTE: order of access is not guaranteed, hence 'sorted'.
+    assert sorted(monitored_array._accesses) == [
+        (slice(0, 3, None), slice(0, 1, None)),
+        (slice(0, 3, None), slice(1, 2, None)),
+    ]
+
+
+def test_real_nocopy():
+    """Check that translation from iris converts real data without copying it."""
+    real_array = np.arange(6.0)
+    monitored_array = MonitoredArray(real_array)
+
+    # We must use a slight patch to prevent Cube creation converting our array to a
+    # MaskedArray.
+    # This ensures we don't copy, so that "cube.data is monitored_array".
+    with patch("iris.cube.ma.isMaskedArray", return_value=True):
+        cube = Cube(monitored_array, var_name="x")
+        assert cube.data is monitored_array
+
+    ncdata = from_iris(cube)
+
+    # check that conversion has *NOT* fetched the data
+    # (except for a 0-length test access required by dask.array.from_array)
+    assert monitored_array._accesses == [(slice(0, 0),)]
+
+    # check for values equality, then re-check that the data *has* now been fetched.
+    var = ncdata.variables["x"]
+    monitored_array._accesses = []
+    assert np.all(var.data.compute() == real_array)
+    assert monitored_array._accesses == [(slice(0, 6),)]
 
 
 def test_multiple_cubes():

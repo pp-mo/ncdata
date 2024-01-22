@@ -15,17 +15,13 @@ import numpy as np
 
 from ncdata import NcData, NcDimension, NcVariable
 
-from tests.unit.iris.test_from_iris import MonitoredArray
+from tests import MonitoredArray
 
 from ncdata.iris import to_iris
 
 
-def test_single_variable():
-    """
-    Check that we can convert a simple ncdata to iris cubes.
-
-    N.B. also checks that lazy data is not fetched by the conversion.
-    """
+def test_lazy_nocompute():
+    """Check that converting to iris preserves lazy data without fetching it."""
     np_data = np.array([1.23, 4, 7.3, 4.1], dtype=np.float32)
     monitored_array = MonitoredArray(np_data)
     dask_array = da.from_array(monitored_array, chunks=(2,), meta=np.ndarray)
@@ -35,31 +31,54 @@ def test_single_variable():
         },
         variables={
             "var_x": NcVariable(
-                name='var_x',
-                dimensions=["x"],
-                data=dask_array
+                name="var_x", dimensions=["x"], data=dask_array
             )
-        }
+        },
     )
 
     # convert to cubes
-    cubes = to_iris(ncdata)
-
-    # check structure of result
-    assert isinstance(cubes, CubeList)
-    assert len(cubes) == 1
-    (cube,) = cubes
-
-    assert not cube.coords()
+    (cube,) = to_iris(ncdata)
 
     # Check that no data was read, then fetch it and check again
     assert cube.has_lazy_data()
     cube_data = cube.core_data()
-    assert len(monitored_array._accesses) == 0
+    assert monitored_array._accesses == []
     real_data = cube_data.compute()
     # should have fetched in 2 chunks
-    assert len(monitored_array._accesses) == 2
+    # NOTE: order of access is not guaranteed, hence 'sorted'.
+    assert sorted(monitored_array._accesses) == [
+        (slice(0, 2),),
+        (slice(2, 4),)
+    ]
     assert np.all(real_data == np_data)
+
+
+def test_real_nocopy():
+    """Check that converting to iris does not copy real data."""
+    real_array = np.array([1.23, 4, 7.3, 4.1], dtype=np.float32)
+    monitored_array = MonitoredArray(real_array)
+    ncdata = NcData(
+        dimensions={
+            "x": NcDimension("x", 3),
+        },
+        variables={
+            "var_x": NcVariable(
+                name="var_x", dimensions=["x"], data=monitored_array
+            )
+        },
+    )
+
+    # convert to cubes
+    (cube,) = to_iris(ncdata)
+
+    # Check that the cube data has not been fetched
+    # - but N.B. a zero-length slice is fetched when making a lazy wrapper.
+    assert monitored_array._accesses == [(slice(0, 0, None),)]
+    # Check value equivalence, and check accesses again
+    monitored_array._accesses = []
+    assert np.all(cube.data == real_array)
+    # It has now been fetched, in a single chunk.
+    assert monitored_array._accesses == [(slice(0, 4, None),)]
 
 
 def sample_2vars_ncdata():
@@ -70,16 +89,16 @@ def sample_2vars_ncdata():
         },
         variables={
             "var1": NcVariable(
-                name='var1',
+                name="var1",
                 dimensions=["x"],
-                data=np.arange(3, dtype=np.int16)
+                data=np.arange(3, dtype=np.int16),
             ),
             "var2": NcVariable(
-                name='var2',
+                name="var2",
                 dimensions=["x"],
-                data=np.arange(3., dtype=np.float32)
-            )
-        }
+                data=np.arange(3.0, dtype=np.float32),
+            ),
+        },
     )
     return ncdata
 
@@ -95,7 +114,7 @@ def test_multiple_cubes():
     assert isinstance(cubes, CubeList)
     assert len(cubes) == 2
     # N.B. order of cubes can vary !
-    assert sorted(cube.name() for cube in cubes) == ['var1', 'var2']
+    assert sorted(cube.name() for cube in cubes) == ["var1", "var2"]
 
 
 def test_kwargs__load_by_name():
@@ -108,4 +127,4 @@ def test_kwargs__load_by_name():
     # check structure of result
     assert isinstance(cubes, CubeList)
     assert len(cubes) == 1
-    assert cubes[0].name() == 'var2'
+    assert cubes[0].name() == "var2"
