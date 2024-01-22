@@ -371,7 +371,7 @@ ADD_UNIT_TESTS = True
 def _define_unit_singleitem_testcases():
     testcases = {}
     if ADD_UNIT_TESTS:
-        # Add selected targetted test datasets.
+        # Add selected targeted test datasets.
 
         # dataset with a single attribute
         testcases["ds__singleattr"] = {"attrs": {"attr1": 1}}

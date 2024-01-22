@@ -117,7 +117,7 @@ def test_kwargs__scaleandoffset(scaleandoffset):
     else:
         assert scaleandoffset == "WITHscaling"
         load_kwargs = {}
-        # in "normal" deafult operation, the "var_x" data gets scaled to these values
+        # in "normal" default operation, the "var_x" data gets scaled to these values
         expected_data = np.array([1.3, 2.2, 4.6], dtype=np.float32)
 
     # Make the call
