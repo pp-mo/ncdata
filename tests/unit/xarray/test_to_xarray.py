@@ -12,11 +12,9 @@ import dask.array as da
 import numpy as np
 import pytest
 
-from ncdata import NcData, NcDimension, NcVariable, NcAttribute
-
-from tests import MonitoredArray
-
+from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 from ncdata.xarray import to_xarray
+from tests import MonitoredArray
 
 
 def test_lazy_nocompute():

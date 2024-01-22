@@ -160,9 +160,10 @@ def nanmask_cube(cube):
 # Horrible code to list the properties of a netCDF4.Variable object
 #
 import inspect
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from pathlib import Path
+
 import netCDF4 as nc
 
 dirpath = Path(tempfile.mkdtemp())

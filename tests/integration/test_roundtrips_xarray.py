@@ -15,9 +15,9 @@ import xarray
 from ncdata.netcdf4 import from_nc4, to_nc4
 from tests._compare_nc_datasets import compare_nc_datasets
 from tests.data_testcase_schemas import (
+    BAD_LOADSAVE_TESTCASES,
     session_testdir,
     standard_testcase,
-    BAD_LOADSAVE_TESTCASES,
 )
 from tests.integration.roundtrips_utils import (
     adjust_chunks,

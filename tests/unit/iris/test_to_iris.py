@@ -9,15 +9,13 @@ This module only tests some specific API and behaviours of the top-level functio
 covered by the generic 'roundtrip' testcases.
 """
 import dask.array as da
-from iris.cube import CubeList
-from iris import NameConstraint
 import numpy as np
+from iris import NameConstraint
+from iris.cube import CubeList
 
 from ncdata import NcData, NcDimension, NcVariable
-
-from tests import MonitoredArray
-
 from ncdata.iris import to_iris
+from tests import MonitoredArray
 
 
 def test_lazy_nocompute():
