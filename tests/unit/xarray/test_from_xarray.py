@@ -59,7 +59,7 @@ def test_lazy_nocompute(tmp_path):
     var.data = lazy_data
 
     # Make the call
-    ncdata = from_xarray(xrds)
+    _ = from_xarray(xrds)
 
     # Check that the underlying real data has *not* been read ..
     assert len(monitored_array._accesses) == 0

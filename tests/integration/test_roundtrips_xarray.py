@@ -7,8 +7,6 @@ Testcases start as netcdf files.
 """
 from subprocess import check_output
 
-import dask.array as da
-import numpy as np
 import pytest
 import xarray
 
@@ -21,7 +19,6 @@ from tests.data_testcase_schemas import (
 )
 from tests.integration.roundtrips_utils import (
     adjust_chunks,
-    cubes_equal__corrected,
     set_tiny_chunks,
 )
 
@@ -127,8 +124,8 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
     ncds_fromxr = from_xarray(xrds)
     to_nc4(ncds_fromxr, temp_ncdata_savepath)
 
-    _Debug = True
-    # _Debug = False
+    # _Debug = True
+    _Debug = False
     if _Debug:
         ncdump_opts = "-h"
         # ncdump_opts = ""
@@ -137,7 +134,6 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
         spec = {standard_testcase.spec}
         ncdata = ...
         {ncdata}
-        
         ncdump ORIGINAL TESTCASE SOURCEFILE =
         """
         txt += check_output(

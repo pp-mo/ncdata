@@ -1,6 +1,4 @@
 """Temporary integrational proof-of-concept example for dataset printout."""
-from pathlib import Path
-
 import iris
 
 import ncdata.iris as nci

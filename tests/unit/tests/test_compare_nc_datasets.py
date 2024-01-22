@@ -3,19 +3,14 @@ Tests for :mod:`tests.unit.netcdf._compare_nc_files`
 
 Yes I know, tests of tests.  But it seems necessary.
 """
-import os
 import shutil
-import subprocess
 import warnings
-from pathlib import Path
-from typing import AnyStr, Optional
 from unittest import mock
 
 import netCDF4 as nc
 import numpy as np
 import pytest
 
-import ncdata.netcdf4
 from tests._compare_nc_datasets import (
     _compare_attributes,
     _compare_name_lists,
@@ -27,30 +22,30 @@ from tests.test_samplecode_cdlgen_comparablecdl import ncgen_from_cdl
 _base_cdl = """
 netcdf everything {
 dimensions:
-	x = 2 ;
-	y = 3 ;
-	strlen = 5 ;
+    x = 2 ;
+    y = 3 ;
+    strlen = 5 ;
 variables:
-	int x(x) ;
-		x:name = "var_x" ;
-	int var_2d(x, y) ;
-	uint var_u8(x) ;
-	float var_f4(x) ;
-	double var_f8(x) ;
-	char var_str(x, strlen) ;
-	int other(x) ;
-	    other:attr_int = 1 ;
-	    other:attr_float = 2.0f ;
-	    other:attr_double = 2.0 ;
-	    other:attr_string = "this" ;
+    int x(x) ;
+        x:name = "var_x" ;
+    int var_2d(x, y) ;
+    uint var_u8(x) ;
+    float var_f4(x) ;
+    double var_f8(x) ;
+    char var_str(x, strlen) ;
+    int other(x) ;
+        other:attr_int = 1 ;
+        other:attr_float = 2.0f ;
+        other:attr_double = 2.0 ;
+        other:attr_string = "this" ;
     int masked_int(y) ;
         masked_int:_FillValue = -3 ;
     int masked_float(y) ;
         masked_float:_FillValue = -4.0 ;
-        
+
 // global attributes:
-		:global_attr_1 = "one" ;
-		:global_attr_2 = 2 ;
+        :global_attr_1 = "one" ;
+        :global_attr_2 = 2 ;
 
 // groups:
 group: grp_1 {
@@ -70,10 +65,10 @@ group: grp_2 {
 _simple_cdl = """
 netcdf test {
 dimensions:
-	x = 5 ;
+    x = 5 ;
 variables:
-	float x(x) ;
-	int y(x) ;
+    float x(x) ;
+    int y(x) ;
 
 data:
   x = 0.12, 1.23, 2.34, _, _ ;

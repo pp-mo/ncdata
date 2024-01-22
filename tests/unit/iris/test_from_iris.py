@@ -44,7 +44,7 @@ def test_lazy_nocompute():
     dask_array = da.from_array(monitored_array, chunks=(3, 1), meta=np.ndarray)
     cube = sample_cube(dask_array)
 
-    ncdata = from_iris(cube)
+    _ = from_iris(cube)
 
     # check that the wrapped data array has not yet been read (i.e. no compute)
     assert len(monitored_array._accesses) == 0

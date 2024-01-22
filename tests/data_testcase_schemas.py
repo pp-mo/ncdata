@@ -9,14 +9,11 @@ These testcases also include various pre-existing testfiles, which are NOT built
 specs.  This enables us to perform various translation tests on standard testfiles from
 the Iris and Xarray test suites.
 """
-import re
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, Tuple, Union
+from typing import Dict, Union
 
 import iris.tests
-import netCDF4
 import netCDF4 as nc
 import numpy as np
 import pytest

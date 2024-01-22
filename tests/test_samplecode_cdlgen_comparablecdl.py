@@ -95,30 +95,30 @@ def ncgen_from_cdl(
 _base_cdl = """
 netcdf everything {
 dimensions:
-	x = 2 ;
-	y = 3 ;
-	strlen = 5 ;
+    x = 2 ;
+    y = 3 ;
+    strlen = 5 ;
 variables:
-	int x(x) ;
-		x:name = "var_x" ;
-	int var_2d(x, y) ;
-	uint var_u8(x) ;
-	float var_f4(x) ;
-	double var_f8(x) ;
-	char var_str(x, strlen) ;
-	int other(x) ;
-	    other:attr_int = 1 ;
-	    other:attr_float = 2.f ;
-	    other:attr_double = 2. ;
-	    other:attr_string = "this" ;
+    int x(x) ;
+        x:name = "var_x" ;
+    int var_2d(x, y) ;
+    uint var_u8(x) ;
+    float var_f4(x) ;
+    double var_f8(x) ;
+    char var_str(x, strlen) ;
+    int other(x) ;
+        other:attr_int = 1 ;
+        other:attr_float = 2.f ;
+        other:attr_double = 2. ;
+        other:attr_string = "this" ;
     int masked_int(y) ;
         masked_int:_FillValue = -3 ;
     int masked_float(y) ;
         masked_float:_FillValue = -4 ;
-        
+
 // global attributes:
-		:global_attr_1 = "one" ;
-		:global_attr_2 = 2 ;
+        :global_attr_1 = "one" ;
+        :global_attr_2 = 2 ;
 
 group: grp_1 {
     dimensions:
@@ -191,7 +191,7 @@ def test_ncgen_from_cdl(testdata_cdl):
 
     # Lines beyond 1st may STILL not match because of _NCProperties
     # ... however, skipping that line (and first line), they *should* match
-    lines_result = [l for l in lines_result if not "_NCProp" in l]
+    lines_result = [line for line in lines_result if "_NCProp" not in line]
     assert lines_result[1:] == lines_original[1:]
 
 

@@ -6,12 +6,8 @@ Testcases start as netcdf files.
 (2) check equivalence of files : iris -> file VS iris->ncdata->file
 """
 from subprocess import check_output
-from unittest import mock
 
-import dask.array as da
 import iris
-import iris.fileformats.netcdf._thread_safe_nc as iris_threadsafe
-import numpy as np
 import pytest
 
 from ncdata.netcdf4 import from_nc4, to_nc4
