@@ -45,7 +45,7 @@ def test_lazy_nocompute():
     # NOTE: order of access is not guaranteed, hence 'sorted'.
     assert sorted(monitored_array._accesses) == [
         (slice(0, 2),),
-        (slice(2, 4),)
+        (slice(2, 4),),
     ]
 
 
