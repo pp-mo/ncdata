@@ -13,7 +13,7 @@ import pytest
 from ncdata.netcdf4 import from_nc4, to_nc4
 from tests._compare_nc_datasets import compare_nc_datasets
 from tests.data_testcase_schemas import session_testdir, standard_testcase
-from tests.integration.roundtrips_utils import (
+from tests.integration.equivalence_testing_utils import (
     adjust_chunks,
     cubes_equal__corrected,
     set_tiny_chunks,

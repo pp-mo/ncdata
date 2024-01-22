@@ -26,7 +26,7 @@ from tests.data_testcase_schemas import (
     session_testdir,
     standard_testcase,
 )
-from tests.integration.roundtrips_utils import (
+from tests.integration.equivalence_testing_utils import (
     adjust_chunks,
     cubes_equal__corrected,
     namesort_cubes,

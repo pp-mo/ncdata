@@ -17,7 +17,10 @@ from tests.data_testcase_schemas import (
     session_testdir,
     standard_testcase,
 )
-from tests.integration.roundtrips_utils import adjust_chunks, set_tiny_chunks
+from tests.integration.equivalence_testing_utils import (
+    adjust_chunks,
+    set_tiny_chunks,
+)
 
 # Avoid complaints that imported fixtures are "unused"
 standard_testcase, session_testdir, adjust_chunks
