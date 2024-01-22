@@ -17,7 +17,7 @@ from tests._compare_nc_datasets import compare_nc_datasets
 
 
 def example_nc4_load_save_roundtrip():  # noqa: D103
-    # Load an existing file, save-netcdf4 : check same (with Iris for now)
+    """Load an existing file ; save to netcdf4 ; check they are the same."""
     print("\n----\nNetcdf4 load-save example.")
 
     filepath = testdata_dir / "toa_brightness_temperature.nc"
@@ -40,7 +40,7 @@ def example_nc4_load_save_roundtrip():  # noqa: D103
 
 
 def example_nc4_save_reload_unlimited_roundtrip():
-    # Create arbitrary ncdata, save to netcdf4, re-load and check.
+    """Create arbitrary ncdata ; save to netcdf4 ; re-load and check similarities."""
     print("\n----\nNetcdf4 save-load example.")
 
     ncdata = NcData()

@@ -108,9 +108,9 @@ def _compare_name_lists(
 
 def _isncdata(obj):
     """
-    A crude test to distinguish NcData objects from similar netCDF4 ones.
+    Distinguish NcData objects from similar netCDF4 ones.
 
-    Used to support comparisons on either type of data.
+    A crude test, used to support comparisons on either type of data.
     """
     return hasattr(obj, "_print_content")
 
