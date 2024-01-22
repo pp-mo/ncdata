@@ -13,6 +13,7 @@ class MonitoredArray:
     """
 
     def __init__(self, data):
+        """Create a MonitoredArray, containing a numpy array."""
         self.dtype = data.dtype
         self.shape = data.shape
         self.ndim = data.ndim
@@ -20,5 +21,6 @@ class MonitoredArray:
         self._accesses = []
 
     def __getitem__(self, keys):
+        """Fetch indexed data section."""
         self._accesses.append(keys)
         return self._data[keys]

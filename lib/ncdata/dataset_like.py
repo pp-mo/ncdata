@@ -1,5 +1,8 @@
 r"""
-An adaptor layer allowing an :class:`~ncdata.NcData` to masquerade as a :class:`netCDF4.Dataset` object.
+An adaptor layer making a NcData appear like a :class:`netCDF4.Dataset`.
+
+Allows an :class:`~ncdata.NcData` to masquerade as a
+:class:`netCDF4.Dataset` object.
 
 Note:
     This is a low-level interface, exposed publicly for extended experimental uses.
@@ -96,6 +99,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
     file_format = "NETCDF4"
 
     def __init__(self, ncdata: NcData = None):
+        """Create an    Nc4DatasetLike, wrapping an NcData."""
         if ncdata is None:
             ncdata = NcData()  # an empty dataset
         #: the contained dataset.  If not provided, a new, empty dataset is created.

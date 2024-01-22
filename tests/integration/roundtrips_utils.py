@@ -1,3 +1,9 @@
+"""
+Utility routines for conversion equivalence testing.
+
+Used by routines in tests/integration which attempt to show that conversions between
+ncdata and other types of data preserve information.
+"""
 import dask.array as da
 import numpy as np
 import pytest
@@ -5,7 +11,7 @@ import pytest
 
 def cubes_equal__corrected(c1, c2):
     """
-    A special cube equality test which works around some equality problems.
+    Perform a cube equality test, working around some specific equality problems.
 
     (1) If cubes contain string (char) data, replace them with booleans which duplicate
     the correct pointwise equivalence.
@@ -107,10 +113,14 @@ def set_tiny_chunks(on, size_spec="20Kib"):
     _USE_TINY_CHUNKS = on
 
 
-# this fixture can be referenced by anything, and will make all chunks small for that
-# item, if enabled via the global setting.
 @pytest.fixture
 def adjust_chunks():
+    """
+    Enable use of "tiny chunks", if enabled.
+
+    This fixture can be referenced by any test class or function, and will make all
+    chunks small for that item, if enabled via the global setting.
+    """
     import dask.config as dcfg
 
     global _USE_TINY_CHUNKS, _CHUNKSIZE_SPEC
@@ -149,6 +159,7 @@ def nanmask_array(array):
 
 
 def nanmask_cube(cube):
+    """Replace all NaNs with masked points, in cube data and coords."""
     cube.data = nanmask_array(cube.core_data())
     for coord in cube.coords():
         coord.points = nanmask_array(coord.core_points())
@@ -160,9 +171,10 @@ def nanmask_cube(cube):
 # Horrible code to list the properties of a netCDF4.Variable object
 #
 import inspect
-from pathlib import Path
-import tempfile
 import shutil
+import tempfile
+from pathlib import Path
+
 import netCDF4 as nc
 
 dirpath = Path(tempfile.mkdtemp())
@@ -179,6 +191,12 @@ finally:
 
 
 def prune_attrs_varproperties(attrs):
+    """
+    Remove invalid attributes from a attributes dictionary.
+
+    Invalid attributes are any whose names match an attribute of a netCDF.Variable.
+    Any such attributes are deleted, and a set of all names removed is returned.
+    """
     names = set()
     for propname in _NCVAR_PROPERTY_NAMES:
         if propname in attrs:
@@ -188,6 +206,11 @@ def prune_attrs_varproperties(attrs):
 
 
 def prune_cube_varproperties(cube_or_cubes):
+    """
+    Remove invalid attributes from a cube or cubes.
+
+    A set of all names of removed attributes is returned.
+    """
     if hasattr(cube_or_cubes, "add_aux_coord"):
         cube_or_cubes = [cube_or_cubes]
 
@@ -207,17 +230,27 @@ def prune_cube_varproperties(cube_or_cubes):
 
 #
 # Remove any "no-units" units, as these are not SAVED correctly.
-# (see
+# See : https://github.com/SciTools/iris/issues/5368
 #
 import cf_units
 
 
 def remove_element_nounits(obj):
+    """
+    Remove an Iris 'no-unit' unit value.
+
+    We replace 'no-unit' with 'unknown unit', since Iris save-and-load confuses them.
+    """
     if obj.units == cf_units._NO_UNIT_STRING:
         obj.units = None
 
 
 def remove_cube_nounits(cube_or_cubes):
+    """
+    Remove any 'no-units' from a cube or cubes.
+
+    Also from all cube components with a unit, i.e. _DimensionalMetadata components.
+    """
     if hasattr(cube_or_cubes, "add_aux_coord"):
         cube_or_cubes = [cube_or_cubes]
 
@@ -240,4 +273,9 @@ def _cube_metadata_key(cube):
 
 
 def namesort_cubes(cubes):
+    """
+    Sort an iterable of cubes into name order.
+
+    Ordering is by the (name(), long_name, var_name) tuple.
+    """
     return sorted(cubes, key=_cube_metadata_key)

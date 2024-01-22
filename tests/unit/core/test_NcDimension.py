@@ -1,6 +1,4 @@
 """Tests for class :class:`ncdata.NcDimension`."""
-from unittest import mock
-
 import numpy as np
 import pytest
 

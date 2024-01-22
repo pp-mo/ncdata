@@ -9,14 +9,11 @@ These testcases also include various pre-existing testfiles, which are NOT built
 specs.  This enables us to perform various translation tests on standard testfiles from
 the Iris and Xarray test suites.
 """
-import re
-import shutil
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Iterable, Tuple, Union
+from typing import Dict, Union
 
 import iris.tests
-import netCDF4
 import netCDF4 as nc
 import numpy as np
 import pytest
@@ -88,7 +85,6 @@ def _write_nc4_dataset(
     Separated for recursion and to keep dataset open/close in separate wrapper routine.
     """
 
-    # Convenience function
     def objmap(objs):
         """Create a map from a list of dim-specs, indexing by their names."""
         return {obj["name"]: obj for obj in objs}
@@ -170,10 +166,11 @@ def _write_nc4_dataset(
 
 def make_testcase_dataset(filepath, spec):
     """
-    Generic routine for converting a test dataset 'spec' into an actual netcdf file.
+    Convert a test dataset 'spec' into an actual netcdf file.
 
-    Rather frustratingly similar to ncdata.to_nc4, but it needs to remain separate as
-    we use it to test that code (!)
+    A generic routine interpreting "specs" provided as dictionaries.
+    This is rather frustratingly similar to ncdata.to_nc4, but it needs to remain
+    separate as we use it to test that code (!)
 
     specs are just a structure of dicts and lists...
     group_spec = {
@@ -302,6 +299,12 @@ _Standard_Testcases: Dict[str, Union[Path, dict]] = {}
 # It automatically **calls** the wrapped function, and adds all the results into the
 # global "_Standard_Testcases" dictionary.
 def standard_testcases_func(func):
+    """
+    Include the results of the wrapped function in the 'standard testcases'.
+
+    A decorator for spec-generating routines.  It automatically **calls** the wrapped
+    function, and adds the results into the global "_Standard_Testcases" dictionary.
+    """
     global _Standard_Testcases
     _Standard_Testcases.update(func())
 
@@ -371,7 +374,7 @@ ADD_UNIT_TESTS = True
 def _define_unit_singleitem_testcases():
     testcases = {}
     if ADD_UNIT_TESTS:
-        # Add selected targetted test datasets.
+        # Add selected targeted test datasets.
 
         # dataset with a single attribute
         testcases["ds__singleattr"] = {"attrs": {"attr1": 1}}
@@ -449,12 +452,15 @@ def _define_unit_dtype_testcases():
 
 @pytest.fixture(scope="session")
 def session_testdir(tmp_path_factory):
+    """Provide a common temporary-files directory path."""
     tmp_dir = tmp_path_factory.mktemp("standard_schema_testfiles")
     return tmp_dir
 
 
 @dataclass
 class TestcaseSchema:
+    """The type of information object returned by the "standard testcase" fixture."""
+
     name: str = ""
     spec: dict = None
     filepath: Path = None
@@ -463,7 +469,9 @@ class TestcaseSchema:
 @pytest.fixture(params=list(_Standard_Testcases.keys()))
 def standard_testcase(request, session_testdir):
     """
-    A fixture which iterates over a set of "standard" dataset testcases.
+    Provide a set of "standard" dataset testcases.
+
+    A fixture returning a parameterised sequence of TestCaseSchema objects.
 
     Some of these are based on a 'testcase spec', from which it builds an actual netcdf
     testfile : these files are created in a temporary directory provided by pytest

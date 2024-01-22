@@ -15,10 +15,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from ncdata.xarray import from_xarray
 from tests import MonitoredArray
 from tests.data_testcase_schemas import make_testcase_dataset
-
-from ncdata.xarray import from_xarray
 
 
 def file_and_xarray_from_spec(
@@ -60,7 +59,7 @@ def test_lazy_nocompute(tmp_path):
     var.data = lazy_data
 
     # Make the call
-    ncdata = from_xarray(xrds)
+    _ = from_xarray(xrds)
 
     # Check that the underlying real data has *not* been read ..
     assert len(monitored_array._accesses) == 0
@@ -69,7 +68,7 @@ def test_lazy_nocompute(tmp_path):
     # NOTE: order of access is not guaranteed, hence 'sorted'.
     assert sorted(monitored_array._accesses) == [
         (slice(0, 2),),
-        (slice(2, 3),)
+        (slice(2, 3),),
     ]
 
 

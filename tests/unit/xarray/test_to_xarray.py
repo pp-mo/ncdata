@@ -12,11 +12,9 @@ import dask.array as da
 import numpy as np
 import pytest
 
-from ncdata import NcData, NcDimension, NcVariable, NcAttribute
-
-from tests import MonitoredArray
-
+from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 from ncdata.xarray import to_xarray
+from tests import MonitoredArray
 
 
 def test_lazy_nocompute():
@@ -47,7 +45,7 @@ def test_lazy_nocompute():
     # NOTE: order of access is not guaranteed, hence 'sorted'.
     assert sorted(monitored_array._accesses) == [
         (slice(0, 2),),
-        (slice(2, 4),)
+        (slice(2, 4),),
     ]
 
 
@@ -119,7 +117,7 @@ def test_kwargs__scaleandoffset(scaleandoffset):
     else:
         assert scaleandoffset == "WITHscaling"
         load_kwargs = {}
-        # in "normal" deafult operation, the "var_x" data gets scaled to these values
+        # in "normal" default operation, the "var_x" data gets scaled to these values
         expected_data = np.array([1.3, 2.2, 4.6], dtype=np.float32)
 
     # Make the call

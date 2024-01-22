@@ -8,33 +8,32 @@ Testcases start as netcdf files.
 from subprocess import check_output
 
 import dask.array as da
-import netCDF4
-
 import iris
+import netCDF4
 import numpy as np
 import pytest
 import xarray
 
 from ncdata import NcAttribute
 from ncdata.iris import from_iris
-from ncdata.iris_xarray import cubes_from_xarray, cubes_to_xarray
-from ncdata.netcdf4 import from_nc4, to_nc4
+from ncdata.iris_xarray import cubes_to_xarray
+from ncdata.netcdf4 import from_nc4
 from ncdata.threadlock_sharing import lockshare_context
 from ncdata.xarray import from_xarray
 from tests._compare_nc_datasets import compare_nc_datasets
 from tests.data_testcase_schemas import (
+    BAD_LOADSAVE_TESTCASES,
     session_testdir,
     standard_testcase,
-    BAD_LOADSAVE_TESTCASES,
 )
 from tests.integration.roundtrips_utils import (
     adjust_chunks,
     cubes_equal__corrected,
-    set_tiny_chunks,
+    namesort_cubes,
     nanmask_cube,
     prune_cube_varproperties,
     remove_cube_nounits,
-    namesort_cubes,
+    set_tiny_chunks,
 )
 
 # Avoid complaints that imported fixtures are "unused"

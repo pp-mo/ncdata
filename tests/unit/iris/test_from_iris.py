@@ -8,17 +8,16 @@ the use of groups, passing of data arrays and attributes.
 This module only tests some specific API and behaviours of the top-level function, not
 covered by the generic 'roundtrip' testcases.
 """
+from unittest.mock import patch
+
 import dask.array as da
 import numpy as np
 import pytest
-from unittest.mock import patch
-
 from iris.coords import DimCoord
 from iris.cube import Cube
 
-from tests import MonitoredArray
-
 from ncdata.iris import from_iris
+from tests import MonitoredArray
 
 
 def sample_cube(data_array=None):
@@ -45,7 +44,7 @@ def test_lazy_nocompute():
     dask_array = da.from_array(monitored_array, chunks=(3, 1), meta=np.ndarray)
     cube = sample_cube(dask_array)
 
-    ncdata = from_iris(cube)
+    _ = from_iris(cube)
 
     # check that the wrapped data array has not yet been read (i.e. no compute)
     assert len(monitored_array._accesses) == 0
