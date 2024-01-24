@@ -199,11 +199,14 @@ As-of v0.1
       2. run `python -m build`
    2. Push to PyPI
       1. if needed, get [twine](https://github.com/pypa/twine)
-      2. run `python -m twine --repository testpypi upload dist/*`
+      2. run `python -m twine upload --repository testpypi dist/*`
          * this uploads to TestPyPI
-      3. if that checks OK, _remove_ `--repository testpypi` _and repeat_
+      3. create a new env with test dependencies `conda create -n ncdtmp python=3.11 iris xarray filelock requests pytest pip`
+         (N.B. 'filelock' and 'requests' are _test_ dependencies of iris) 
+      5. install the new package with `pip install --index-url https://test.pypi.org/simple/ ncdata` and run tests
+      6. if that checks OK, _remove_ `--repository testpypi` _and repeat_ #2
          * --> uploads to "real" PyPI
-      4. check that `pip install ncdata` can now find the new version
+      7. repeat #4, _removing_ the `--index-url`, to check that `pip install ncdata` now finds the new version
    3. Update conda to source the new version from PyPI
       1. create a PR on the [ncdata feedstock](https://github.com/conda-forge/ncdata-feedstock)
       1. update :
