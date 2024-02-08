@@ -11,10 +11,115 @@ Current limitations :
 of dimensions referenced by variables.
 
 """
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Iterable, List, Mapping, Optional, Tuple, Union
 
 import numpy
 import numpy as np
+
+
+class NameMap(dict):
+    """
+    A specialised dictionary type for data manipulation convenience.
+
+    Provides an init convenience for creating from item creation tuples.
+    Provides 'add' and 'rename' to make it easier to ensure self[key].name == name.
+    """
+
+    def __init__(self, *args, **kwargs):
+        item_type = kwargs.pop("item_type")
+        super().__init__(*args, **kwargs)
+        self.item_type = item_type
+
+    @classmethod
+    def fromtype(cls, item_class, *item_tuples):
+        """
+        Create from a list of content creation tuples.
+
+        The 'item_class' provided defines the expected '.item_type'.
+        This is called with each provided tuple to create content items.
+        """
+        self = cls(item_type=item_class)
+        for item_tuple in item_tuples:
+            self.add(self.item_type(*item_tuple))
+
+    def add(self, item):
+        """
+        Enter a content item under its '.name'.
+
+        If the expected type is recorded, the item is type checked.
+        """
+        if self.item_type is not None:
+            if not isinstance(item, self.item_type):
+                raise ValueError(
+                    f'Item expected to be of type {self.item_type} : got {item}."'
+                )
+        if not hasattr(item, "name"):
+            raise ValueError(f"Item has no '.name' property : {item}.")
+        self[item.name] = item
+
+    def addall(self, items):
+        """Add a number of content items with self.add()."""
+        for item in items:
+            self.add(item)
+
+    def rename(self, name: str, new_name: str):
+        """Rename a content item."""
+        item = self.pop(name)
+        item.name = new_name
+        self.add(item)
+
+
+def as_namemap(arg, item_type=None):
+    """
+    Convert a map or iterable of items to a NameMap.
+
+    Optionally, fix the expected type.
+    """
+    if isinstance(arg, NameMap):
+        # If all is well, this is a no-copy operation.
+        result = arg
+        if arg.item_type != item_type:
+            # Replace with a map of fixed type if required
+            result = NameMap(item_type=item_type)
+            result.addall(arg.values())
+    else:
+        # Default is an empty map of the required type.
+        result = NameMap(item_type=item_type)
+        if arg is not None:
+            # We expect either another type of dictionary, or a list of items.
+            # We do *not* support the NameMap.fromtype style.
+            # All content items must match the expected type (if any).
+            if isinstance(arg, Mapping):
+                result.addall(arg.values())
+            elif isinstance(arg, Iterable):
+                result.addall(arg)
+            else:
+                msg = f"Unexpected argument, can't convert to NameMap : {arg}"
+                raise ValueError(msg)
+
+    return result
+
+
+class NcAttributeAccessesMixin:
+    """
+    A mixin with attribute access conveniences for NcData and NcVariable.
+
+    This assists in assigning and extracting attributes as python values.
+    """
+
+    def set_ncdata_attr(self, name: str, value) -> "NcAttribute":
+        """Set the Python value of a named attribute in self.attributes."""
+        attr = NcAttribute(name, value)
+        self.attributes[name] = attr
+        return attr
+
+    def get_ncdata_attr(self, name: str):
+        """Get the Python value of a named attribute in self.attributes."""
+        attr = self.attributes.get(name)
+        if attr is not None:
+            attr = attr.as_python_value()
+        return attr
+
 
 #
 # A totally basic and naive representation of netCDF data.
@@ -30,7 +135,7 @@ def _addlines_indent(text, indent=""):
 _indent = " " * 4
 
 
-class NcData:
+class NcData(NcAttributeAccessesMixin):
     """
     An object representing a netcdf group- or dataset-level container.
 
@@ -48,13 +153,19 @@ class NcData:
         #: a group/dataset name (optional)
         self.name: str = name
         #: group/dataset dimensions
-        self.dimensions: Dict[str, "NcDimension"] = dimensions or {}
+        self.dimensions: Dict[str, "NcDimension"] = as_namemap(
+            dimensions, NcDimension
+        )
         #: group/dataset variables
-        self.variables: Dict[str, "NcVariable"] = variables or {}
+        self.variables: Dict[str, "NcVariable"] = as_namemap(
+            variables, NcVariable
+        )
         #: group/dataset global attributes
-        self.attributes: Dict[str, "NcAttribute"] = attributes or {}
+        self.attributes: Dict[str, "NcAttribute"] = as_namemap(
+            attributes, NcAttribute
+        )
         #: sub-groups
-        self.groups: Dict[str, "NcData"] = groups or {}
+        self.groups: Dict[str, "NcData"] = as_namemap(groups, NcData)
 
     def _print_content(self) -> str:
         """
@@ -147,7 +258,7 @@ class NcDimension:
         return repr(self)
 
 
-class NcVariable:
+class NcVariable(NcAttributeAccessesMixin):
     """
     An object representing a netcdf variable.
 
@@ -200,7 +311,9 @@ class NcVariable:
         #: variable data (an array-like, typically a dask or numpy array)
         self.data = data  # Supports lazy, and normally provides a dtype
         #: variable attributes
-        self.attributes: Dict[str, NcAttribute] = attributes or {}
+        self.attributes: Dict[str, NcAttribute] = as_namemap(
+            attributes, NcAttribute
+        )
         #: parent group
         self.group: Optional[NcData] = group
 
