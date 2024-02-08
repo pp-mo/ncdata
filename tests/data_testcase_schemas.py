@@ -307,6 +307,7 @@ def standard_testcases_func(func):
     """
     global _Standard_Testcases
     _Standard_Testcases.update(func())
+    return func
 
 
 @standard_testcases_func
