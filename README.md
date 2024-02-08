@@ -4,7 +4,7 @@ Generic NetCDF data in Python.
 Provides fast data exchange between analysis packages, and full control of storage
 formatting.
 
-Especially : Ncdata **exchanges data between Xarray and Iris** as efficently as possible  
+Especially : Ncdata **exchanges data between Xarray and Iris** as efficiently as possible  
 > "lossless, copy-free and lazy-preserving".
 
 This enables the user to freely mix+match operations from both projects, getting the
