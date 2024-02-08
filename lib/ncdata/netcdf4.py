@@ -262,7 +262,7 @@ def _from_nc4_group(
             group_names_path=group_names_path,
         )
         var.data = da.from_array(
-            proxy, chunks=shape, asarray=True, meta=np.ndarray
+            proxy, chunks="auto", asarray=True, meta=np.ndarray
         )
 
         for attrname in nc4var.ncattrs():
