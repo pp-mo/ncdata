@@ -218,7 +218,7 @@ class TestNcVariable__str__repr:
         var = NcVariable(
             "var",
             dimensions=("x", "y"),
-            attributes={"a1": NcAttribute("a1", 1)},
+            attributes=[NcAttribute("a1", 1)],
         )
         result = repr(var)
         expected = f"<ncdata._core.NcVariable object at 0x{id(var):012x}>"

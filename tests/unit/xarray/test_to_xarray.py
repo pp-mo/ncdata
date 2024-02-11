@@ -23,14 +23,10 @@ def test_lazy_nocompute():
     monitored_array = MonitoredArray(real_numpy_data)
     dask_array = da.from_array(monitored_array, chunks=(2,), meta=np.ndarray)
     ncdata = NcData(
-        dimensions={
-            "x": NcDimension("x", 3),
-        },
-        variables={
-            "var_x": NcVariable(
-                name="var_x", dimensions=["x"], data=dask_array
-            )
-        },
+        dimensions=[NcDimension("x", 3)],
+        variables=[
+            NcVariable(name="var_x", dimensions=["x"], data=dask_array)
+        ],
     )
 
     # convert to xarray.Dataset
@@ -53,14 +49,10 @@ def test_real_nocopy():
     """Check that to_xarray transfers real variable data directly without copying."""
     real_numpy_data = np.array([1.23, 4, 7.3, 4.1], dtype=np.float32)
     ncdata = NcData(
-        dimensions={
-            "x": NcDimension("x", 3),
-        },
-        variables={
-            "var_x": NcVariable(
-                name="var_x", dimensions=["x"], data=real_numpy_data
-            )
-        },
+        dimensions=[NcDimension("x", 3)],
+        variables=[
+            NcVariable(name="var_x", dimensions=["x"], data=real_numpy_data)
+        ],
     )
 
     # convert to xarray.Dataset
@@ -89,24 +81,22 @@ def test_kwargs__scaleandoffset(scaleandoffset):
     # Make a test NcData dataset with a scaled-and-offset variable.
     raw_int_data = np.array([66, 75, 99], dtype=np.int16)
     ncdata = NcData(
-        dimensions={
-            "x": NcDimension("x", 3),
-        },
-        variables={
-            "var_x": NcVariable(
+        dimensions=[NcDimension("x", 3)],
+        variables=[
+            NcVariable(
                 name="var_x",
                 dimensions=["x"],
-                attributes={
-                    "scale_factor": NcAttribute(
+                attributes=[
+                    NcAttribute(
                         "scale_factor", np.array(0.1, dtype=np.float32)
                     ),
-                    "add_offset": NcAttribute(
+                    NcAttribute(
                         "add_offset", np.array(-5.3, dtype=np.float32)
                     ),
-                },
+                ],
                 data=raw_int_data,
             )
-        },
+        ],
     )
 
     # convert to Xarray
