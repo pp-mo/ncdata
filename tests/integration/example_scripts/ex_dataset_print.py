@@ -16,20 +16,20 @@ def sample_printout():  # noqa: D103
     # namely groups and shortform variables (vars with no attrs)
     ds.groups["extra"] = NcData(
         name="extra",
-        dimensions={"extra_qq": NcDimension("extra_qq", 4, unlimited=True)},
-        variables={
-            "noattrs": NcVariable("noattrs", ["x"]),
-            "x": NcVariable(
+        dimensions=[NcDimension("extra_qq", 4, unlimited=True)],
+        variables=[
+            NcVariable("noattrs", ["x"]),
+            NcVariable(
                 name="x",
                 dimensions=["y", "extra_qq"],
-                attributes={
-                    "q1": NcAttribute("q1", 1),
-                    "q_multi": NcAttribute("q_multi", [1.1, 2.2]),
-                    "q_multstr": NcAttribute("q_multstr", ["one", "two"]),
-                },
+                attributes=[
+                    NcAttribute("q1", 1),
+                    NcAttribute("q_multi", [1.1, 2.2]),
+                    NcAttribute("q_multstr", ["one", "two"]),
+                ],
             ),
-        },
-        attributes={"extra__global": NcAttribute("extra__global", "=value")},
+        ],
+        attributes=[NcAttribute("extra__global", "=value")],
     )
     print(ds)
 

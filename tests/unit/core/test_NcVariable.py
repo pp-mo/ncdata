@@ -7,7 +7,7 @@ import dask.array as da
 import numpy as np
 import pytest
 
-from ncdata import NcAttribute, NcData, NcVariable
+from ncdata import NcAttribute, NcVariable
 
 
 class Test_NcVariable__init__:
@@ -29,39 +29,72 @@ class Test_NcVariable__init__:
             _ = NcVariable()
 
     def test_allargs(self):
-        # Since there is no type checking, you can put whatever you like in the "slots".
+        # Constructor slots are not type-checked, if the right kind of arg. There is no enforced type checking, put whatever you like in the "slots".
         name = "data_name"
-        dims = {f"dimname_{i}": f"dim_{i}" for i in range(3)}
-        vars = {f"varname_{i}": f"var_{i}" for i in range(5)}
-        attrs = {f"varname_{i}": f"var_{i}" for i in range(6)}
-        grps = {f"groupname_{i}": f"group_{i}" for i in range(3)}
-        sample1 = NcData(
+        # NOTE: for *no-copy* construction, args must be NameMap of correct item_type
+        dims = [f"dimname_{i}" for i in range(3)]
+        # note: variable dims and shape **don't have to agree**.
+        data = np.array((3.0, 2, 1))
+        attrs = [NcAttribute(f"attr_{i}", i) for i in range(6)]
+        dtype = "f8"  # match the provided data for correct matching
+        group = ""
+        sample1 = NcVariable(
             name=name,
             dimensions=dims,
-            variables=vars,
+            data=data,
+            dtype=data.dtype,
             attributes=attrs,
-            groups=grps,
+            group=group,
         )
         # Nothing is copied : all contents are simply references to the inputs
-        assert sample1.name is name
-        assert sample1.dimensions is dims
-        assert sample1.variables is vars
-        assert sample1.groups is grps
-        assert sample1.attributes is attrs
+        assert sample1.name == name
+        assert sample1.dimensions == tuple(dims)
+        assert sample1.data is data
+        assert sample1.dtype == np.dtype(dtype)
+        assert list(sample1.attributes.values()) == attrs
+        assert sample1.attributes.item_type == NcAttribute
+        assert sample1.group is group
         # Also check construction with arguments alone (no keywords).
-        sample2 = NcData(name, dims, vars, attrs, grps)
+        sample2 = NcVariable(name, dims, data, dtype, attrs, group)
         # result is new object, but all contents are references identical to the other
         assert sample2 is not sample1
-        for name in [n for n in dir(sample1) if n[0] != "_"]:
-            assert getattr(sample2, name) is getattr(sample1, name)
+        for name in (
+            "name",
+            "dimensions",
+            "data",
+            "dtype",
+            "attributes",
+            "group",
+        ):
+            assert np.all(getattr(sample2, name) == getattr(sample1, name))
 
-    @pytest.mark.parametrize("with_data", [False, True])
-    def test_dtype__with_and_without_data(self, with_data):
-        test_dtype_nonfunctional = "invalid_dtype"
+    @pytest.mark.parametrize("withdata_or_not", ["withdata", "nodata"])
+    def test_valid_dtype__with_and_without_data(self, withdata_or_not):
+        test_dtype = "i2"
+        with_data = withdata_or_not == "withdata"
         data = np.arange(2.0) if with_data else None
-        var = NcVariable("x", data=data, dtype=test_dtype_nonfunctional)
-        expect_dtype = data.dtype if with_data else test_dtype_nonfunctional
-        assert var.dtype == expect_dtype
+        if with_data:
+            # with provided data, dtype is *ignored*
+            var = NcVariable("x", data=data, dtype=test_dtype)
+            assert var.dtype == data.dtype
+        else:
+            # with no data, provided dtype is respected
+            var = NcVariable("x", data=data, dtype=test_dtype)
+            assert var.dtype == np.dtype(test_dtype)
+
+    @pytest.mark.parametrize("withdata_or_not", ["withdata", "nodata"])
+    def test_invalid_dtype__with_and_without_data(self, withdata_or_not):
+        test_dtype_nonfunctional = "invalid_dtype"
+        with_data = withdata_or_not == "withdata"
+        data = np.arange(2.0) if with_data else None
+        if with_data:
+            # with provided data. invalid dtype is still ignored
+            var = NcVariable("x", data=data, dtype=test_dtype_nonfunctional)
+            assert var.dtype == data.dtype
+        else:
+            # with no data, invalid dtype causes error
+            with pytest.raises(TypeError, match="data type.*not understood"):
+                _ = NcVariable("x", data=data, dtype=test_dtype_nonfunctional)
 
     @pytest.mark.parametrize(
         # All of these cases should deliver data wrapped as np.asanyarray()
