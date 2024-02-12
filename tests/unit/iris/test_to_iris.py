@@ -24,14 +24,10 @@ def test_lazy_nocompute():
     monitored_array = MonitoredArray(np_data)
     dask_array = da.from_array(monitored_array, chunks=(2,), meta=np.ndarray)
     ncdata = NcData(
-        dimensions={
-            "x": NcDimension("x", 3),
-        },
-        variables={
-            "var_x": NcVariable(
-                name="var_x", dimensions=["x"], data=dask_array
-            )
-        },
+        dimensions=[NcDimension("x", 3)],
+        variables=[
+            NcVariable(name="var_x", dimensions=["x"], data=dask_array)
+        ],
     )
 
     # convert to cubes
@@ -56,14 +52,10 @@ def test_real_nocopy():
     real_array = np.array([1.23, 4, 7.3, 4.1], dtype=np.float32)
     monitored_array = MonitoredArray(real_array)
     ncdata = NcData(
-        dimensions={
-            "x": NcDimension("x", 3),
-        },
-        variables={
-            "var_x": NcVariable(
-                name="var_x", dimensions=["x"], data=monitored_array
-            )
-        },
+        dimensions=[NcDimension("x", 3)],
+        variables=[
+            NcVariable(name="var_x", dimensions=["x"], data=monitored_array)
+        ],
     )
 
     # convert to cubes
@@ -82,21 +74,19 @@ def test_real_nocopy():
 def sample_2vars_ncdata():
     """Construct a test ncdata that loads as 2 cubes with a common dimension."""
     ncdata = NcData(
-        dimensions={
-            "x": NcDimension("x", 3),
-        },
-        variables={
-            "var1": NcVariable(
+        dimensions=[NcDimension("x", 3)],
+        variables=[
+            NcVariable(
                 name="var1",
                 dimensions=["x"],
                 data=np.arange(3, dtype=np.int16),
             ),
-            "var2": NcVariable(
+            NcVariable(
                 name="var2",
                 dimensions=["x"],
                 data=np.arange(3.0, dtype=np.float32),
             ),
-        },
+        ],
     )
     return ncdata
 

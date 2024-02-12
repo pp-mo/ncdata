@@ -72,7 +72,7 @@ autopackage_name = [
     "ncdata.dataset_like",
 ]
 # api generation configuration
-autoclass_content = "both"
+autoclass_content = "class"
 autodoc_member_order = "bysource"
 autodoc_typehints = "description"
 autodoc_class_signature = "separated"
@@ -83,7 +83,7 @@ autodoc_default_options = {
     "inherited-members": True,
     "class-signature": "separated",
     "autodoc_typehints": "description",
-    "autoclass_content": "both",
+    "autoclass_content": "class",
 }
 
 # Add any paths that contain templates here, relative to this directory.

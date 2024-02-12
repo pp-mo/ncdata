@@ -11,13 +11,209 @@ Current limitations :
 of dimensions referenced by variables.
 
 """
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Iterable, Mapping, Optional, Tuple, Union
 
 import numpy
 import numpy as np
 
+
+class NameMap(dict):
+    """
+    A specialised dictionary type for data manipulation convenience.
+
+    All values (aka 'content items') are expected to have a ".name" property which is a
+    string, and we aim to ensure that "value.name == key" for each key, value pair.
+
+    This "item key relation" is *not* rigorously enforced, but we provide convenience
+    methods which make use of it and help to maintain it :
+    See :meth:`NameMap.add`, :meth:`NameMap.addall` :meth:`NameMap.from_items` and
+    :meth:`NameMap.rename`.
+
+    ..
+    """
+
+    def __init__(self, *args, item_type=None, **kwargs):
+        """
+        Create a NameMap with dict-style constructor behaviour.
+
+        For example, from key/value pairs.
+
+        Notes
+        -----
+        A keyword-only 'item_type' arg sets the 'item_type' property.
+
+        Creation using :meth:`NameMap.from_items` is generally more convenient.
+        """
+        super().__init__(*args, **kwargs)
+        #: expected type of all content items (if not None)
+        self.item_type = item_type
+
+    def copy(self) -> "NameMap":
+        """Produce a new NameMap with same content and item_type."""
+        # NOTE: dict.copy() produces a dict, and will not duplicate 'item_type'.
+        return NameMap.from_items(self.values(), item_type=self.item_type)
+
+    def add(self, item):
+        """
+        Enter a content item under its '.name'.
+
+        If the NameMap has a non-None 'item_type', the added item is type checked.
+        """
+        if self.item_type is not None:
+            if not isinstance(item, self.item_type):
+                raise TypeError(
+                    f'Item expected to be of type {self.item_type} : got {item}."'
+                )
+        if not hasattr(item, "name"):
+            raise TypeError(f"Item has no '.name' property : {item}.")
+        self[item.name] = item
+
+    def addall(self, items):
+        """Add a number of content items with self.add()."""
+        for item in items:
+            self.add(item)
+
+    def rename(self, name: str, new_name: str):
+        """
+        Rename a content item.
+
+        Parameters
+        ----------
+        name
+            name of an existing item.  If not, a KeyError will occur.
+
+        new_name
+            new name for the selected item.  Both the container key and its ".name"
+            will be changed.
+
+        Notes
+        -----
+        The order of items is preserved.
+
+        If "new_name == name", has no effect.  Otherwise, if `new_name` already exists,
+        the old item of that name is removed, but the renamed item remains in its
+        original order place.
+
+        Examples
+        --------
+        >>> mymap = NameMap.from_items([NcAttribute(x, x.upper()) for x in "abcd"])
+        >>> mymap
+        {'a': NcAttribute('a', 'A'), 'b': NcAttribute('b', 'B'), 'c': NcAttribute('c', 'C'), 'd': NcAttribute('d', 'D')}
+        >>> mymap.rename('b', 'qqq')
+        >>> mymap
+        {'a': NcAttribute('a', 'A'), 'qqq': NcAttribute('qqq', 'B'), 'c': NcAttribute('c', 'C'), 'd': NcAttribute('d', 'D')}
+        >>> mymap.rename('a', 'c')
+        >>> mymap
+        {'c': NcAttribute('c', 'A'), 'qqq': NcAttribute('qqq', 'B'), 'd': NcAttribute('d', 'D')}
+        """
+        if new_name == name:
+            # skip this case, to avoid removing the item because it matches 'new_name'.
+            pass
+        else:
+            # Since keys are immutable, we can't change a key in-place. So to preserve
+            # item order within the container, we extract all items + re-insert them.
+            # Get all items in original order, except an existing item of the new name
+            items = [item for key, item in self.items() if key != new_name]
+            # rename the selected item object (meaning it no longer matches its key)
+            self[name].name = new_name
+            # clear content and re-insert items in the original order.
+            self.clear()
+            self.addall(items)
+
+    @classmethod
+    def from_items(
+        cls, arg: Union[Iterable, Mapping], item_type=None
+    ) -> "NameMap":
+        """
+        Convert an iterable or mapping of items to a NameMap.
+
+        Parameters
+        ----------
+        arg
+            an iterable or mapping of 'content items'.
+
+        item_type
+            if not None, we expect all contents to be of this type.
+
+        Returns
+        -------
+        map
+            a NameMap with the given 'item_type'
+
+        Notes
+        -----
+        All content items must have a ".name" property.  If 'item_type' is not None,
+        all items must be of the given type.
+
+        If 'arg' is an iterable, its contents are added.
+
+        If 'arg' is a mapping, it must have (key == arg[key].name) for all keys.
+
+        If 'arg'' is a NameMap of the same 'item_type' (including None), then 'arg'
+        is returned unchanged as the result.
+
+        If the input is a NameMap of a different 'item_type', it is converted to a new
+        NameMap of the required 'item_type' (assuming contents match the requirement).
+        """
+        if isinstance(arg, cls):
+            if arg.item_type == item_type:
+                # If input is of required type, this is a no-copy operation.
+                result = arg
+            else:
+                # Replace with a map of of the required type.
+                result = cls(item_type=item_type)
+                result.addall(arg.values())
+        else:
+            # Start with an empty map of the required type.
+            result = cls(item_type=item_type)
+            if arg is not None:
+                # We expect either another type of dictionary, or a list of items.
+                if isinstance(arg, Mapping):
+                    # ignore mapping keys, and set [name]=item.name for each value.
+                    result.addall(arg.values())
+                elif isinstance(arg, Iterable):
+                    result.addall(arg)
+                else:
+                    msg = (
+                        f"Argument must be an iterable or mapping: got {arg}."
+                    )
+                    raise TypeError(msg)
+
+        return result
+
+
+# A convenient name alias for :meth:`NameMap.from_items`.
+as_namemap = NameMap.from_items
+
+
+class _AttributeAccessMixin:
+    """
+    A mixin with attribute access conveniences for NcData and NcVariable.
+
+    This assists in assigning and extracting attributes as python values.
+    See :meth:`NcAttribute.get_python_value()` for how different types are handled.
+    """
+
+    def get_attrval(self, name: str):
+        """
+        Get the Python value of a named attribute in self.attributes.
+
+        If no such attribute exists, returns None.
+        """
+        attr = self.attributes.get(name)
+        if attr is not None:
+            attr = attr.as_python_value()
+        return attr
+
+    def set_attrval(self, name: str, value) -> "NcAttribute":
+        """Set the Python value of a named attribute in self.attributes."""
+        attr = NcAttribute(name, value)
+        self.attributes[name] = attr
+        return attr
+
+
 #
-# A totally basic and naive representation of netCDF data.
+# A relatively simple and naive representation of netCDF data.
 #
 
 
@@ -30,7 +226,7 @@ def _addlines_indent(text, indent=""):
 _indent = " " * 4
 
 
-class NcData:
+class NcData(_AttributeAccessMixin):
     """
     An object representing a netcdf group- or dataset-level container.
 
@@ -40,21 +236,27 @@ class NcData:
     def __init__(
         self,
         name: Optional[str] = None,
-        dimensions: Dict[str, "NcDimension"] = None,
-        variables: Dict[str, "NcVariable"] = None,
-        attributes: Dict[str, "NcAttribute"] = None,
-        groups: Dict[str, "NcData"] = None,
+        dimensions: Union[Mapping, Iterable] = None,
+        variables: Union[Mapping, Iterable] = None,
+        attributes: Union[Mapping, Iterable] = None,
+        groups: Union[Mapping, Iterable] = None,
     ):  # noqa: D107
         #: a group/dataset name (optional)
         self.name: str = name
         #: group/dataset dimensions
-        self.dimensions: Dict[str, "NcDimension"] = dimensions or {}
+        self.dimensions: Dict[str, "NcDimension"] = as_namemap(
+            dimensions, NcDimension
+        )
         #: group/dataset variables
-        self.variables: Dict[str, "NcVariable"] = variables or {}
+        self.variables: Dict[str, "NcVariable"] = as_namemap(
+            variables, NcVariable
+        )
         #: group/dataset global attributes
-        self.attributes: Dict[str, "NcAttribute"] = attributes or {}
+        self.attributes: Dict[str, "NcAttribute"] = as_namemap(
+            attributes, NcAttribute
+        )
         #: sub-groups
-        self.groups: Dict[str, "NcData"] = groups or {}
+        self.groups: Dict[str, "NcData"] = as_namemap(groups, NcData)
 
     def _print_content(self) -> str:
         """
@@ -112,14 +314,8 @@ class NcDimension:
     """
     An object representing a netcdf dimension.
 
-    Associates a length with a name.
-    A length of 0 indicates an "unlimited" dimension, though that is essentially a
-    file-specific concept.
+    Associates a name with a length, and also an 'unlimited' flag.
     """
-
-    # TODO : I think the unlimited interpretation is limiting, since we will want to
-    #  represent "current length" too.
-    #  ? Change this by adopting a boolean "is_unlimited" property ?
 
     def __init__(
         self, name: str, size: int, unlimited: Optional[bool] = None
@@ -147,7 +343,7 @@ class NcDimension:
         return repr(self)
 
 
-class NcVariable:
+class NcVariable(_AttributeAccessMixin):
     """
     An object representing a netcdf variable.
 
@@ -168,7 +364,7 @@ class NcVariable:
     def __init__(
         self,
         name: str,
-        dimensions: Tuple[str] = (),
+        dimensions: Iterable[str] = (),
         # NOTE: flake8 objects to type checking against an unimported package, even in
         # a quoted reference when it's not otherwise needed (and we don't want to
         # import it).
@@ -177,30 +373,32 @@ class NcVariable:
             Union[np.ndarray, "dask.array.array"]  # noqa: F821
         ] = None,
         dtype: np.dtype = None,
-        attributes: Dict[str, "NcAttribute"] = None,
+        attributes: Union[Mapping, Iterable] = None,
         group: "NcData" = None,
     ):
         """
         Create a variable.
 
-        The 'dtype' arg relevant only when no data is provided :
+        The 'dtype' arg is relevant only when no data is provided :
         If 'data' is provided, it is converted to an array if needed, and its dtype
         replaces any provided 'dtype'.
         """
         #: variable name
         self.name: str = name
         #: variable dimension names (a list of strings, *not* a dict of objects)
-        self.dimensions: List[str] = tuple(dimensions)
+        self.dimensions: Tuple[str] = tuple(dimensions)
         if data is not None:
             if not hasattr(data, "dtype"):
                 data = np.asanyarray(data)
             dtype = data.dtype
         #: variable datatype, as a numpy :class:`numpy.dtype`
+        if dtype is not None and not isinstance(dtype, np.dtype):
+            dtype = np.dtype(dtype)
         self.dtype: numpy.dtype = dtype
         #: variable data (an array-like, typically a dask or numpy array)
         self.data = data  # Supports lazy, and normally provides a dtype
         #: variable attributes
-        self.attributes: Dict[str, NcAttribute] = attributes or {}
+        self.attributes: NameMap = as_namemap(attributes, NcAttribute)
         #: parent group
         self.group: Optional[NcData] = group
 

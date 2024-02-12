@@ -80,29 +80,29 @@ def test_target_types(sourcetype, tmp_path):
 
     # Construct an NcData which *ought* to match the test specification.
     ncdata_expected = NcData(
-        dimensions={"xdim": NcDimension(name="xdim", size=3)},
-        variables={
-            "x": NcVariable(
+        dimensions=[NcDimension(name="xdim", size=3)],
+        variables=[
+            NcVariable(
                 name="x",
                 dimensions=("xdim"),
                 dtype=np.float32,
                 data=[1.23, 2, 9],
             )
-        },
-        groups={
-            "inner_group": NcData(
+        ],
+        groups=[
+            NcData(
                 name="inner_group",
-                dimensions={"ydim": NcDimension(name="ydim", size=2)},
-                variables={
-                    "y": NcVariable(
+                dimensions=[NcDimension(name="ydim", size=2)],
+                variables=[
+                    NcVariable(
                         name="y",
                         dimensions=("xdim", "ydim"),
                         dtype=np.int64,
                         data=[[77, 2], [13, 1], [19, 3]],
                     )
-                },
+                ],
             )
-        },
+        ],
     )
     if sourcetype == "group":
         ncdata_expected = ncdata_expected.groups["inner_group"]

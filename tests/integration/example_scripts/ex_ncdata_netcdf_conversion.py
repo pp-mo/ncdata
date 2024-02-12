@@ -53,7 +53,7 @@ def example_nc4_save_reload_unlimited_roundtrip():
         dtype=np.float32,
         data=np.arange(4),
         # Just an an attribute for the sake of it.
-        attributes={"varattr1": NcAttribute("varattr1", 1)},
+        attributes=[NcAttribute("varattr1", 1)],
     )
     ncdata.attributes["globalattr1"] = NcAttribute("globalattr1", "one")
     print("Source ncdata object:")

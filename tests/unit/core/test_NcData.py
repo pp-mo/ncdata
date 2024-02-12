@@ -2,7 +2,7 @@
 
 There is almost no behaviour, but we can test some constructor usages.
 """
-from ncdata import NcData
+from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 
 
 class Test_NcData__init__:
@@ -15,12 +15,11 @@ class Test_NcData__init__:
         assert sample.attributes == {}
 
     def test_allargs(self):
-        # Since there is no type checking, you can put what you like in the "slots".
         name = "data_name"
-        dims = {f"dimname_{i}": f"dim_{i}" for i in range(3)}
-        vars = {f"varname_{i}": f"var_{i}" for i in range(5)}
-        attrs = {f"varname_{i}": f"var_{i}" for i in range(6)}
-        grps = {f"groupname_{i}": f"group_{i}" for i in range(3)}
+        dims = [NcDimension(f"dimname_{i}", i) for i in range(3)]
+        vars = [NcVariable(f"varname_{i}", (), int) for i in range(5)]
+        attrs = [NcAttribute(f"attrname_{i}", i) for i in range(6)]
+        grps = [NcData(f"groupname_{i}") for i in range(3)]
         sample1 = NcData(
             name=name,
             dimensions=dims,
@@ -30,18 +29,21 @@ class Test_NcData__init__:
         )
         # Nothing is copied : all contents are simply references to the inputs
         assert sample1.name is name
-        assert sample1.dimensions is dims
-        assert sample1.variables is vars
-        assert sample1.groups is grps
-        assert sample1.attributes is attrs
+        assert list(sample1.dimensions.values()) == dims
+        assert sample1.dimensions.item_type == NcDimension
+        assert list(sample1.variables.values()) == vars
+        assert sample1.variables.item_type == NcVariable
+        assert list(sample1.groups.values()) == grps
+        assert sample1.groups.item_type == NcData
+        assert list(sample1.attributes.values()) == attrs
+        assert sample1.attributes.item_type == NcAttribute
 
         # Also check construction with arguments alone (no keywords).
         sample2 = NcData(name, dims, vars, attrs, grps)
         # result is a new object, but contents are references identical to the other
         assert sample2 is not sample1
-        for name in dir(sample1):
-            if not name.startswith("_"):
-                assert getattr(sample2, name) is getattr(sample1, name)
+        for name in ("dimensions", "variables", "attributes", "groups"):
+            assert getattr(sample2, name) == getattr(sample1, name)
 
 
 # Note: str() and repr() of NcData are too complex to test unit-wise.
