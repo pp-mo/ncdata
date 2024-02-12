@@ -28,6 +28,8 @@ class NameMap(dict):
     methods which make use of it and help to maintain it :
     See :meth:`NameMap.add`, :meth:`NameMap.addall` :meth:`NameMap.from_items` and
     :meth:`NameMap.rename`.
+
+    ..
     """
 
     def __init__(self, *args, item_type=None, **kwargs):
@@ -47,7 +49,7 @@ class NameMap(dict):
         #: expected type of all content items (if not None)
         self.item_type = item_type
 
-    def copy(self):
+    def copy(self) -> "NameMap":
         """Produce a new NameMap with same content and item_type."""
         # NOTE: dict.copy() produces a dict, and will not duplicate 'item_type'.
         return NameMap.from_items(self.values(), item_type=self.item_type)
@@ -120,7 +122,9 @@ class NameMap(dict):
             self.addall(items)
 
     @classmethod
-    def from_items(cls, arg: Union[Iterable, Mapping], item_type=None):
+    def from_items(
+        cls, arg: Union[Iterable, Mapping], item_type=None
+    ) -> "NameMap":
         """
         Convert an iterable or mapping of items to a NameMap.
 
@@ -183,15 +187,20 @@ class NameMap(dict):
 as_namemap = NameMap.from_items
 
 
-class _AttributeAccessesMixin:
+class _AttributeAccessMixin:
     """
     A mixin with attribute access conveniences for NcData and NcVariable.
 
     This assists in assigning and extracting attributes as python values.
+    See :meth:`NcAttribute.get_python_value()` for how different types are handled.
     """
 
     def get_attrval(self, name: str):
-        """Get the Python value of a named attribute in self.attributes."""
+        """
+        Get the Python value of a named attribute in self.attributes.
+
+        If no such attribute exists, returns None.
+        """
         attr = self.attributes.get(name)
         if attr is not None:
             attr = attr.as_python_value()
@@ -218,7 +227,7 @@ def _addlines_indent(text, indent=""):
 _indent = " " * 4
 
 
-class NcData(_AttributeAccessesMixin):
+class NcData(_AttributeAccessMixin):
     """
     An object representing a netcdf group- or dataset-level container.
 
@@ -306,14 +315,8 @@ class NcDimension:
     """
     An object representing a netcdf dimension.
 
-    Associates a length with a name.
-    A length of 0 indicates an "unlimited" dimension, though that is essentially a
-    file-specific concept.
+    Associates a name with a length, and also an 'unlimited' flag.
     """
-
-    # TODO : I think the unlimited interpretation is limiting, since we will want to
-    #  represent "current length" too.
-    #  ? Change this by adopting a boolean "is_unlimited" property ?
 
     def __init__(
         self, name: str, size: int, unlimited: Optional[bool] = None
@@ -341,7 +344,7 @@ class NcDimension:
         return repr(self)
 
 
-class NcVariable(_AttributeAccessesMixin):
+class NcVariable(_AttributeAccessMixin):
     """
     An object representing a netcdf variable.
 
