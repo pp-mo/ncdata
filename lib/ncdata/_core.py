@@ -40,11 +40,10 @@ class NameMap(dict):
 
         Notes
         -----
-        An 'item_type' keyword (keyword only) assigns the 'item_type' property.
+        A keyword-only 'item_type' arg sets the 'item_type' property.
 
         Creation using :meth:`NameMap.from_items` is generally more convenient.
         """
-        # item_type = kwargs.pop("item_type", None)
         super().__init__(*args, **kwargs)
         #: expected type of all content items (if not None)
         self.item_type = item_type
@@ -380,7 +379,7 @@ class NcVariable(_AttributeAccessMixin):
         """
         Create a variable.
 
-        The 'dtype' arg relevant only when no data is provided :
+        The 'dtype' arg is relevant only when no data is provided :
         If 'data' is provided, it is converted to an array if needed, and its dtype
         replaces any provided 'dtype'.
         """
