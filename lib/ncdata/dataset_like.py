@@ -63,20 +63,18 @@ class _Nc4DatalikeWithNcattrs:
         #  attributes are cast as numpy arrays (so have shape, dtype etc).
         self._ncdata.attributes[attr] = NcAttribute(attr, value)
 
+    # Extend local object attribute access to the ncattrs of the stored data item
+    #  (Unpleasant, but I think the Iris load code requires it).
+
     def __getattr__(self, attr):
-        # Extend local object attribute access to the ncattrs of the stored data item
-        #  (Unpleasant, but I think the Iris load code requires it).
         return self.getncattr(attr)
 
     def __setattr__(self, attr, value):
         if attr in self._local_instance_props:
-            # N.B. use _local_instance_props to define standard instance attributes, to avoid a
-            #  possible endless loop here.
+            # N.B. use _local_instance_props to define standard instance attributes, to
+            # avoid a possible endless loop here.
             super().__setattr__(attr, value)
         else:
-            # # if not hasattr(self, '_allsetattrs'):
-            # #     self._allsetattrs = set()
-            # self._allsetattrs.add(attr)
             self.setncattr(attr, value)
 
 
@@ -145,15 +143,18 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
             raise ValueError(msg)
         # Add a variable into the underlying NcData object.
 
-        # N.B. to correctly mirror netCDF4, a variable must be created with all-masked
+        # N.B. to correctly mirror netCDF4, a variable should be created with all-masked
         # content.  For this we need to decode the dims + work out the shape.
         # NOTE: simplistic version here, as we don't support groups.
         shape = tuple(
             self._ncdata.dimensions[dim_name].size for dim_name in dimensions
         )
-        # Note: does *not* allocate a full array in memory ...until you modify it.
-        initial_allmasked_data = np.ma.masked_array(
-            np.zeros(shape, dtype=datatype), mask=True
+        # Note: initial content is an all-masked lazy array, to avoid allocating space
+        # in memory.  This is not assignable, so we cannot mimic partial writes, but
+        # that's okay as we don't currently provide any Nc4VariableLike.__setitem__ :
+        # The user will instead read and write Nc4VariableLike._data_array.
+        initial_allmasked_data = da.ma.masked_array(
+            da.zeros(shape, dtype=datatype), mask=True
         )
 
         ncvar = NcVariable(
@@ -223,12 +224,13 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         if array is None:
             # temporary empty data (to correctly support never-written content)
             # NOTE: significantly, does *not* allocate an actual full array in memory
-            array = np.ma.masked_array(
-                np.zeros(self.shape, self.datatype), np.ones(self.shape, bool)
+            array = da.ma.masked_array(
+                da.zeros(self.shape, self.datatype), mask=True
             )
 
-        # Convert from "inner" raw form to masked-and-scaled, and re-assign it.
-        # This ensures that our inner data contains the appropriate fill-value, as
+        # Convert from the "inner" raw form to masked-and-scaled, and then back again
+        # (by assigning self._data_array).
+        # This ensures that our inner data is stored with the correct fill-value, as
         # determined from our attributes and the netCDF4 default fill-values.
         array = self._maskandscale_inner_to_apparent(array)
         self._data_array = array
