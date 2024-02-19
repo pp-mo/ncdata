@@ -476,7 +476,10 @@ class NcAttribute:
             )
 
         if result.shape == (1,):
+            # Reduce the dimension, but *always* return an array scalar.
+            # This is useful for consistency of handling non-numpy content
             result = result[0]
+            result = np.asanyarray(result)
 
         if result.dtype.kind in ("U", "S"):
             if result.ndim == 0:
@@ -494,8 +497,9 @@ class NcAttribute:
 
         # Convert numpy non-string scalars to simple Python values, in string output.
         if getattr(value, "shape", None) in ((0,), (1,), ()):
-            op = {"i": int, "u": int, "f": float}[value.dtype.kind]
-            value = op(value.flatten()[0])
+            op = {"i": int, "u": int, "f": float}.get(value.dtype.kind)
+            if op:
+                value = op(value.flatten()[0])
 
         return repr(value)
 
