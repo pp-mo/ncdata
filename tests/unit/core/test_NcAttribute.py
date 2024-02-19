@@ -13,15 +13,31 @@ _data_types = [
     "int",
     "float",
     "string",
+    "none",
+    "custom",
     "numpyint",
     "numpyfloat",
     "numpystring",
+    "numpynone",
+    "numpycustom",
 ]
 _container_types = ["scalar", "vectorof1", "vectorofN"]
+
+
+class _OddObj:
+    def __init__(self, x):
+        self.x = x
+
+    def __repr__(self):
+        return f"<OddObj: {self.x!r}>"
+
+
 _attribute_testdata = {
     "int": [1, 2, 3, 4],
     "float": [1.2, 3.4, 5.6],
     "string": ["xx", "yyy", "z"],
+    "none": [None, None, None],
+    "custom": [_OddObj(1), _OddObj("a"), _OddObj(None)],
 }
 
 
@@ -96,7 +112,7 @@ class Test_NcAttribute__as_python_value:
                 assert isinstance(result, np.ndarray)
                 assert result.ndim == 1
             else:
-                # array scalar
+                # scalar : result is *always* an array scalar (e.g. np.float64)
                 assert result.shape == ()
 
 
@@ -116,10 +132,11 @@ class Test_NcAttribute__str_repr:
 
         value_repr = repr(value)
 
-        if is_multiple and "string" not in datatype:
-            # All *non-string* vectors appear wrapped as numpy 'array(...)'.
+        is_non_numpy = "custom" in datatype or "none" in datatype
+        if is_non_numpy or (is_multiple and "string" not in datatype):
+            # Non-numpy data, and all *non-string* vectors appearnumpy 'array(...)'.
             # N.B. but *string vectors* print just as a list of Python strings.
-            value_repr = f"array({value_repr})"
+            value_repr = repr(np.asanyarray(value))
 
         expect = f"NcAttribute('x', {value_repr})"
         assert result == expect
