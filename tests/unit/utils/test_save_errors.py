@@ -87,8 +87,11 @@ class TestSaveErrors_Names:
 
 
 class TestSaveErrors_Attributes:
-    def test_alltypes(self, datatype, structuretype):
+    def test_valid_datatypes(self, datatype, structuretype):
         # Check that all expected types + structures of attribute are accepted
+        if "none" in datatype or "custom" in datatype:
+            # These produce "unsaveable datatype" errors.
+            pytest.skip("invalid dtype fails")
         value = attrvalue(datatype, structuretype)
         ncdata = NcData(attributes=[NcAttribute("x", value)])
         errors = save_errors(ncdata)
