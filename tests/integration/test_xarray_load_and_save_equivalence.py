@@ -76,77 +76,8 @@ def test_load_direct_vs_viancdata(
     # Load same, via ncdata
     xr_ncdata_ds = to_xarray(ncdata)
 
-    testvar_names = None
-    if (standard_testcase.name == "ds_testdata1") or ("toa_brightness" in standard_testcase.name):
-        testvar_names = ['time']
-    elif standard_testcase.name == r"testdata__\lambert_azimuthal_equal_area\euro_air_temp":
-        testvar_names = ["time", "forecast_reference_time"]
-        # testvar_names = ["time"]
-        # testvar_names = ["forecast_reference_time"]
-    elif "theta_nodal" in standard_testcase.name:
-        testvar_names = ["Mesh0"]
-
-    if testvar_names:
-        # print("XR ds")
-        # print(xr_ds)
-        #
-        # print("")
-        # print("xrds == xrncds ?", xr_ds.identical(xr_ncdata_ds))
-
-        for testvar_name in testvar_names:
-            print(f"\nxr_ds['{testvar_name}']:\n", xr_ds[testvar_name])
-            print(f"xr_ncdata_ds['{testvar_name}']:\n", xr_ncdata_ds[testvar_name])
-            print(f"xr_ds['{testvar_name}'].encoding['units']:\n", xr_ds[testvar_name].encoding.get('units'))
-            print(f"xr_ncdata_ds['{testvar_name}'].encoding['units']:\n", xr_ncdata_ds[testvar_name].encoding.get('units'))
-            # Xarray dataset (variable) comparison is problematic
-            # result = xr_ncdata_ds.identical(xr_ds)
-
-            # do_fix = "none"
-            # do_fix = "fix_xrds"
-            # do_fix = "fix_xrncds"
-            do_fix = "fix_origshape"
-            if do_fix == "fix_xrncds":
-                print('\nOLD xrncds data:\n', xr_ncdata_ds[testvar_name].data)
-                xr_ncdata_ds[testvar_name].data = xr_ncdata_ds[testvar_name].data.compute()
-                print('NEW xrncds data:\n', xr_ncdata_ds[testvar_name].data)
-            elif do_fix == "fix_xrds":
-                import dask.array as da
-                print('\nOLD xrds data:\n', xr_ds[testvar_name].data)
-                data = xr_ds[testvar_name].data
-                xr_ds[testvar_name].data = da.from_array(data, meta=np.ndarray((), dtype=data.dtype), chunks=-1)
-                print('NEW xrds data:\n', xr_ds[testvar_name].data)
-            elif do_fix == "fix_origshape":
-                xr_ncdata_ds[testvar_name].encoding['original_shape'] = ()
-
-    # So for now, save Xarray datasets to disk + compare that way.
-    temp_xr_path = tmp_path / "tmp_out_xr.nc"
-    temp_xr_ncdata_path = tmp_path / "tmp_out_xr_ncdata.nc"
-
-    xr_ds.to_netcdf(temp_xr_path)
-    xr_ncdata_ds.to_netcdf(temp_xr_ncdata_path)
-
-    if _Debug:
-        print("\n\n-----\nResult ncdump : 'DIRECT' nc4 -> xr -> nc4 ... ")
-        txt = check_output([f"ncdump {temp_xr_path}"], shell=True).decode()
-        print(txt)
-        print(
-            "\n\n-----\nResult ncdump : 'INDIRECT'' nc4 -> ncdata-> xr -> nc4 ... "
-        )
-        txt = check_output(
-            [f"ncdump {temp_xr_ncdata_path}"], shell=True
-        ).decode()
-        print(txt)
-
-    # FOR NOW: compare with experimental ncdata comparison.
-    # I know this is a bit circular, but it is useful for debugging, for now ...
-    result = compare_nc_datasets(
-        temp_xr_path,
-        temp_xr_ncdata_path,
-        check_dims_order=False,
-        suppress_warnings=True,
-    )
-    if result != []:
-        assert result == []
+    # Treat as OK if it passes xarray comparison
+    assert xr_ds.identical(xr_ncdata_ds)
 
 
 def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
