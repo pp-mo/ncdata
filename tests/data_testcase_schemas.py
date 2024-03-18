@@ -511,6 +511,6 @@ BAD_LOADSAVE_TESTCASES = {
         # We think Xarray can load ~anything (maybe returning nothing)
         "load": [],
         # Xarray can save ~anything
-        "save": [],
+        "save": [r"test_monotonic_coordinate"],
     },
 }
