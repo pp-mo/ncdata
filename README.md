@@ -189,10 +189,13 @@ Unsupported features : _planned for future release_
  * file output chunking control
 
 ## Known problems
-As-of v0.1
+As-of v0.1.1
  * in conversion from iris cubes with [`from_iris`](https://ncdata.readthedocs.io/en/latest/api/ncdata.iris.html#ncdata.iris.from_iris),
    use of an `unlimited_dims` key currently causes an exception
    * https://github.com/pp-mo/ncdata/issues/43
+ * in conversion to xarray with [`to_xarray`](https://ncdata.readthedocs.io/en/latest/api/ncdata.xarray.html#ncdata.xarray.to_xarray),
+   dataset encodings are not reproduced, most notably **the "unlimited_dims" control is missing**
+   * https://github.com/pp-mo/ncdata/issues/66
 
 # References
   * Iris issue : https://github.com/SciTools/iris/issues/4994
