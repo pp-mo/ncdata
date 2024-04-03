@@ -28,6 +28,7 @@ This enables the user to freely mix+match operations from both projects, getting
   * [API documentation](#api-documentation)
   * [Installation](#installation)
   * [Project Status](#project-status)
+    * [Change Notes](#change-notes)
     * [Code stability](#code-stability)
     * [Iris and Xarray version compatibility](#iris-and-xarray-compatibility)
     * [Current Limitations](#known-limitations)
@@ -150,13 +151,28 @@ pip install ncdata
 ```
 
 # Project Status
+
 ## Code Stability
 We intend to follow [PEP 440](https://peps.python.org/pep-0440/) or (older) [SemVer](https://semver.org/) versioning principles.
 
-Release version is at **"v0.1"**.  
+Minor release version is at **"v0.1"**.  
 This is a first complete implementation, with functional operational of all public APIs.  
 
 The code is however still experimental, and APIs are not stable (hence no major version yet).  
+
+## Change Notes
+### v0.1.1
+Small tweaks + bug fixes.  
+**Note:** [#62](https://github.com/pp-mo/ncdata/pull/62) and [#59](https://github.com/pp-mo/ncdata/pull/59) are important fixes to achieve intended performance goals,
+i.e. moving arbitrarily large data via Dask without running out of memory.
+
+* Stop non-numpy attribute values from breaking attribute printout.  [#63](https://github.com/pp-mo/ncdata/pull/63)
+* Stop ``ncdata.iris.from_iris()`` consuming full data memory for each variable. [#62](https://github.com/pp-mo/ncdata/pull/62)
+* Provide convenience APIs for ncdata component dictionaries and attribute values. [#61](https://github.com/pp-mo/ncdata/pull/61)
+* Use dask ``chunks="auto"`` in ``ncdata.netcdf4.from_nc4()``.  [#59](https://github.com/pp-mo/ncdata/pull/59)
+
+### v0.1.0
+First release
 
 ## Iris and Xarray Compatibility
 * C.I. tests GitHub PRs and merges, against latest releases of Iris and Xarray
@@ -173,10 +189,13 @@ Unsupported features : _planned for future release_
  * file output chunking control
 
 ## Known problems
-As-of v0.1
+As-of v0.1.1
  * in conversion from iris cubes with [`from_iris`](https://ncdata.readthedocs.io/en/latest/api/ncdata.iris.html#ncdata.iris.from_iris),
    use of an `unlimited_dims` key currently causes an exception
    * https://github.com/pp-mo/ncdata/issues/43
+ * in conversion to xarray with [`to_xarray`](https://ncdata.readthedocs.io/en/latest/api/ncdata.xarray.html#ncdata.xarray.to_xarray),
+   dataset encodings are not reproduced, most notably **the "unlimited_dims" control is missing**
+   * https://github.com/pp-mo/ncdata/issues/66
 
 # References
   * Iris issue : https://github.com/SciTools/iris/issues/4994
