@@ -58,19 +58,20 @@ class TestSaveErrors_Okay:
 
 
 class TestSaveErrors_Names:
+    @pytest.fixture(params=["attribute", "dimension", "variable", "group"])
+    def component(self, request):
+        return request.param
+
     @pytest.mark.parametrize(
-        "missingtype", ["None", "empty", "number", "object"]
+        "badnametype", ["None", "empty", "number", "object"]
     )
-    @pytest.mark.parametrize(
-        "component", ["attribute", "dimension", "variable", "group"]
-    )
-    def test_no_name(self, missingtype, component):
+    def test_bad_name_type(self, badnametype, component):
         bad_name = {
             "None": None,
             "empty": "",
             "number": 3,
             "object": ("x", 2),
-        }[missingtype]
+        }[badnametype]
         ncdata = _basic_testdata()
         elements = getattr(ncdata, component + "s")
         element = list(elements.values())[0]
@@ -84,6 +85,34 @@ class TestSaveErrors_Names:
 
         assert len(errors) == 1
         assert re.search(f"{component}.* invalid netCDF name", errors[0])
+
+    def test_bad_name_string(self, component):
+        # Basically, only "/" is banned, at present
+        ncdata = _basic_testdata()
+        elements = getattr(ncdata, component + "s")
+        component_name = list(elements.keys())[0]
+        elements.rename(component_name, "qq/q")
+
+        errors = save_errors(ncdata)
+        debug_errors(errors)
+
+        assert len(errors) == 1
+        assert re.search(f"{component}.* invalid netCDF name", errors[0])
+
+    def test_key_name_mismatch(self, component):
+        ncdata = _basic_testdata()
+        elements = getattr(ncdata, component + "s")
+        key, element = list(elements.items())[0]
+        element.name = "qqq"
+
+        errors = save_errors(ncdata)
+        debug_errors(errors)
+
+        assert len(errors) == 1
+        msg = (
+            f"{component} element {key!r} has a different element.name : 'qqq'"
+        )
+        assert re.search(msg, errors[0])
 
 
 class TestSaveErrors_Attributes:
@@ -190,6 +219,19 @@ class TestSaveErrors_Variables:
         errors = save_errors(ncdata)
 
         msg = "Variable 'vx1' has a dtype which cannot be saved to netcdf : dtype('O')."
+        assert errors == [msg]
+
+    def test_shape_mismatch(self):
+        ncdata = _basic_testdata()
+        var = list(ncdata.variables.values())[0]
+        var.data = np.zeros((1, 2))
+
+        errors = save_errors(ncdata)
+
+        msg = (
+            "Variable 'vx1' data shape = (1, 2), "
+            "does not match that of its dimensions = (3,)."
+        )
         assert errors == [msg]
 
     @pytest.mark.parametrize("extradims", ["v", "vw"])

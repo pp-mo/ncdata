@@ -28,7 +28,7 @@ def _name_errors(element_container, id_string):
         if element.name != name:
             errors.append(
                 f"{id_string} element {name!r} has a different element.name : "
-                "{element.name!r}."
+                f"{element.name!r}."
             )
         if not _name_is_valid(name):
             errors.append(
@@ -95,34 +95,13 @@ def _variable_errors(
     return errors
 
 
-def save_errors(
+def _save_errors_inner(
     ncdata: NcData,
     enclosing_dimensions: Dict[str, int] = None,
     group_path: str = None,
 ) -> List[str]:
     """
-    Scan a dataset for it's consistency and completeness.
-
-    Reports on anything that will make this fail to save.
-    If there are any such problems, then an attempt to save the ncdata to a netcdf file
-    will fail.  If there are none, then a save should succeed.
-
-    The checks made are roughly the following
-
-    (1) check names in all components (dimensions, variables, attributes and groups):
-
-    * all names are valid netcdf names
-    * all element names match their key in the component,
-       i.e. "component[key].name == key"
-
-    (2) check that all attribute values have netcdf-compatible dtypes.
-    (E.G. no object or compound (recarray) dtypes).
-
-    (3) check that, for all contained variables :
-
-    * its' dimensions are all present in the enclosing dataset
-    * it has an attached data array, of a netcdf-compatible dtype
-    * the shape of it's data matches the lengths of its' dimensions
+    Scan dataset, with context allowing operation over inner groups.
 
     Parameters
     ----------
@@ -140,7 +119,7 @@ def save_errors(
     Returns
     -------
     errors
-        A set of strings describing problems with the dataset
+        A list of strings describing problems with the dataset
     """
     # Construct a name prefix for naming dataset/group attributes
     if group_path is None:
@@ -189,7 +168,7 @@ def save_errors(
             group_path = ncdata.name or ""
         for group in ncdata.groups.values():
             errors.extend(
-                save_errors(
+                _save_errors_inner(
                     group,
                     enclosing_dimensions=known_dimensions,
                     group_path=group_path + f"/{group.name}",
@@ -197,3 +176,42 @@ def save_errors(
             )
 
     return errors
+
+
+def save_errors(ncdata: NcData) -> List[str]:
+    """
+    Scan a dataset for it's consistency and completeness.
+
+    Reports on anything that will make this fail to save.
+    If there are any such problems, then an attempt to save the ncdata to a netcdf file
+    will fail.  If there are none, then a save should succeed.
+
+    The checks made are roughly the following
+
+    (1) check names in all components (dimensions, variables, attributes and groups):
+
+    * all names are valid netcdf names
+    * all element names match their key in the component,
+      i.e. "component[key].name == key"
+
+    (2) check that all attribute values have netcdf-compatible dtypes.
+        (E.G. no object or compound (recarray) dtypes).
+
+    (3) check that, for all contained variables :
+
+    * it's dimensions are all present in the enclosing dataset
+    * it has an attached data array, of a netcdf-compatible dtype
+    * the shape of it's data matches the lengths of it's dimensions
+
+    Parameters
+    ----------
+    ncdata
+        data to check
+
+    Returns
+    -------
+    errors
+        A list of strings, error messages describing problems with the dataset.
+        If no errors, returns an empty list.
+    """
+    return _save_errors_inner(ncdata)

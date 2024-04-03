@@ -9,15 +9,14 @@ import pytest
 import xarray
 
 from ncdata.netcdf4 import from_nc4, to_nc4
+from ncdata.threadlock_sharing import lockshare_context
+from ncdata.xarray import from_xarray, to_xarray
 from tests._compare_nc_datasets import compare_nc_datasets
 from tests.data_testcase_schemas import (
     BAD_LOADSAVE_TESTCASES,
     session_testdir,
     standard_testcase,
 )
-
-from ncdata.threadlock_sharing import lockshare_context
-from ncdata.xarray import from_xarray, to_xarray
 
 # Avoid complaints that imported fixtures are "unused"
 # TODO: declare fixtures in usual way in pytest config?
@@ -37,9 +36,7 @@ def use_xarraylock():
         yield
 
 
-def test_load_direct_vs_viancdata(
-    standard_testcase, use_xarraylock, tmp_path
-):
+def test_load_direct_vs_viancdata(standard_testcase, use_xarraylock, tmp_path):
     source_filepath = standard_testcase.filepath
     ncdata = from_nc4(source_filepath)
 
