@@ -150,7 +150,7 @@ def _compare_attributes(
     Does not return results, but appends error messages to 'errs'.
     """
     attrnames, attrnames2 = [
-        obj.attributes.keys() if _isncdata(obj) else obj.ncattrs()
+        list(obj.attributes.keys()) if _isncdata(obj) else list(obj.ncattrs())
         for obj in (obj1, obj2)
     ]
     if attrs_order and force_first_attrnames:
@@ -259,6 +259,13 @@ def _compare_nc_groups(
             msg = (
                 f'{group_id_string} "{dimname}" dimensions '
                 f"have different sizes: {dimlen} != {dimlen2}"
+            )
+            errs.append(msg)
+        unlim1, unlim2 = [dim.unlimited for dim in (d1, d2)]
+        if unlim1 != unlim2:
+            msg = (
+                f'{group_id_string} "{dimname}" dimension '
+                f'has different "unlimited" status : {unlim1} != {unlim2}'
             )
             errs.append(msg)
 
