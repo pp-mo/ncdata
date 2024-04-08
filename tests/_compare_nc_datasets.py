@@ -27,6 +27,8 @@ def compare_nc_datasets(
     check_groups_order: bool = True,
     check_var_data: bool = True,
     suppress_warnings: bool = False,
+    check_names: bool = False,
+    check_unlimited: bool = True,
 ) -> List[str]:
     r"""
     Compare netcdf data.
@@ -46,6 +48,10 @@ def compare_nc_datasets(
     suppress_warnings : bool, default False
         When False (the default), report changes in content order as Warnings.
         When True, ignore changes in ordering.
+    check_names: bool, default False
+        Whether to warn if the names of the top-level datasets are different
+    check_unlimited: bool, default True
+        Whether to compare the 'unlimited' status of dimensions
 
     Returns
     -------
@@ -80,6 +86,8 @@ def compare_nc_datasets(
             groups_order=check_groups_order,
             data_equality=check_var_data,
             suppress_warnings=suppress_warnings,
+            check_names=check_names,
+            check_unlimited=check_unlimited,
         )
     finally:
         if ds1_was_path and ds1:
@@ -154,7 +162,8 @@ def _compare_attributes(
         for obj in (obj1, obj2)
     ]
     if attrs_order and force_first_attrnames:
-
+        # In order to ignore the order of appearance of *specific* attributes, move
+        # all those ones to the front in a known order.
         def fix_orders(attrlist):
             for name in force_first_attrnames[::-1]:
                 if name in attrlist:
@@ -231,6 +240,8 @@ def _compare_nc_groups(
     groups_order: bool = True,
     data_equality: bool = True,
     suppress_warnings: bool = False,
+    check_names: bool = False,
+    check_unlimited: bool = True,
 ):
     """
     Inner routine to compare either whole datasets or subgroups.
@@ -238,6 +249,11 @@ def _compare_nc_groups(
     Note that, rather than returning a list of error strings, it appends them to the
     passed arg `errs`.  This just makes recursive calling easier.
     """
+    if check_names:
+        if g1.name != g2.name:
+            errs.append(
+                f"Datasets have different names: {g1.name!r} != {g2.name!r}."
+            )
     # Compare lists of dimension names
     dimnames, dimnames2 = [list(grp.dimensions.keys()) for grp in (g1, g2)]
     _compare_name_lists(
@@ -261,13 +277,18 @@ def _compare_nc_groups(
                 f"have different sizes: {dimlen} != {dimlen2}"
             )
             errs.append(msg)
-        unlim1, unlim2 = [dim.unlimited for dim in (d1, d2)]
-        if unlim1 != unlim2:
-            msg = (
-                f'{group_id_string} "{dimname}" dimension '
-                f'has different "unlimited" status : {unlim1} != {unlim2}'
-            )
-            errs.append(msg)
+
+        if check_unlimited:
+            unlim1, unlim2 = [
+                dim.unlimited if _isncdata(dim) else dim.isunlimited()
+                for dim in (d1, d2)
+            ]
+            if unlim1 != unlim2:
+                msg = (
+                    f'{group_id_string} "{dimname}" dimension '
+                    f'has different "unlimited" status : {unlim1} != {unlim2}'
+                )
+                errs.append(msg)
 
     # Compare file attributes
     _compare_attributes(
@@ -286,7 +307,7 @@ def _compare_nc_groups(
         varnames,
         varnames2,
         f"{group_id_string} variable lists",
-        order_strict=dims_order,
+        order_strict=vars_order,
         suppress_warnings=suppress_warnings,
     )
 
@@ -302,6 +323,7 @@ def _compare_nc_groups(
         dims, dims2 = [v.dimensions for v in (v1, v2)]
         if dims != dims2:
             msg = f"{var_id_string} dimensions differ : {dims!r} != {dims2!r}"
+            errs.append(msg)
 
         # attributes
         _compare_attributes(
@@ -439,28 +461,5 @@ def _compare_nc_groups(
             attrs_order=attrs_order,
             groups_order=groups_order,
             data_equality=data_equality,
+            check_unlimited=check_unlimited,
         )
-
-
-if __name__ == "__main__":
-    fps = [
-        "/home/h05/itpp/tmp.nc",
-        "/home/h05/itpp/tmp2.nc",
-        "/home/h05/itpp/mask.nc",
-        "/home/h05/itpp/tmps.nc",
-        "/home/h05/itpp/tmps2.nc",
-    ]
-    fp1, fp2, fp3, fp4, fp5 = fps
-    pairs = [
-        [fp1, fp1],
-        [fp1, fp2],
-        [fp1, fp3],
-        [fp4, fp5],
-    ]
-    for p1, p2 in pairs:
-        errs = compare_nc_datasets(p1, p2, check_attrs_order=False)
-        print("")
-        print(f"Compare {p1} with {p2} : {len(errs)} errors ")
-        for err in errs:
-            print("  ", err)
-        print("-ends-")
