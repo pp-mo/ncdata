@@ -1,9 +1,15 @@
-from dataclasses import dataclass
-
+"""
+Tests for :mod:`tests.unit.netcdf._compare_nc_files`
+Split in two files ...
+    * HERE: "mainfunctions" cover the core functionality
+        -- which elements are compared and what errors this constructs.
+    * ( ALSO: "additional" tests (q.v.) cover subsidiary routines and the
+        main API usage modes. )
+"""
 import numpy as np
 import pytest
 
-from ncdata import NameMap, NcAttribute, NcData, NcDimension, NcVariable
+from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 from tests._compare_nc_datasets import compare_nc_datasets
 
 # from tests.data_testcase_schemas import _Datatype_Sample_Values, data_types
@@ -17,8 +23,8 @@ def group_context(request):
     """
     The different contexts of locations in a dataset
 
-    In which an element (dimension, group or variable) might be found, and which might
-    appear different in the mismatch-error messages.
+    In which an element (dimension, group or variable) might be found, and
+    which might appear different in the mismatch-error messages.
     """
     return request.param
 
@@ -111,15 +117,8 @@ class TestCompareDimensions:
         testdata = put_group_into_context(testdata, group_context)
         return testdata
 
-    @dataclass
-    class DimsData:
-        data1: NcData = None
-        data2: NcData = None
-        location_string: str = ""
-        dims: NameMap = None
-
-    @pytest.fixture()
-    def dimsdata(self, group_context):
+    @pytest.fixture(autouse=True)
+    def _dims_data(self, group_context):
         data1, data2 = [
             self.dimension_testdata(group_context) for _ in range(2)
         ]
@@ -127,49 +126,46 @@ class TestCompareDimensions:
         if "group" in group_context:
             location = location.groups["inner_group"]
 
-        dimsdata = self.DimsData(
-            data1=data1,
-            data2=data2,
-            location_string=location_prefix(group_context),
-            dims=location.dimensions,
-        )
-        return dimsdata
+        self.data1 = data1
+        self.data2 = data2
+        self.location_string = location_prefix(group_context)
+        self.dims = location.dimensions
 
-    def test_name(self, dimsdata):
-        dimsdata.dims.rename("x", "q")
-        errs = compare_nc_datasets(dimsdata.data1, dimsdata.data2)
+    def test_name(self):
+        self.dims.rename("x", "q")
+        errs = compare_nc_datasets(self.data1, self.data2)
         expected = [
-            f"{dimsdata.location_string} dimension lists do not match: "
+            f"{self.location_string} dimension lists do not match: "
             "['x', 'y'] != ['q', 'y']"
         ]
         check(errs, expected)
 
-    def test_size(self, dimsdata):
-        dimsdata.dims["x"].size = 77
+    def test_size(self):
+        self.dims["x"].size = 77
 
-        errs = compare_nc_datasets(dimsdata.data1, dimsdata.data2)
+        errs = compare_nc_datasets(self.data1, self.data2)
 
         expected = [
-            f'{dimsdata.location_string} "x" dimensions have different sizes: 2 != 77'
+            f'{self.location_string} "x" dimensions have different sizes: 2 != 77'
         ]
         check(errs, expected)
 
     @pytest.mark.parametrize(
         "check_unlim", ["unlims_checked", "unlims_unchecked"]
     )
-    def test_unlimited(self, dimsdata, check_unlim):
-        dimsdata.dims["y"].unlimited = True
+    def test_unlimited(self, check_unlim):
+        self.dims["y"].unlimited = True
 
         do_check_unlims = {"unlims_checked": True, "unlims_unchecked": False}[
             check_unlim
         ]
         errs = compare_nc_datasets(
-            dimsdata.data1, dimsdata.data2, check_unlimited=do_check_unlims
+            self.data1, self.data2, check_unlimited=do_check_unlims
         )
 
         if do_check_unlims:
             expected = [
-                f'{dimsdata.location_string} "y" dimension has different "unlimited" status : '
+                f'{self.location_string} "y" dimension has different "unlimited" status : '
                 "False != True"
             ]
         else:
@@ -177,19 +173,19 @@ class TestCompareDimensions:
 
         check(errs, expected)
 
-    def test_ordering(self, dimsdata, order_checking):
-        all_dims = list(dimsdata.dims.values())
-        dimsdata.dims.clear()
-        dimsdata.dims.addall(all_dims[::-1])
+    def test_ordering(self, order_checking):
+        all_dims = list(self.dims.values())
+        self.dims.clear()
+        self.dims.addall(all_dims[::-1])
 
         do_ordercheck = decode_ordercheck(order_checking)
         errs = compare_nc_datasets(
-            dimsdata.data1, dimsdata.data2, check_dims_order=do_ordercheck
+            self.data1, self.data2, check_dims_order=do_ordercheck
         )
 
         if do_ordercheck:
             expected = [
-                f"{dimsdata.location_string} dimension lists do not match: "
+                f"{self.location_string} dimension lists do not match: "
                 "['x', 'y'] != ['y', 'x']"
             ]
         else:
@@ -197,16 +193,16 @@ class TestCompareDimensions:
 
         check(errs, expected)
 
-    def test_extra_or_missing(self, dimsdata):
-        all_dims = list(dimsdata.dims.values())
+    def test_extra_or_missing(self):
+        all_dims = list(self.dims.values())
         # Remove the last dimension, so data1 has a dim not present in data2
-        dimsdata.dims.clear()
-        dimsdata.dims.addall(all_dims[:-1])
+        self.dims.clear()
+        self.dims.addall(all_dims[:-1])
 
-        errs = compare_nc_datasets(dimsdata.data1, dimsdata.data2)
+        errs = compare_nc_datasets(self.data1, self.data2)
 
         expected = [
-            f"{dimsdata.location_string} dimension lists do not match: "
+            f"{self.location_string} dimension lists do not match: "
             "['x', 'y'] != ['x']"
         ]
         check(errs, expected)
@@ -235,15 +231,8 @@ class TestCompareAttributes:
         testdata = put_group_into_context(testdata, group_context)
         return testdata
 
-    @dataclass
-    class AttrsData:
-        data1: NcData = None
-        data2: NcData = None
-        location_string: str = ""
-        attrs: NameMap = None
-
-    @pytest.fixture()
-    def attrsdata(self, group_context, attr_context):
+    @pytest.fixture(autouse=True)
+    def _attrs_data(self, group_context, attr_context):
         data1, data2 = [
             self.attribute_testdata(group_context) for _ in range(2)
         ]
@@ -254,87 +243,66 @@ class TestCompareAttributes:
         if is_on_var:
             location = location.variables["vx"]
 
-        attrsdata = self.AttrsData(
-            data1=data1,
-            data2=data2,
-            location_string=location_prefix(group_context, attr_context),
-            attrs=location.attributes,
-        )
-        return attrsdata
+        self.data1 = data1
+        self.data2 = data2
+        self.location_string = location_prefix(group_context, attr_context)
+        self.attrs = location.attributes
 
-    def test_name(self, attrsdata):
-        attrsdata.attrs.rename("att1", "changed")
+    def test_name(self):
+        self.attrs.rename("att1", "changed")
 
-        errs = compare_nc_datasets(attrsdata.data1, attrsdata.data2)
+        errs = compare_nc_datasets(self.data1, self.data2)
 
         expected = [
-            f"{attrsdata.location_string} attribute lists do not match: "
+            f"{self.location_string} attribute lists do not match: "
             "['att1', 'att2'] != ['changed', 'att2']"
         ]
         check(errs, expected)
 
-    def test_value(self, attrsdata, attr_context):
-        attrsdata.attrs["att1"].value = np.array(999)
+    def test_value(self, attr_context):
+        self.attrs["att1"].value = np.array(999)
 
-        errs = compare_nc_datasets(attrsdata.data1, attrsdata.data2)
+        errs = compare_nc_datasets(self.data1, self.data2)
 
         if "variable" in attr_context:
             value_string = "1"
         else:
             value_string = "11"
         expected = [
-            f'{attrsdata.location_string} "att1" attribute values differ : '
+            f'{self.location_string} "att1" attribute values differ : '
             f"array({value_string}) != array(999)"
         ]
         check(errs, expected)
 
-    def test_dtype(self):
-        # TODO: check over various datatype for dtype difference
-        #  N.B. strings behave differently.
-        assert 0
-        # attrsdata.attrs["att1"].value = np.array(999)
-        #
-        # errs = compare_nc_datasets(attrsdata.data1, attrsdata.data2)
-        #
-        # if "variable" in attr_context:
-        #     value_string = "1"
-        # else:
-        #     value_string = "11"
-        # expected = [
-        #     f'{attrsdata.location_string} "att1" attribute values differ : '
-        #     f"array({value_string}) != array(999)"
-        # ]
-        # check(errs, expected)
-
-    def test_ordering(self, attrsdata, order_checking):
+    def test_ordering(self, order_checking):
         do_ordercheck = decode_ordercheck(order_checking)
-        all_attrs = list(attrsdata.attrs.values())
-        attrsdata.attrs.clear()
-        attrsdata.attrs.addall(all_attrs[::-1])
+        all_attrs = list(self.attrs.values())
+        self.attrs.clear()
+        self.attrs.addall(all_attrs[::-1])
 
         errs = compare_nc_datasets(
-            attrsdata.data1, attrsdata.data2, check_attrs_order=do_ordercheck
+            self.data1, self.data2, check_attrs_order=do_ordercheck
         )
 
         if do_ordercheck:
             expected = [
-                f"{attrsdata.location_string} attribute lists do not match: "
+                f"{self.location_string} attribute lists do not match: "
                 "['att1', 'att2'] != ['att2', 'att1']"
             ]
         else:
             expected = []
         check(errs, expected)
 
-    def test_extra_or_missing(self, attrsdata, order_checking):
+    def test_extra_or_missing(self, order_checking):
         do_ordercheck = decode_ordercheck(order_checking)
-        del attrsdata.attrs["att1"]
+        del self.attrs["att1"]
 
         errs = compare_nc_datasets(
-            attrsdata.data1, attrsdata.data2, check_attrs_order=do_ordercheck
+            self.data1, self.data2, check_attrs_order=do_ordercheck
         )
 
         expected = [
-            f"{attrsdata.location_string} attribute lists do not match: "
+            f"{self.location_string} attribute lists do not match: "
             "['att1', 'att2'] != ['att2']"
         ]
         check(errs, expected)
@@ -367,7 +335,8 @@ class TestCompareAttributes:
 
 
 class TestCompareVariables__metadata:
-    def vars_testdata(self, group_context):
+    @staticmethod
+    def _vars_testdata(group_context):
         def data():
             return np.zeros((2, 3))
 
@@ -382,107 +351,102 @@ class TestCompareVariables__metadata:
         testdata = put_group_into_context(testdata, group_context)
         return testdata
 
-    @dataclass
-    class VarsData:
-        data1: NcData = None
-        data2: NcData = None
-        location_string: str = ""
-        vars: NameMap = None
-
-    @pytest.fixture()
-    def varsdata(self, group_context):
-        data1, data2 = [self.vars_testdata(group_context) for _ in range(2)]
+    @pytest.fixture(autouse=True)
+    def _vars_data(self, group_context):
+        data1, data2 = [self._vars_testdata(group_context) for _ in range(2)]
         location = data2
         if "group" in group_context:
             location = location.groups["inner_group"]
 
-        varsdata = self.VarsData(
-            data1=data1,
-            data2=data2,
-            location_string=location_prefix(group_context),
-            vars=location.variables,
-        )
-        return varsdata
+        self.data1 = data1
+        self.data2 = data2
+        self.location_string = location_prefix(group_context)
+        self.vars = location.variables
 
-    def test_name(self, varsdata):
-        varsdata.vars.rename("v2", "q")
+    def test_vars_names(self):
+        self.vars.rename("v2", "q")
 
-        errs = compare_nc_datasets(varsdata.data1, varsdata.data2)
+        errs = compare_nc_datasets(self.data1, self.data2)
 
         expected = [
-            f"{varsdata.location_string} variable lists do not match: "
+            f"{self.location_string} variable lists do not match: "
             "['v1', 'v2'] != ['v1', 'q']"
         ]
         check(errs, expected)
 
-    def test_order(self, varsdata, order_checking):
-        all_vars = list(varsdata.vars.values())
-        varsdata.vars.clear()
-        varsdata.vars.addall(all_vars[::-1])
+    def test_vars_order(self, order_checking):
+        all_vars = list(self.vars.values())
+        self.vars.clear()
+        self.vars.addall(all_vars[::-1])
 
         do_ordercheck = decode_ordercheck(order_checking)
         errs = compare_nc_datasets(
-            varsdata.data1, varsdata.data2, check_vars_order=do_ordercheck
+            self.data1, self.data2, check_vars_order=do_ordercheck
         )
 
         if do_ordercheck:
             expected = [
-                f"{varsdata.location_string} variable lists do not match: "
+                f"{self.location_string} variable lists do not match: "
                 "['v1', 'v2'] != ['v2', 'v1']"
             ]
         else:
             expected = []
         check(errs, expected)
 
-    def test_extra_or_missing(self, varsdata, order_checking):
-        do_ordercheck = decode_ordercheck(order_checking)
-        del varsdata.vars["v1"]
+    def test_vars_extra_or_missing(self, order_checking):
+        del self.vars["v1"]
 
         do_ordercheck = decode_ordercheck(order_checking)
         errs = compare_nc_datasets(
-            varsdata.data1, varsdata.data2, check_vars_order=do_ordercheck
+            self.data1, self.data2, check_vars_order=do_ordercheck
         )
 
         expected = [
-            f"{varsdata.location_string} variable lists do not match: "
+            f"{self.location_string} variable lists do not match: "
             "['v1', 'v2'] != ['v2']"
         ]
         check(errs, expected)
 
-    def test_dims__reorder(self, varsdata, order_checking):
+    def test_var_dims__reorder(self, order_checking):
         # N.B. here we check behaviour of the DIMENSIONS order control, but this does
         # *not* apply to dimensions order in a variable,which is always significant.
-        varsdata.vars["v1"].dimensions = varsdata.vars["v1"].dimensions[::-1]
+        self.vars["v1"].dimensions = self.vars["v1"].dimensions[::-1]
         # N.B. the data shape doesn't now correspond, but that won't matter as, with
         #  mismatched dimensions, the data won't be checked.
 
         do_orderchecks = decode_ordercheck(order_checking)
         errs = compare_nc_datasets(
-            varsdata.data1, varsdata.data2, check_dims_order=do_orderchecks
+            self.data1, self.data2, check_dims_order=do_orderchecks
         )
 
         expected = [
-            f'{varsdata.location_string} variable "v1" dimensions differ : '
+            f'{self.location_string} variable "v1" dimensions differ : '
             "('y', 'x') != ('x', 'y')"
         ]
         check(errs, expected)
 
-    def test_dims__extra_or_missing(self, varsdata, order_checking):
+    def test_var_dims__extra_or_missing(self, order_checking):
         # N.B. here we check for DIMENSIONS order check control.
-        varsdata.vars["v1"].dimensions = varsdata.vars["v1"].dimensions[:-1]
+        self.vars["v1"].dimensions = self.vars["v1"].dimensions[:-1]
         # N.B. the data shape doesn't now correspond, but that won't matter as, with
         #  mismatched dimensions, the data won't be checked.
 
         do_orderchecks = decode_ordercheck(order_checking)
         errs = compare_nc_datasets(
-            varsdata.data1, varsdata.data2, check_dims_order=do_orderchecks
+            self.data1, self.data2, check_dims_order=do_orderchecks
         )
 
         expected = [
-            f'{varsdata.location_string} variable "v1" dimensions differ : '
+            f'{self.location_string} variable "v1" dimensions differ : '
             "('y', 'x') != ('y',)"
         ]
         check(errs, expected)
+
+    def test_var_dtype(self):
+        pass
+        # PLAN:
+        #   default data has int type (int64?)
+        #   basic dtypes to check : u1/2/4/8, i1/2/4/8, f4/8, string
 
 
 class TestCompareVariables__data:

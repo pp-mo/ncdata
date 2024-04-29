@@ -1,11 +1,13 @@
 """
 Tests for :mod:`tests.unit.netcdf._compare_nc_files`
-
-Yes I know, tests of tests.  But it seems necessary.
+Split in two files ...
+  * HERE: "additional" tests cover subsidiary routines and the main
+    API usage modes.
+  * ( ALSO: "mainfunctions" (q.v.) cover the core functionality
+    -- which elements are compared and what errors this constructs. )
 """
 import shutil
 import warnings
-from unittest import mock
 
 import netCDF4 as nc
 import numpy as np
@@ -17,50 +19,6 @@ from tests._compare_nc_datasets import (
     compare_nc_datasets,
 )
 from tests.test_samplecode_cdlgen_comparablecdl import ncgen_from_cdl
-
-# CDL to create a reference file with "all" features included.
-_base_cdl = """
-netcdf everything {
-dimensions:
-    x = 2 ;
-    y = 3 ;
-    strlen = 5 ;
-variables:
-    int x(x) ;
-        x:name = "var_x" ;
-    int var_2d(x, y) ;
-    uint var_u8(x) ;
-    float var_f4(x) ;
-    double var_f8(x) ;
-    char var_str(x, strlen) ;
-    int other(x) ;
-        other:attr_int = 1 ;
-        other:attr_float = 2.0f ;
-        other:attr_double = 2.0 ;
-        other:attr_string = "this" ;
-    int masked_int(y) ;
-        masked_int:_FillValue = -3 ;
-    int masked_float(y) ;
-        masked_float:_FillValue = -4.0 ;
-
-// global attributes:
-        :global_attr_1 = "one" ;
-        :global_attr_2 = 2 ;
-
-// groups:
-group: grp_1 {
-    dimensions:
-        y = 7 ;
-    variables:
-        int parent_dim(x) ;
-        int own_dim(y) ;
-}
-group: grp_2 {
-    variables:
-        int grp2_x(x) ;
-}
-}
-"""
 
 _simple_cdl = """
 netcdf test {
@@ -132,44 +90,41 @@ class Test__compare_name_lists:
 
 
 class Test__compare_attributes:
-    def test_compare_attributes_namelists(self):
+    def test_compare_attributes_namelists(self, mocker):
         # Check that it calls the generic _compare_name_lists routine, passing all the
         # correct controls
-        # Mimic 2 objects with NO attributes.
-        attrs1 = mock.MagicMock()
-        attrs2 = mock.MagicMock()
-        # Make the test objects look like real files (not NcData), and ensure that
-        # obj.ncattrs() is iterable.
-        obj1 = mock.Mock(
-            spec="ncattrs", ncattrs=mock.Mock(return_value=attrs1)
+        # NB make the compared object mimic nc Variables, not NcData
+        attrnames_1 = ["a", "b"]
+        attrnames_2 = ["c", "d"]
+        obj1 = mocker.Mock(
+            spec=nc.Variable, ncattrs=mocker.Mock(return_value=attrnames_1)
         )
-        obj2 = mock.Mock(
-            spec="ncattrs", ncattrs=mock.Mock(return_value=attrs2)
+        obj2 = mocker.Mock(
+            spec=nc.Variable, ncattrs=mocker.Mock(return_value=attrnames_2)
         )
-        errs = mock.sentinel.errors_list
+        errs = mocker.sentinel.errors_list
         elemname = "<elem_types>"
-        order = mock.sentinel.attrs_order
-        suppress = mock.sentinel.suppress_warnings
+        order = mocker.sentinel.attrs_order
+        suppress = mocker.sentinel.suppress_warnings
         tgt = "tests._compare_nc_datasets._compare_name_lists"
-        with mock.patch(tgt) as patch_tgt:
-            _compare_attributes(
-                errs=errs,
-                obj1=obj1,
-                obj2=obj2,
-                elemname=elemname,
-                attrs_order=order,
-                suppress_warnings=suppress,
-            )
-        assert patch_tgt.call_args_list == [
-            mock.call(
-                errs,
-                attrs1,
-                attrs2,
-                "<elem_types> attribute lists",
-                order_strict=order,
-                suppress_warnings=suppress,
-            )
-        ]
+        patch_tgt = mocker.patch(tgt)
+        _compare_attributes(
+            errs=errs,
+            obj1=obj1,
+            obj2=obj2,
+            elemname=elemname,
+            attrs_order=order,
+            suppress_warnings=suppress,
+        )
+        (one_call,) = patch_tgt.call_args_list
+        assert one_call == mocker.call(
+            errs,
+            attrnames_1,
+            attrnames_2,
+            "<elem_types> attribute lists",
+            order_strict=order,
+            suppress_warnings=suppress,
+        )
 
     class Nc4ObjectWithAttrsMimic:
         def __init__(self, **attrs):
@@ -221,7 +176,7 @@ class Test__compare_attributes:
             '<object attributes> "b" attribute values differ : 2 != -77'
         ]
 
-    def test_compare_attributes_values__dtype_mismatch(self):
+    def test_compare_attributes_values__dtype_mismatch__length(self):
         # Attributes of different dtypes, even though values ==
         obj1 = self.Nc4ObjectWithAttrsMimic(a=np.float32(0))
         obj2 = self.Nc4ObjectWithAttrsMimic(a=np.float64(0))
@@ -231,6 +186,45 @@ class Test__compare_attributes:
             (
                 '<object attributes> "a" attribute datatypes differ : '
                 "dtype('float32') != dtype('float64')"
+            )
+        ]
+
+    def test_compare_attributes_values__dtype_mismatch__signed_unsigned(self):
+        # Attributes of different dtypes, even though values ==
+        obj1 = self.Nc4ObjectWithAttrsMimic(a=np.uint32(0))
+        obj2 = self.Nc4ObjectWithAttrsMimic(a=np.int32(0))
+        errs = []
+        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        assert errs == [
+            (
+                '<object attributes> "a" attribute datatypes differ : '
+                "dtype('uint32') != dtype('int32')"
+            )
+        ]
+
+    def test_compare_attributes_values__dtype_mismatch__float_int(self):
+        # Attributes of different dtypes, even though values ==
+        obj1 = self.Nc4ObjectWithAttrsMimic(a=np.float32(0))
+        obj2 = self.Nc4ObjectWithAttrsMimic(a=np.int32(0))
+        errs = []
+        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        assert errs == [
+            (
+                '<object attributes> "a" attribute datatypes differ : '
+                "dtype('float32') != dtype('int32')"
+            )
+        ]
+
+    def test_compare_attributes_values__dtype_mismatch__numeric_string(self):
+        # Attributes of different dtypes, even though values ==
+        obj1 = self.Nc4ObjectWithAttrsMimic(a=np.float32(0))
+        obj2 = self.Nc4ObjectWithAttrsMimic(a="this")
+        errs = []
+        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        assert errs == [
+            (
+                '<object attributes> "a" attribute datatypes differ : '
+                "dtype('float32') != <class 'str'>"
             )
         ]
 
