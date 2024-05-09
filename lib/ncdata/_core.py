@@ -175,7 +175,7 @@ class NameMap(dict):
                     if (
                         item_type == NcAttribute
                         and len(arg) > 1
-                        and not isinstance(list(arg.values())[0], cls)
+                        and not isinstance(list(arg.values())[0], NcAttribute)
                     ):
                         # for attributes only, also allow simple name=value map
                         # for which, convert each value to an NcAttribute
