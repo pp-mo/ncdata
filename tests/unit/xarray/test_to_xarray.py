@@ -12,7 +12,7 @@ import dask.array as da
 import numpy as np
 import pytest
 
-from ncdata import NcAttribute, NcData, NcDimension, NcVariable
+from ncdata import NcData, NcDimension, NcVariable
 from ncdata.xarray import to_xarray
 from tests import MonitoredArray
 
@@ -86,14 +86,10 @@ def test_kwargs__scaleandoffset(scaleandoffset):
             NcVariable(
                 name="var_x",
                 dimensions=["x"],
-                attributes=[
-                    NcAttribute(
-                        "scale_factor", np.array(0.1, dtype=np.float32)
-                    ),
-                    NcAttribute(
-                        "add_offset", np.array(-5.3, dtype=np.float32)
-                    ),
-                ],
+                attributes={
+                    "scale_factor": np.array(0.1, dtype=np.float32),
+                    "add_offset": np.array(-5.3, dtype=np.float32),
+                },
                 data=raw_int_data,
             )
         ],

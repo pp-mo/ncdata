@@ -2,7 +2,7 @@
 import iris
 
 import ncdata.iris as nci
-from ncdata import NcAttribute, NcData, NcDimension, NcVariable
+from ncdata import NcData, NcDimension, NcVariable
 from tests import testdata_dir
 
 
@@ -22,14 +22,14 @@ def sample_printout():  # noqa: D103
             NcVariable(
                 name="x",
                 dimensions=["y", "extra_qq"],
-                attributes=[
-                    NcAttribute("q1", 1),
-                    NcAttribute("q_multi", [1.1, 2.2]),
-                    NcAttribute("q_multstr", ["one", "two"]),
-                ],
+                attributes={
+                    "q1": 1,
+                    "q_multi": [1.1, 2.2],
+                    "q_multstr": ["one", "two"],
+                },
             ),
         ],
-        attributes=[NcAttribute("extra__global", "=value")],
+        attributes={"extra__global": "=value"},
     )
     print(ds)
 

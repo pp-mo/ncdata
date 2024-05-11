@@ -27,11 +27,11 @@ def _basic_testdata():
                 name="vx1",
                 dimensions=("x"),
                 data=[1, 2, 3],
-                attributes=[NcAttribute("xx", 1)],
+                attributes={"xx": 1},
             )
         ],
         groups=[NcData("inner")],
-        attributes=[NcAttribute("x", 1)],
+        attributes={"x": 1},
     )
     return ncdata
 
@@ -122,7 +122,7 @@ class TestSaveErrors_Attributes:
             # These produce "unsaveable datatype" errors.
             pytest.skip("invalid dtype fails")
         value = attrvalue(datatype, structuretype)
-        ncdata = NcData(attributes=[NcAttribute("x", value)])
+        ncdata = NcData(attributes={"x": value})
         errors = save_errors(ncdata)
         assert errors == []
 
