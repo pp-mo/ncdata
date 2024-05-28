@@ -384,6 +384,11 @@ def _compare_nc_groups(
     Note that, rather than returning a list of error strings, it appends them to the
     passed arg `errs`.  This just makes recursive calling easier.
     """
+    ndiffs = int(show_n_diffs)
+    if ndiffs < 1:
+        msg = f"'show_n_diffs' must be >=1 : got {show_n_diffs!r}."
+        raise ValueError(msg)
+
     if check_names:
         if g1.name != g2.name:
             errs.append(
