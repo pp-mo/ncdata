@@ -15,7 +15,7 @@ import netCDF4
 import netCDF4 as nc
 import numpy as np
 
-from ncdata import NcData
+from ncdata import NcData, NcVariable
 
 
 def compare_nc_datasets(
@@ -26,6 +26,7 @@ def compare_nc_datasets(
     check_attrs_order: bool = True,
     check_groups_order: bool = True,
     check_var_data: bool = True,
+    show_n_first_different: int = 2,
     suppress_warnings: bool = False,
     check_names: bool = False,
     check_unlimited: bool = True,
@@ -45,6 +46,9 @@ def compare_nc_datasets(
     check_var_data : bool, default True
         If True, all variable data is also checked for equality.
         If False, only dtype and shape are compared.
+        NOTE: comparison of large arrays is done in-memory, so may be highly inefficient.
+    show_n_first_different: int, default 2
+        Number of value differences to display.
     suppress_warnings : bool, default False
         When False (the default), report changes in content order as Warnings.
         When True, ignore changes in ordering.
@@ -88,6 +92,7 @@ def compare_nc_datasets(
             suppress_warnings=suppress_warnings,
             check_names=check_names,
             check_unlimited=check_unlimited,
+            show_n_diffs=show_n_first_different,
         )
     finally:
         if ds1_was_path and ds1:
@@ -123,7 +128,7 @@ def _isncdata(obj):
     return hasattr(obj, "_print_content")
 
 
-def _array_eq(a1, a2):
+def _attribute_arrays_eq(a1, a2):
     """
     Test equality of array values in attributes.
 
@@ -220,13 +225,142 @@ def _compare_attributes(
             # If datatypes match (only then), compare values
             # Cast attrs, which might be strings, to arrays for comparison
             arr, arr2 = [np.asarray(attr) for attr in (attr, attr2)]
-            if not _array_eq(arr, arr2):
+            if not _attribute_arrays_eq(arr, arr2):
                 # N.B. special comparison to handle strings and NaNs
                 msg = (
                     f'{elemname} "{attrname}" attribute values differ : '
                     f"{attr!r} != {attr2!r}"
                 )
                 errs.append(msg)
+
+
+def _compare_variables(
+    errs: List[str],
+    v1: NcVariable,
+    v2: NcVariable,
+    group_id_string: str,
+    attrs_order: bool = True,
+    data_equality: bool = True,
+    suppress_warnings: bool = False,
+    show_n_diffs: int = 2,
+):
+    varname = v1.name
+    assert v2.name == varname
+
+    var_id_string = f'{group_id_string} variable "{varname}"'
+
+    # dimensions
+    dims, dims2 = [v.dimensions for v in (v1, v2)]
+    if dims != dims2:
+        msg = f"{var_id_string} dimensions differ : {dims!r} != {dims2!r}"
+        errs.append(msg)
+
+    # attributes
+    _compare_attributes(
+        errs,
+        v1,
+        v2,
+        var_id_string,
+        attrs_order=attrs_order,
+        suppress_warnings=suppress_warnings,
+        force_first_attrnames=[
+            "_FillValue"
+        ],  # for some reason, this doesn't always list consistently
+    )
+
+    # dtypes
+    dtype, dtype2 = [v.dtype if _isncdata(v) else v.datatype for v in (v1, v2)]
+    if dtype != dtype2:
+        msg = f"{var_id_string} datatypes differ : {dtype!r} != {dtype2!r}"
+        errs.append(msg)
+
+    # data values
+    is_str, is_str2 = (dt.kind in "SUb" for dt in (dtype, dtype2))
+    # TODO: is this correct check to allow compare between different dtypes?
+    if data_equality and dims == dims2 and is_str == is_str2:
+        # N.B. don't check shapes here: we already checked dimensions.
+        # NOTE: no attempt to use laziness here.  Could be improved.
+        def getdata(var):
+            if _isncdata(var):
+                data = var.data
+                if hasattr(data, "compute"):
+                    data = data.compute()
+            else:
+                # expect var to be an actual netCDF4.Variable
+                # (check for obscure property NOT provided by mimics)
+                assert hasattr(var, "use_nc_get_vars")
+                data = var[:]
+            # Return 0D as 1D, as this makes results simpler to interpret.
+            if data.ndim == 0:
+                data = data.flatten()
+                assert data.shape == (1,)
+            return data
+
+        data, data2 = (getdata(v) for v in (v1, v2))
+        flatdata, flatdata2 = (
+            np.asanyarray(arr).flatten() for arr in (data, data2)
+        )
+
+        # For simpler checking, use flat versions
+        flat_diff_inds = (
+            []
+        )  # NB *don't* make this an array, it causes problems
+
+        # Work out whether string : N.B. array type does not ALWAYS match the
+        # variable type, because apparently the scalar content of a *masked* scalar
+        # string variable has a numeric type (!! yuck !!)
+        is_string_data = flatdata.dtype.kind in ("S", "U")
+        if is_string_data:
+            safe_fill_const = ""
+        else:
+            safe_fill_const = np.zeros((1,), dtype=flatdata.dtype)[0]
+
+        # Where data is masked, count mask mismatches and skip those points
+        if any(np.ma.is_masked(arr) for arr in (data, data2)):
+            mask, mask2 = (
+                np.ma.getmaskarray(array) for array in (flatdata, flatdata2)
+            )
+            flat_diff_inds = list(np.where(mask != mask2)[0])
+            # Replace all masked points to exclude them from unmasked-point checks.
+            either_masked = mask | mask2
+            flatdata[either_masked] = safe_fill_const
+            flatdata2[either_masked] = safe_fill_const
+
+        # Where data has NANs, count mismatches and skip (as for masked)
+        if not is_string_data:
+            isnans, isnans2 = (np.isnan(arr) for arr in (flatdata, flatdata2))
+            if np.any(isnans) or np.any(isnans2):
+                nandiffs = np.where(isnans != isnans2)[0]
+                if nandiffs:
+                    flat_diff_inds += list(nandiffs)
+                anynans = isnans | isnans2
+                flatdata[anynans] = safe_fill_const
+                flatdata2[anynans] = safe_fill_const
+
+        flat_diff_inds += list(np.where(flatdata != flatdata2)[0])
+        # Order the nonmatching indices :  We report just the first few ...
+        flat_diff_inds = sorted(flat_diff_inds)
+        n_diffs = len(flat_diff_inds)
+        if n_diffs:
+            msg = (
+                f"{var_id_string} data contents differ, at {n_diffs} points: "
+            )
+            ellps = ", ..." if n_diffs > show_n_diffs else ""
+            diffinds = flat_diff_inds[:show_n_diffs]
+            diffinds = [
+                np.unravel_index(ind, shape=data.shape) for ind in diffinds
+            ]
+            diffinds_str = ", ".join(repr(tuple(x)) for x in diffinds)
+            inds_str = f"[{diffinds_str}{ellps}]"
+            points_lhs_str = ", ".join(repr(data[ind]) for ind in diffinds)
+            points_rhs_str = ", ".join(repr(data2[ind]) for ind in diffinds)
+            points_lhs_str = f"[{points_lhs_str}{ellps}]"
+            points_rhs_str = f"[{points_rhs_str}{ellps}]"
+            msg += (
+                f"@INDICES{inds_str}"
+                f" : LHS={points_lhs_str}, RHS={points_rhs_str}"
+            )
+            errs.append(msg)
 
 
 def _compare_nc_groups(
@@ -242,6 +376,7 @@ def _compare_nc_groups(
     suppress_warnings: bool = False,
     check_names: bool = False,
     check_unlimited: bool = True,
+    show_n_diffs: int = 2,
 ):
     """
     Inner routine to compare either whole datasets or subgroups.
@@ -316,126 +451,16 @@ def _compare_nc_groups(
         if varname not in varnames2:
             continue
         v1, v2 = [grp.variables[varname] for grp in (g1, g2)]
-
-        var_id_string = f'{group_id_string} variable "{varname}"'
-
-        # dimensions
-        dims, dims2 = [v.dimensions for v in (v1, v2)]
-        if dims != dims2:
-            msg = f"{var_id_string} dimensions differ : {dims!r} != {dims2!r}"
-            errs.append(msg)
-
-        # attributes
-        _compare_attributes(
+        _compare_variables(
             errs,
             v1,
             v2,
-            var_id_string,
+            group_id_string=group_id_string,
             attrs_order=attrs_order,
+            data_equality=data_equality,
             suppress_warnings=suppress_warnings,
-            force_first_attrnames=[
-                "_FillValue"
-            ],  # for some reason, this doesn't always list consistently
+            show_n_diffs=show_n_diffs,
         )
-
-        # dtypes
-        dtype, dtype2 = [
-            v.dtype if _isncdata(v) else v.datatype for v in (v1, v2)
-        ]
-        if dtype != dtype2:
-            msg = f"{var_id_string} datatypes differ : {dtype!r} != {dtype2!r}"
-            errs.append(msg)
-
-        # data values
-        is_str, is_str2 = (dt.kind in "SUb" for dt in (dtype, dtype2))
-        # TODO: is this correct check to allow compare between different dtypes?
-        if data_equality and dims == dims2 and is_str == is_str2:
-            # N.B. don't check shapes here: we already checked dimensions.
-            # NOTE: no attempt to use laziness here.  Could be improved.
-            def getdata(var):
-                if _isncdata(var):
-                    data = var.data
-                    if hasattr(data, "compute"):
-                        data = data.compute()
-                else:
-                    # expect var to be an actual netCDF4.Variable
-                    # (check for obscure property NOT provided by mimics)
-                    assert hasattr(var, "use_nc_get_vars")
-                    data = var[:]
-                # Return 0D as 1D, as this makes results simpler to interpret.
-                if data.ndim == 0:
-                    data = data.flatten()
-                    assert data.shape == (1,)
-                return data
-
-            data, data2 = (getdata(v) for v in (v1, v2))
-            flatdata, flatdata2 = (
-                np.asanyarray(arr).flatten() for arr in (data, data2)
-            )
-
-            # For simpler checking, use flat versions
-            flat_diff_inds = (
-                []
-            )  # NB *don't* make this an array, it causes problems
-
-            # Work out whether string : N.B. array type does not ALWAYS match the
-            # variable type, because apparently the scalar content of a *masked* scalar
-            # string variable has a numeric type (!! yuck !!)
-            is_string_data = flatdata.dtype.kind in ("S", "U")
-            if is_string_data:
-                safe_fill_const = ""
-            else:
-                safe_fill_const = np.zeros((1,), dtype=flatdata.dtype)[0]
-
-            # Where data is masked, count mask mismatches and skip those points
-            if any(np.ma.is_masked(arr) for arr in (data, data2)):
-                mask, mask2 = (
-                    np.ma.getmaskarray(array)
-                    for array in (flatdata, flatdata2)
-                )
-                flat_diff_inds = list(np.where(mask != mask2)[0])
-                # Replace all masked points to exclude them from unmasked-point checks.
-                either_masked = mask | mask2
-                flatdata[either_masked] = safe_fill_const
-                flatdata2[either_masked] = safe_fill_const
-
-            # Where data has NANs, count mismatches and skip (as for masked)
-            if not is_string_data:
-                isnans, isnans2 = (
-                    np.isnan(arr) for arr in (flatdata, flatdata2)
-                )
-                if np.any(isnans) or np.any(isnans2):
-                    nandiffs = np.where(isnans != isnans2)[0]
-                    if nandiffs:
-                        flat_diff_inds += list(nandiffs)
-                    anynans = isnans | isnans2
-                    flatdata[anynans] = safe_fill_const
-                    flatdata2[anynans] = safe_fill_const
-
-            flat_diff_inds += list(np.where(flatdata != flatdata2)[0])
-            # Order the nonmatching indices :  We report just the first few ...
-            flat_diff_inds = sorted(flat_diff_inds)
-            n_diffs = len(flat_diff_inds)
-            if n_diffs:
-                msg = f"{var_id_string} data contents differ, at {n_diffs} points: "
-                ellps = ", ..." if n_diffs > 2 else ""
-                diffinds = flat_diff_inds[:2]
-                diffinds = [
-                    np.unravel_index(ind, shape=data.shape) for ind in diffinds
-                ]
-                diffinds_str = ", ".join(repr(tuple(x)) for x in diffinds)
-                inds_str = f"[{diffinds_str}{ellps}]"
-                points_lhs_str = ", ".join(repr(data[ind]) for ind in diffinds)
-                points_rhs_str = ", ".join(
-                    repr(data2[ind]) for ind in diffinds
-                )
-                points_lhs_str = f"[{points_lhs_str}{ellps}]"
-                points_rhs_str = f"[{points_rhs_str}{ellps}]"
-                msg += (
-                    f"@INDICES{inds_str}"
-                    f" : LHS={points_lhs_str}, RHS={points_rhs_str}"
-                )
-                errs.append(msg)
 
     # Finally, recurse over groups
     grpnames, grpnames2 = [list(grp.groups.keys()) for grp in (g1, g2)]
@@ -462,4 +487,5 @@ def _compare_nc_groups(
             groups_order=groups_order,
             data_equality=data_equality,
             check_unlimited=check_unlimited,
+            show_n_diffs=show_n_diffs,
         )
