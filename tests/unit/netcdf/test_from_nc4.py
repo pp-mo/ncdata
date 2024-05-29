@@ -84,7 +84,7 @@ def test_target_types(sourcetype, tmp_path):
         variables=[
             NcVariable(
                 name="x",
-                dimensions=("xdim"),
+                dimensions=("xdim",),
                 dtype=np.float32,
                 data=[1.23, 2, 9],
             )
