@@ -35,7 +35,7 @@ jobs:
 
       - name: "Install dependencies"
         run: |
-          conda install --yes pytest iris xarray filelock requests
+          conda install --yes pytest pytest-mock iris xarray filelock requests
 
       - name: "Install *latest* Iris"
         run: |
