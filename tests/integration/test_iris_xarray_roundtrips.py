@@ -20,7 +20,7 @@ from ncdata.iris_xarray import cubes_to_xarray
 from ncdata.netcdf4 import from_nc4
 from ncdata.threadlock_sharing import lockshare_context
 from ncdata.xarray import from_xarray
-from tests._compare_nc_datasets import compare_nc_datasets
+from tests._compare_nc_datasets import dataset_differences
 from tests.data_testcase_schemas import (
     BAD_LOADSAVE_TESTCASES,
     session_testdir,
@@ -172,7 +172,7 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
     if not result:
         # FOR NOW: compare with experimental ncdata comparison.
         # I know this is a bit circular, but it is useful for debugging, for now ...
-        result = compare_nc_datasets(
+        result = dataset_differences(
             from_iris(iris_cubes), from_iris(iris_xr_cubes)
         )
         assert result == []
@@ -299,14 +299,14 @@ def test_roundtrip_xix(
                         "calendar", "standard"
                     )
 
-    result = compare_nc_datasets(
+    result = dataset_differences(
         ncds_xr, ncds_xr_iris
     )  # , check_var_data=False)
     assert result == []
 
     # TODO:  check equivalence, in Xarray terms
     # xr_result = xrds_iris.equals(xrds)
-    # ncd_result = compare_nc_datasets(
+    # ncd_result = dataset_differences(
     #     ncds_xr, ncds_xr_iris
     # )  # , check_var_data=False)
     # print("\nDATASET COMPARE RESULTS:\n" + "\n".join(ncd_result))

@@ -16,7 +16,7 @@ import pytest
 
 from ncdata import NcData, NcDimension, NcVariable
 from ncdata.netcdf4 import from_nc4
-from tests._compare_nc_datasets import compare_nc_datasets
+from tests._compare_nc_datasets import dataset_differences
 from tests.data_testcase_schemas import make_testcase_dataset
 
 
@@ -38,7 +38,7 @@ def test_target_types(sourcetype, tmp_path):
     """Check the various ways of specifying the input data."""
     # This testcase is a rather complicated, but we need to test with groups, and we
     # may as well also test for variables which map dimensions from multiple levels.
-    # In effect, this is also exercising tricky bits of 'compare_nc_datasets' !!
+    # In effect, this is also exercising tricky bits of 'dataset_differences' !!
     test_spec = {
         "dims": [dict(name="xdim", size=3)],
         "vars": [
@@ -107,5 +107,5 @@ def test_target_types(sourcetype, tmp_path):
     if sourcetype == "group":
         ncdata_expected = ncdata_expected.groups["inner_group"]
 
-    diffs = compare_nc_datasets(ncdata, ncdata_expected)
+    diffs = dataset_differences(ncdata, ncdata_expected)
     assert diffs == []

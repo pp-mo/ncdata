@@ -14,9 +14,9 @@ import numpy as np
 import pytest
 
 from tests._compare_nc_datasets import (
-    _compare_attributes,
-    _compare_name_lists,
-    compare_nc_datasets,
+    _attribute_differences,
+    _namelist_differences,
+    dataset_differences,
 )
 from tests.test_samplecode_cdlgen_comparablecdl import ncgen_from_cdl
 
@@ -35,38 +35,32 @@ data:
 """
 
 
-class Test__compare_name_lists:
+class Test_namelist_differences:
     # Test subsidiary routine for checking a list of names
     def test_empty(self):
-        errs = []
-        _compare_name_lists(errs, [], [], "named-elements")
+        errs = _namelist_differences([], [], "named-elements")
         assert errs == []
 
     def test_same(self):
         tst = ["a", "b"]
-        errs = []
-        _compare_name_lists(errs, tst, tst, "named-elements")
+        errs = _namelist_differences(tst, tst, "named-elements")
         assert errs == []
 
     def test_diff(self):
-        errs = []
-        _compare_name_lists(errs, ["a"], [], "named-elements")
+        errs = _namelist_differences(["a"], [], "named-elements")
         assert errs == ["named-elements do not match: ['a'] != []"]
 
     def test_difforder(self):
-        errs = []
-        _compare_name_lists(errs, ["a", "b"], ["b", "a"], "named-elements")
+        errs = _namelist_differences(["a", "b"], ["b", "a"], "named-elements")
         assert errs == [
             "named-elements do not match: ['a', 'b'] != ['b', 'a']"
         ]
 
     def test_difforder_tolerant_warns(self):
-        errs = []
         with pytest.warns(
             UserWarning, match="Ignoring: named-elements do not match"
         ):
-            _compare_name_lists(
-                errs,
+            errs = _namelist_differences(
                 ["a", "b"],
                 ["b", "a"],
                 "named-elements",
@@ -75,11 +69,9 @@ class Test__compare_name_lists:
         assert errs == []
 
     def test_difforder_tolerant_nowarn(self):
-        errs = []
         with warnings.catch_warnings():
             warnings.simplefilter("error")
-            _compare_name_lists(
-                errs,
+            errs = _namelist_differences(
                 ["a", "b"],
                 ["b", "a"],
                 "named-elements",
@@ -89,9 +81,9 @@ class Test__compare_name_lists:
         assert errs == []
 
 
-class Test__compare_attributes:
+class Test_attribute_differences:
     def test_compare_attributes_namelists(self, mocker):
-        # Check that it calls the generic _compare_name_lists routine, passing all the
+        # Check that it calls the generic _namelist_differences routine, passing all the
         # correct controls
         # NB make the compared object mimic nc Variables, not NcData
         attrnames_1 = ["a", "b"]
@@ -102,14 +94,12 @@ class Test__compare_attributes:
         obj2 = mocker.Mock(
             spec=nc.Variable, ncattrs=mocker.Mock(return_value=attrnames_2)
         )
-        errs = mocker.sentinel.errors_list
         elemname = "<elem_types>"
         order = mocker.sentinel.attrs_order
         suppress = mocker.sentinel.suppress_warnings
-        tgt = "tests._compare_nc_datasets._compare_name_lists"
+        tgt = "tests._compare_nc_datasets._namelist_differences"
         patch_tgt = mocker.patch(tgt)
-        _compare_attributes(
-            errs=errs,
+        _attribute_differences(
             obj1=obj1,
             obj2=obj2,
             elemname=elemname,
@@ -118,7 +108,6 @@ class Test__compare_attributes:
         )
         (one_call,) = patch_tgt.call_args_list
         assert one_call == mocker.call(
-            errs,
             attrnames_1,
             attrnames_2,
             "<elem_types> attribute lists",
@@ -154,32 +143,28 @@ class Test__compare_attributes:
         # Test two objects with no attributes
         obj1 = self.Nc4ObjectWithAttrsMimic()
         obj2 = self.Nc4ObjectWithAttrsMimic()
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == []
 
     def test_compare_attributes_values__allok(self):
         # Objects with matching attributes
         obj1 = self.Nc4ObjectWithAttrsMimic(a=1, b=2)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=1, b=2)
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == []
 
     def test_compare_attributes_values__scalar_arrayof1(self):
         # Objects with matching attributes
         obj1 = self.Nc4ObjectWithAttrsMimic(a=1, b=2)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=1, b=[2])
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == []
 
     def test_compare_attributes_values__data_mismatch(self):
         # Attributes of different value (but matching dtype)
         obj1 = self.Nc4ObjectWithAttrsMimic(a=1, b=2, c=3)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=1, b=-77, c=3)
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             '<object attributes> "b" attribute values differ : 2 != -77'
         ]
@@ -188,8 +173,7 @@ class Test__compare_attributes:
         # Attributes of different dtypes, even though values ==
         obj1 = self.Nc4ObjectWithAttrsMimic(a=np.float32(0))
         obj2 = self.Nc4ObjectWithAttrsMimic(a=np.float64(0))
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             (
                 '<object attributes> "a" attribute datatypes differ : '
@@ -201,8 +185,7 @@ class Test__compare_attributes:
         # Attributes of different dtypes, even though values ==
         obj1 = self.Nc4ObjectWithAttrsMimic(a=np.uint32(0))
         obj2 = self.Nc4ObjectWithAttrsMimic(a=np.int32(0))
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             (
                 '<object attributes> "a" attribute datatypes differ : '
@@ -214,8 +197,7 @@ class Test__compare_attributes:
         # Attributes of different dtypes, even though values ==
         obj1 = self.Nc4ObjectWithAttrsMimic(a=np.float32(0))
         obj2 = self.Nc4ObjectWithAttrsMimic(a=np.int32(0))
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             (
                 '<object attributes> "a" attribute datatypes differ : '
@@ -227,8 +209,7 @@ class Test__compare_attributes:
         # Attributes of different dtypes, even though values ==
         obj1 = self.Nc4ObjectWithAttrsMimic(a=np.float32(0))
         obj2 = self.Nc4ObjectWithAttrsMimic(a="this")
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             (
                 '<object attributes> "a" attribute datatypes differ : '
@@ -240,8 +221,7 @@ class Test__compare_attributes:
         # Attributes of different dtypes, but values !=
         obj1 = self.Nc4ObjectWithAttrsMimic(a=np.float32(0))
         obj2 = self.Nc4ObjectWithAttrsMimic(a=np.float64(1))
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             '<object attributes> "a" attribute datatypes differ : '
             "dtype('float32') != dtype('float64')"
@@ -252,8 +232,7 @@ class Test__compare_attributes:
         array = np.arange(3.0)
         obj1 = self.Nc4ObjectWithAttrsMimic(a=array)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array)
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == []
 
     def test_compare_attributes_values__data_arrays_dtype_mismatch(self):
@@ -261,8 +240,7 @@ class Test__compare_attributes:
         array = np.arange(3, dtype="f4")
         obj1 = self.Nc4ObjectWithAttrsMimic(a=array)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array.astype("f8"))
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             (
                 '<object attributes> "a" attribute datatypes differ : '
@@ -275,8 +253,7 @@ class Test__compare_attributes:
         array = np.arange(3)
         obj1 = self.Nc4ObjectWithAttrsMimic(a=array)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array[:-1])
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             (
                 '<object attributes> "a" attribute values differ : '
@@ -290,8 +267,7 @@ class Test__compare_attributes:
         array2 = np.array([1, 2, 777])
         obj1 = self.Nc4ObjectWithAttrsMimic(a=array1)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array2)
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             (
                 '<object attributes> "a" attribute values differ : '
@@ -304,8 +280,7 @@ class Test__compare_attributes:
         array = np.array([1, np.nan, 3])
         obj1 = self.Nc4ObjectWithAttrsMimic(a=array)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array)
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == []
 
     def test_compare_attributes_values__data_arrays_nans_mismatch(self):
@@ -314,8 +289,7 @@ class Test__compare_attributes:
         array2 = np.array([1.0, np.nan, 3.0])
         obj1 = self.Nc4ObjectWithAttrsMimic(a=array1)
         obj2 = self.Nc4ObjectWithAttrsMimic(a=array2)
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             (
                 '<object attributes> "a" attribute values differ : '
@@ -327,8 +301,7 @@ class Test__compare_attributes:
         # Attributes of string and non-string types, since we handle that differently
         obj1 = self.Nc4ObjectWithAttrsMimic(a=1)
         obj2 = self.Nc4ObjectWithAttrsMimic(a="1")
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             '<object attributes> "a" attribute datatypes differ : '
             "dtype('int64') != <class 'str'>"
@@ -338,16 +311,14 @@ class Test__compare_attributes:
         # Attributes of string type (since netCDF4 returns char attributes as string)
         obj1 = self.Nc4ObjectWithAttrsMimic(S="this")
         obj2 = self.Nc4ObjectWithAttrsMimic(S="this")
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == []
 
     def test_compare_attributes_values__string_mismatch(self):
         # Attributes of string type (since netCDF4 returns char attributes as string)
         obj1 = self.Nc4ObjectWithAttrsMimic(S="this")
         obj2 = self.Nc4ObjectWithAttrsMimic(S="that")
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             "<object attributes> \"S\" attribute values differ : 'this' != 'that'"
         ]
@@ -356,16 +327,14 @@ class Test__compare_attributes:
         # Attributes of string type (since netCDF4 returns char attributes as string)
         obj1 = self.Nc4ObjectWithAttrsMimic(S=["a", "b"])
         obj2 = self.Nc4ObjectWithAttrsMimic(S=["a", "b"])
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == []
 
     def test_compare_attributes_values__string_array_mismatch(self):
         # Attributes of string type (since netCDF4 returns char attributes as string)
         obj1 = self.Nc4ObjectWithAttrsMimic(S=["a", "b"])
         obj2 = self.Nc4ObjectWithAttrsMimic(S=["a", "c"])
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == [
             '<object attributes> "S" attribute values differ : '
             "['a', 'b'] != ['a', 'c']"
@@ -377,8 +346,7 @@ class Test__compare_attributes:
 
         obj1 = NcData(attributes=[NcAttribute("x", ["string"])])
         obj2 = NcData(attributes=[NcAttribute("x", "string")])
-        errs = []
-        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        errs = _attribute_differences(obj1, obj2, "<object attributes>")
         assert errs == []
 
 
@@ -417,12 +385,12 @@ def samefiles_bothtypes(samefiles_filesonly, sourcetype):
 class Test_compare_nc_files__api:
     def test_identical(self, samefiles_bothtypes):
         source1, source2 = samefiles_bothtypes
-        result = compare_nc_datasets(source1, source2)
+        result = dataset_differences(source1, source2)
         assert result == []
 
     def test_identical_stringpaths(self, samefiles_filesonly):
         source1, source2 = samefiles_filesonly
-        result = compare_nc_datasets(str(source1), str(source2))
+        result = dataset_differences(str(source1), str(source2))
         assert result == []
 
     def test_identical_datasets(self, samefiles_filesonly, sourcetype):
@@ -431,7 +399,7 @@ class Test_compare_nc_files__api:
         try:
             ds1 = nc.Dataset(source1)
             ds2 = nc.Dataset(source2)
-            result = compare_nc_datasets(ds1, ds2)
+            result = dataset_differences(ds1, ds2)
             assert result == []
         finally:
             for ds in (ds1, ds2):
@@ -454,7 +422,7 @@ class Test_compare_nc_files__api:
             # Source1/2 are NcData : just modify source2
             source2.attributes["extra_global_attr"] = 1
 
-        result = compare_nc_datasets(source1, source2)
+        result = dataset_differences(source1, source2)
         assert result == [
             "Dataset attribute lists do not match: [] != ['extra_global_attr']"
         ]
@@ -486,7 +454,7 @@ class Test_compare_nc_files__api:
             if ds is not None:
                 ds.close()
 
-        result = compare_nc_datasets(source1, source2)
+        result = dataset_differences(source1, source2)
         # N.B. ncdata comparison bypasses the masked+scaled view of data, hence the
         # message differs.  Could fix this?
         mask1 = "masked" if sourcetype == "InputsFile" else "9.96921e+36"

@@ -17,7 +17,7 @@ import pytest
 
 from ncdata import NcData
 from ncdata.netcdf4 import from_nc4, to_nc4
-from tests._compare_nc_datasets import compare_nc_datasets
+from tests._compare_nc_datasets import dataset_differences
 from tests.data_testcase_schemas import make_testcase_dataset
 
 
@@ -61,7 +61,7 @@ def test_target_types(targettype, tmp_path):
         target.close()
 
     assert target_path.exists()
-    assert compare_nc_datasets(target_path, original_path) == []
+    assert dataset_differences(target_path, original_path) == []
 
 
 def fetch_nc_var(nc_file: nc.Dataset, var_path: str or List[str]):
