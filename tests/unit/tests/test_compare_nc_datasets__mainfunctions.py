@@ -465,7 +465,9 @@ class TestCompareVariables__dtype:
     @pytest.fixture(autouse=True)
     def _vars_data(self):
         self.data1, self.data2 = [self._vars_testdata() for _ in range(2)]
-        self.testvar = self.data2.variables["v1"]
+        self.reference_var, self.testvar = (
+            ds.variables["v1"] for ds in (self.data1, self.data2)
+        )
 
     def test_numbers_v_strings(self):
         # Set a different dtype
@@ -529,6 +531,36 @@ class TestCompareVariables__dtype:
             expected.append(
                 'Dataset variable "v1" data contents differ, at 1 points: '
                 "@INDICES[(0,)] : LHS=[0.0], RHS=[1.0]"
+            )
+        check(errs, expected)
+
+    @pytest.mark.parametrize("equaldata", [False, True])
+    def test_signed_unsigned(self, equaldata):
+        # Test floats with wordlength difference -- assume ints are the same
+        # In this case, there is also a data comparison to check.
+        new_dtype = np.dtype(np.int64)
+        v0 = self.reference_var
+        v0.data = v0.data.astype(new_dtype)
+        v0.dtype = new_dtype
+
+        new_dtype = np.dtype(np.uint64)
+        v1 = self.testvar
+        v1.data = v1.data.astype(new_dtype)
+        if not equaldata:
+            v1.data.flat[0] += 1
+        v1.dtype = new_dtype
+
+        # Test the comparison
+        errs = compare_nc_datasets(self.data1, self.data2)
+
+        expected = [
+            'Dataset variable "v1" datatypes differ : '
+            "dtype('int64') != dtype('uint64')"
+        ]
+        if not equaldata:
+            expected.append(
+                'Dataset variable "v1" data contents differ, at 1 points: '
+                "@INDICES[(0,)] : LHS=[0], RHS=[1]"
             )
         check(errs, expected)
 
