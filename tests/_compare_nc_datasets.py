@@ -18,7 +18,7 @@ import numpy as np
 from ncdata import NcData, NcVariable
 
 
-def compare_nc_datasets(
+def dataset_differences(
     dataset_or_path_1: Union[Path, AnyStr, nc.Dataset, NcData],
     dataset_or_path_2: Union[Path, AnyStr, nc.Dataset, NcData],
     check_dims_order: bool = True,
@@ -32,7 +32,7 @@ def compare_nc_datasets(
     check_unlimited: bool = True,
 ) -> List[str]:
     r"""
-    Compare netcdf data.
+    Compare netcdf data objects.
 
     Accepts paths, pathstrings, open :class:`netCDF4.Dataset`\\s or :class:`NcData` objects.
 
@@ -60,7 +60,7 @@ def compare_nc_datasets(
     Returns
     -------
     errs : list of str
-        a list of error strings.
+        A list of "error" strings, describing differences between the inputs.
         If empty, no differences were found.
 
     """
@@ -78,9 +78,7 @@ def compare_nc_datasets(
         else:
             ds2 = dataset_or_path_2
 
-        errs = []
-        _compare_nc_groups(
-            errs,
+        errs = _group_differences(
             ds1,
             ds2,
             group_id_string="Dataset",
@@ -103,9 +101,10 @@ def compare_nc_datasets(
     return errs
 
 
-def _compare_name_lists(
-    errslist, l1, l2, elemname, order_strict=True, suppress_warnings=False
+def _namelist_differences(
+    l1, l2, elemname, order_strict=True, suppress_warnings=False
 ):
+    errs = []
     msg = f"{elemname} do not match: {list(l1)} != {list(l2)}"
     ok = l1 == l2
     ok_except_order = ok
@@ -114,9 +113,10 @@ def _compare_name_lists(
 
     if not ok:
         if not ok_except_order or order_strict:
-            errslist.append(msg)
+            errs.append(msg)
         elif ok_except_order and not suppress_warnings:
             warn("(Ignoring: " + msg + " )", category=UserWarning)
+    return errs
 
 
 def _isncdata(obj):
@@ -148,15 +148,14 @@ def _attribute_arrays_eq(a1, a2):
     return result
 
 
-def _compare_attributes(
-    errs,
+def _attribute_differences(
     obj1,
     obj2,
     elemname,
     attrs_order=True,
     suppress_warnings=False,
     force_first_attrnames=None,
-):
+) -> List[str]:
     """
     Compare attribute name lists.
 
@@ -178,8 +177,7 @@ def _compare_attributes(
         attrnames = fix_orders(attrnames)
         attrnames2 = fix_orders(attrnames2)
 
-    _compare_name_lists(
-        errs,
+    errs = _namelist_differences(
         attrnames,
         attrnames2,
         f"{elemname} attribute lists",
@@ -232,10 +230,10 @@ def _compare_attributes(
                     f"{attr!r} != {attr2!r}"
                 )
                 errs.append(msg)
+    return errs
 
 
-def _compare_variables(
-    errs: List[str],
+def _variable_differences(
     v1: NcVariable,
     v2: NcVariable,
     group_id_string: str,
@@ -243,7 +241,8 @@ def _compare_variables(
     data_equality: bool = True,
     suppress_warnings: bool = False,
     show_n_diffs: int = 2,
-):
+) -> List[str]:
+    errs = []
     varname = v1.name
     assert v2.name == varname
 
@@ -256,8 +255,7 @@ def _compare_variables(
         errs.append(msg)
 
     # attributes
-    _compare_attributes(
-        errs,
+    errs += _attribute_differences(
         v1,
         v2,
         var_id_string,
@@ -361,10 +359,10 @@ def _compare_variables(
                 f" : LHS={points_lhs_str}, RHS={points_rhs_str}"
             )
             errs.append(msg)
+    return errs
 
 
-def _compare_nc_groups(
-    errs: List[str],
+def _group_differences(
     g1: Union[netCDF4.Dataset, netCDF4.Group],
     g2: Union[netCDF4.Dataset, netCDF4.Group],
     group_id_string: str,
@@ -377,13 +375,14 @@ def _compare_nc_groups(
     check_names: bool = False,
     check_unlimited: bool = True,
     show_n_diffs: int = 2,
-):
+) -> List[str]:
     """
     Inner routine to compare either whole datasets or subgroups.
 
     Note that, rather than returning a list of error strings, it appends them to the
     passed arg `errs`.  This just makes recursive calling easier.
     """
+    errs = []
     ndiffs = int(show_n_diffs)
     if ndiffs < 1:
         msg = f"'show_n_diffs' must be >=1 : got {show_n_diffs!r}."
@@ -396,8 +395,7 @@ def _compare_nc_groups(
             )
     # Compare lists of dimension names
     dimnames, dimnames2 = [list(grp.dimensions.keys()) for grp in (g1, g2)]
-    _compare_name_lists(
-        errs,
+    errs += _namelist_differences(
         dimnames,
         dimnames2,
         f"{group_id_string} dimension lists",
@@ -431,8 +429,7 @@ def _compare_nc_groups(
                 errs.append(msg)
 
     # Compare file attributes
-    _compare_attributes(
-        errs,
+    errs += _attribute_differences(
         g1,
         g2,
         group_id_string,
@@ -442,8 +439,7 @@ def _compare_nc_groups(
 
     # Compare lists of variables
     varnames, varnames2 = [list(grp.variables.keys()) for grp in (g1, g2)]
-    _compare_name_lists(
-        errs,
+    errs += _namelist_differences(
         varnames,
         varnames2,
         f"{group_id_string} variable lists",
@@ -456,8 +452,7 @@ def _compare_nc_groups(
         if varname not in varnames2:
             continue
         v1, v2 = [grp.variables[varname] for grp in (g1, g2)]
-        _compare_variables(
-            errs,
+        errs += _variable_differences(
             v1,
             v2,
             group_id_string=group_id_string,
@@ -469,8 +464,7 @@ def _compare_nc_groups(
 
     # Finally, recurse over groups
     grpnames, grpnames2 = [list(grp.groups.keys()) for grp in (g1, g2)]
-    _compare_name_lists(
-        errs,
+    errs += _namelist_differences(
         grpnames,
         grpnames2,
         f"{group_id_string} subgroup lists",
@@ -481,8 +475,7 @@ def _compare_nc_groups(
         if grpname not in grpnames2:
             continue
         grp1, grp2 = [grp.groups[grpname] for grp in (g1, g2)]
-        _compare_nc_groups(
-            errs,
+        errs += _group_differences(
             grp1,
             grp2,
             group_id_string=f"{group_id_string}/{grpname}",
@@ -494,3 +487,4 @@ def _compare_nc_groups(
             check_unlimited=check_unlimited,
             show_n_diffs=show_n_diffs,
         )
+    return errs

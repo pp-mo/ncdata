@@ -11,7 +11,7 @@ import numpy as np
 import pytest
 
 from ncdata import NcAttribute, NcData, NcDimension, NcVariable
-from tests._compare_nc_datasets import compare_nc_datasets
+from tests._compare_nc_datasets import dataset_differences
 
 # from tests.data_testcase_schemas import _Datatype_Sample_Values, data_types
 # data_types  # avoid 'unused' warning
@@ -97,7 +97,7 @@ class TestCompareDatasets:
 
         # Use kwargs just to confirm that the default for name-checking is 'off'
         kwargs = dict(check_names=True) if do_namecheck else {}
-        errs = compare_nc_datasets(data1, data2, **kwargs)
+        errs = dataset_differences(data1, data2, **kwargs)
 
         if do_namecheck:
             expected = [f"Datasets have different names: 'x' != {altname!r}."]
@@ -134,7 +134,7 @@ class TestCompareDimensions:
 
     def test_name(self):
         self.dims.rename("x", "q")
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
         expected = [
             f"{self.location_string} dimension lists do not match: "
             "['x', 'y'] != ['q', 'y']"
@@ -144,7 +144,7 @@ class TestCompareDimensions:
     def test_size(self):
         self.dims["x"].size = 77
 
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
 
         expected = [
             f'{self.location_string} "x" dimensions have different sizes: 2 != 77'
@@ -160,7 +160,7 @@ class TestCompareDimensions:
         do_check_unlims = {"unlims_checked": True, "unlims_unchecked": False}[
             check_unlim
         ]
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_unlimited=do_check_unlims
         )
 
@@ -180,7 +180,7 @@ class TestCompareDimensions:
         self.dims.addall(all_dims[::-1])
 
         do_ordercheck = decode_ordercheck(order_checking)
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_dims_order=do_ordercheck
         )
 
@@ -200,7 +200,7 @@ class TestCompareDimensions:
         self.dims.clear()
         self.dims.addall(all_dims[:-1])
 
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
 
         expected = [
             f"{self.location_string} dimension lists do not match: "
@@ -252,7 +252,7 @@ class TestCompareAttributes:
     def test_name(self):
         self.attrs.rename("att1", "changed")
 
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
 
         expected = [
             f"{self.location_string} attribute lists do not match: "
@@ -263,7 +263,7 @@ class TestCompareAttributes:
     def test_value(self, attr_context):
         self.attrs["att1"].value = np.array(999)
 
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
 
         if "variable" in attr_context:
             value_string = "1"
@@ -281,7 +281,7 @@ class TestCompareAttributes:
         self.attrs.clear()
         self.attrs.addall(all_attrs[::-1])
 
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_attrs_order=do_ordercheck
         )
 
@@ -298,7 +298,7 @@ class TestCompareAttributes:
         do_ordercheck = decode_ordercheck(order_checking)
         del self.attrs["att1"]
 
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_attrs_order=do_ordercheck
         )
 
@@ -323,7 +323,7 @@ class TestCompareAttributes:
             for attrs in (attr_pair, attr_pair[::-1])
         ]
 
-        errs = compare_nc_datasets(data1, data2)
+        errs = dataset_differences(data1, data2)
 
         if "generic" in attname:
             expected = [
@@ -367,7 +367,7 @@ class TestCompareVariables__metadata:
     def test_var_names(self):
         self.vars.rename("v2", "q")
 
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
 
         expected = [
             f"{self.location_string} variable lists do not match: "
@@ -381,7 +381,7 @@ class TestCompareVariables__metadata:
         self.vars.addall(all_vars[::-1])
 
         do_ordercheck = decode_ordercheck(order_checking)
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_vars_order=do_ordercheck
         )
 
@@ -398,7 +398,7 @@ class TestCompareVariables__metadata:
         del self.vars["v1"]
 
         do_ordercheck = decode_ordercheck(order_checking)
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_vars_order=do_ordercheck
         )
 
@@ -416,7 +416,7 @@ class TestCompareVariables__metadata:
         #  mismatched dimensions, the data won't be checked.
 
         do_orderchecks = decode_ordercheck(order_checking)
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_dims_order=do_orderchecks
         )
 
@@ -433,7 +433,7 @@ class TestCompareVariables__metadata:
         #  mismatched dimensions, the data won't be checked.
 
         do_orderchecks = decode_ordercheck(order_checking)
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_dims_order=do_orderchecks
         )
 
@@ -446,7 +446,7 @@ class TestCompareVariables__metadata:
 
 class TestCompareVariables__dtype:
     # Note: testing variable comparison via the 'main' public API instead of
-    #  via '_compare_variables'.  This makes sense because it is only called
+    #  via '_variable_differences'.  This makes sense because it is only called
     #  in one way, from one place.
     @staticmethod
     def _vars_testdata():
@@ -476,7 +476,7 @@ class TestCompareVariables__dtype:
         self.testvar.dtype = np.dtype("S5")
 
         # Test the comparison
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
         expected = [
             'Dataset variable "v1" datatypes differ : '
             "dtype('float64') != dtype('S5')"
@@ -495,7 +495,7 @@ class TestCompareVariables__dtype:
         v1.dtype = new_dtype
 
         # Test the comparison
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
 
         expected = [
             'Dataset variable "v1" datatypes differ : '
@@ -521,7 +521,7 @@ class TestCompareVariables__dtype:
         v1.dtype = new_dtype
 
         # Test the comparison
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
 
         expected = [
             'Dataset variable "v1" datatypes differ : '
@@ -551,7 +551,7 @@ class TestCompareVariables__dtype:
         v1.dtype = new_dtype
 
         # Test the comparison
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
 
         expected = [
             'Dataset variable "v1" datatypes differ : '
@@ -567,7 +567,7 @@ class TestCompareVariables__dtype:
 
 class TestCompareVariables__data__checkcontrols:
     # Note: testing variable comparison via the 'main' public API instead of
-    #  via '_compare_variables'.  This makes sense because it is only called
+    #  via '_variable_differences'.  This makes sense because it is only called
     #  in one way, from one place.
     @staticmethod
     def _vars_testdata():
@@ -591,7 +591,7 @@ class TestCompareVariables__data__checkcontrols:
 
     def test_no_values_check(self):
         self.testvar.data += 1
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_var_data=False
         )
         check(errs, [])
@@ -599,14 +599,14 @@ class TestCompareVariables__data__checkcontrols:
     def test_print_bad_nprint(self):
         msg = "'show_n_diffs' must be >=1 : got 0."
         with pytest.raises(ValueError, match=msg):
-            compare_nc_datasets(
+            dataset_differences(
                 self.data1, self.data2, show_n_first_different=0
             )
 
     @pytest.mark.parametrize("ndiffs", [1, 2, 3])
     def test_ndiffs(self, ndiffs):
         self.testvar.data.flat[1 : ndiffs + 1] += 1
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
         detail = {
             1: "[(0, 1)] : LHS=[1.0], RHS=[2.0]",
             2: "[(0, 1), (0, 2)] : LHS=[1.0, 2.0], RHS=[2.0, 3.0]",
@@ -624,7 +624,7 @@ class TestCompareVariables__data__checkcontrols:
     @pytest.mark.parametrize("nprint", [1, 2, 3])
     def test_show_n_first_different(self, nprint):
         self.testvar.data.flat[1:3] += 1
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, show_n_first_different=nprint
         )
         detail = {
@@ -641,7 +641,7 @@ class TestCompareVariables__data__checkcontrols:
 
 class TestCompareVariables__data__diffreports:
     # Note: testing variable comparison via the 'main' public API instead of
-    #  via '_compare_variables'.  This makes sense because it is only called
+    #  via '_variable_differences'.  This makes sense because it is only called
     #  in one way, from one place.
     @staticmethod
     def _vars_testdata():
@@ -678,7 +678,7 @@ class TestCompareVariables__data__diffreports:
                 self.reference_var.data
             )
             self.reference_var.data[1:2] = np.ma.masked
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
         if bothmasked:
             expected = []
         else:
@@ -694,7 +694,7 @@ class TestCompareVariables__data__diffreports:
         self.testvar.data[1:2] = np.nan
         if bothnans:
             self.reference_var.data[1:2] = np.nan
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
         if bothnans:
             expected = []
         else:
@@ -709,7 +709,7 @@ class TestCompareVariables__data__diffreports:
         for value, var in enumerate([self.reference_var, self.testvar]):
             var.dimensions = ()
             var.data = np.array(value, dtype=var.dtype)
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
         expected = [
             'Dataset variable "v1" data contents differ, at 1 points: '
             "@INDICES[(0,)] : LHS=[0.0], RHS=[1.0]"
@@ -730,7 +730,7 @@ class TestCompareVariables__data__diffreports:
             if arraytype == "lazy":
                 var.data = da.from_array(var.data, chunks=-1)
         # compare + check results
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
         # N.B. the result should be the same in all cases
         expected = [
             'Dataset variable "v1" data contents differ, at 1 points: '
@@ -759,7 +759,7 @@ class TestCompareGroups:
     def test_group_names(self):
         self.groups.rename("g2", "q")
 
-        errs = compare_nc_datasets(self.data1, self.data2)
+        errs = dataset_differences(self.data1, self.data2)
 
         expected = [
             "Dataset subgroup lists do not match: ['g1', 'g2'] != ['g1', 'q']"
@@ -772,7 +772,7 @@ class TestCompareGroups:
         self.groups.addall(all_groups[::-1])
 
         do_ordercheck = decode_ordercheck(order_checking)
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_groups_order=do_ordercheck
         )
 
@@ -789,7 +789,7 @@ class TestCompareGroups:
         del self.groups["g1"]
 
         do_ordercheck = decode_ordercheck(order_checking)
-        errs = compare_nc_datasets(
+        errs = dataset_differences(
             self.data1, self.data2, check_groups_order=do_ordercheck
         )
 

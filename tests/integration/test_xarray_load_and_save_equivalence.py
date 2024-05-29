@@ -11,7 +11,7 @@ import xarray
 from ncdata.netcdf4 import from_nc4, to_nc4
 from ncdata.threadlock_sharing import lockshare_context
 from ncdata.xarray import from_xarray, to_xarray
-from tests._compare_nc_datasets import compare_nc_datasets
+from tests._compare_nc_datasets import dataset_differences
 from tests.data_testcase_schemas import (
     BAD_LOADSAVE_TESTCASES,
     session_testdir,
@@ -74,7 +74,7 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
     to_nc4(ncds_fromxr, temp_ncdata_savepath)
 
     # Check equivalence
-    results = compare_nc_datasets(
+    results = dataset_differences(
         temp_direct_savepath,
         temp_ncdata_savepath,
         check_dims_order=False,
