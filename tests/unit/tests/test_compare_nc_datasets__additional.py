@@ -166,6 +166,14 @@ class Test__compare_attributes:
         _compare_attributes(errs, obj1, obj2, "<object attributes>")
         assert errs == []
 
+    def test_compare_attributes_values__scalar_arrayof1(self):
+        # Objects with matching attributes
+        obj1 = self.Nc4ObjectWithAttrsMimic(a=1, b=2)
+        obj2 = self.Nc4ObjectWithAttrsMimic(a=1, b=[2])
+        errs = []
+        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        assert errs == []
+
     def test_compare_attributes_values__data_mismatch(self):
         # Attributes of different value (but matching dtype)
         obj1 = self.Nc4ObjectWithAttrsMimic(a=1, b=2, c=3)
@@ -362,6 +370,16 @@ class Test__compare_attributes:
             '<object attributes> "S" attribute values differ : '
             "['a', 'b'] != ['a', 'c']"
         ]
+
+    def test_compare_attributes__ncdata_string_scalar_array(self):
+        # Attributes of string type (since netCDF4 returns char attributes as string)
+        from ncdata import NcAttribute, NcData
+
+        obj1 = NcData(attributes=[NcAttribute("x", ["string"])])
+        obj2 = NcData(attributes=[NcAttribute("x", "string")])
+        errs = []
+        _compare_attributes(errs, obj1, obj2, "<object attributes>")
+        assert errs == []
 
 
 @pytest.fixture(autouse=True, scope="module")
