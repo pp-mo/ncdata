@@ -236,17 +236,32 @@ def _attribute_differences(
 def _variable_differences(
     v1: NcVariable,
     v2: NcVariable,
-    group_id_string: str,
+    group_id_string: str = None,
     attrs_order: bool = True,
     data_equality: bool = True,
     suppress_warnings: bool = False,
     show_n_diffs: int = 2,
 ) -> List[str]:
     errs = []
-    varname = v1.name
-    assert v2.name == varname
 
-    var_id_string = f'{group_id_string} variable "{varname}"'
+    show_n_diffs = int(show_n_diffs)
+    if show_n_diffs < 1:
+        msg = f"'show_n_diffs' must be >=1 : got {show_n_diffs!r}."
+        raise ValueError(msg)
+
+    if v1.name == v2.name:
+        varname = v1.name
+    else:
+        varname = f"{v1.name} / {v2.name}"
+
+    if group_id_string:
+        var_id_string = f'{group_id_string} variable "{varname}"'
+    else:
+        var_id_string = f'Variable "{varname}"'
+
+    if v1.name != v2.name:
+        msg = f"{var_id_string} names differ : {v1.name!r} != {v2.name!r}"
+        errs.append(msg)
 
     # dimensions
     dims, dims2 = [v.dimensions for v in (v1, v2)]
@@ -383,10 +398,6 @@ def _group_differences(
     passed arg `errs`.  This just makes recursive calling easier.
     """
     errs = []
-    ndiffs = int(show_n_diffs)
-    if ndiffs < 1:
-        msg = f"'show_n_diffs' must be >=1 : got {show_n_diffs!r}."
-        raise ValueError(msg)
 
     if check_names:
         if g1.name != g2.name:
