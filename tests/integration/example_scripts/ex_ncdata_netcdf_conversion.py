@@ -12,8 +12,8 @@ import numpy as np
 
 from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 from ncdata.netcdf4 import from_nc4, to_nc4
+from ncdata.utils import dataset_differences
 from tests import testdata_dir
-from tests._compare_nc_datasets import dataset_differences
 
 
 def example_nc4_load_save_roundtrip():  # noqa: D103

@@ -16,7 +16,7 @@ import pytest
 
 from ncdata import NcData, NcDimension, NcVariable
 from ncdata.netcdf4 import from_nc4
-from tests._compare_nc_datasets import dataset_differences
+from ncdata.utils import dataset_differences
 from tests.data_testcase_schemas import make_testcase_dataset
 
 

@@ -10,8 +10,8 @@ import xarray
 
 from ncdata.netcdf4 import from_nc4, to_nc4
 from ncdata.threadlock_sharing import lockshare_context
+from ncdata.utils import dataset_differences
 from ncdata.xarray import from_xarray, to_xarray
-from tests._compare_nc_datasets import dataset_differences
 from tests.data_testcase_schemas import (
     BAD_LOADSAVE_TESTCASES,
     session_testdir,
