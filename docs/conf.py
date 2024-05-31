@@ -100,8 +100,8 @@ exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_logo = "_static/logo.png"
-html_favicon = "_static/logo.png"
+html_logo = "_static/ncdata_logo.png"
+html_favicon = "_static/ncdata_logo.png"
 html_theme = "pydata_sphinx_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,

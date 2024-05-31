@@ -6,7 +6,7 @@
 ncdata
 ======
 
-.. image:: _static/logo_full.png
+.. image:: _static/ncdata_logo_full.png
    :width: 400
    :align: center
    :alt: ncdata logo

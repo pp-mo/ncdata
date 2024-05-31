@@ -1,6 +1,6 @@
 # ncdata
 
-<img src="docs/_static/logo_full.png" alt="ncdata logo" width="400" class="center">
+<img src="docs/_static/ncdata_logo_full.png" alt="ncdata logo" width="400" class="center">
 
 Generic NetCDF data in Python.
 
