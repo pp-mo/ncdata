@@ -3,9 +3,7 @@ import numpy as np
 import pytest
 
 from ncdata import NcVariable
-from ncdata.utils._compare_nc_datasets import (
-    _variable_differences as variable_differences,
-)
+from ncdata.utils import variable_differences
 
 _DEBUG_RESULTS = True
 # _DEBUG_RESULTS = True
@@ -62,7 +60,7 @@ class TestSimpleProperties:
 
 class TestDtypes:
     # Note: testing variable comparison via the 'main' public API instead of
-    #  via '_variable_differences'.  This makes sense because it is only called
+    #  via 'variable_differences'.  This makes sense because it is only called
     #  in one way, from one place.
     @pytest.fixture(autouse=True)
     def _vars_data(self):
@@ -168,7 +166,7 @@ class TestDtypes:
 
 class TestDataCheck__controls:
     # Note: testing variable comparison via the 'main' public API instead of
-    #  via '_variable_differences'.  This makes sense because it is only called
+    #  via 'variable_differences'.  This makes sense because it is only called
     #  in one way, from one place.
     @pytest.fixture(autouse=True)
     def _vars_data(self):
@@ -179,13 +177,15 @@ class TestDataCheck__controls:
 
     def test_no_values_check(self):
         self.var2.data += 1
-        errs = variable_differences(self.var1, self.var2, data_equality=False)
+        errs = variable_differences(self.var1, self.var2, check_var_data=False)
         check(errs, [])
 
     def test_print_bad_nprint(self):
         msg = "'show_n_diffs' must be >=1 : got 0."
         with pytest.raises(ValueError, match=msg):
-            variable_differences(self.var1, self.var2, show_n_diffs=0)
+            variable_differences(
+                self.var1, self.var2, show_n_first_different=0
+            )
 
     @pytest.mark.parametrize("ndiffs", [1, 2, 3])
     def test_ndiffs(self, ndiffs):
@@ -208,7 +208,9 @@ class TestDataCheck__controls:
     @pytest.mark.parametrize("nprint", [1, 2, 3])
     def test_show_n_first_different(self, nprint):
         self.var2.data.flat[1:3] += 1
-        errs = variable_differences(self.var1, self.var2, show_n_diffs=nprint)
+        errs = variable_differences(
+            self.var1, self.var2, show_n_first_different=nprint
+        )
         detail = {
             1: "[(0, 1), ...] : LHS=[1.0, ...], RHS=[2.0, ...]",
             2: "[(0, 1), (0, 2)] : LHS=[1.0, 2.0], RHS=[2.0, 3.0]",
@@ -223,7 +225,7 @@ class TestDataCheck__controls:
 
 class TestDataCheck__difference_reports:
     # Note: testing variable comparison via the 'main' public API instead of
-    #  via '_variable_differences'.  This makes sense because it is only called
+    #  via 'variable_differences'.  This makes sense because it is only called
     #  in one way, from one place.
     @pytest.fixture(autouse=True)
     def _vars_data(self):

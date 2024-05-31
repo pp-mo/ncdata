@@ -21,15 +21,15 @@ from ncdata import NcData, NcVariable
 def dataset_differences(
     dataset_or_path_1: Union[Path, AnyStr, nc.Dataset, NcData],
     dataset_or_path_2: Union[Path, AnyStr, nc.Dataset, NcData],
+    check_names: bool = False,
     check_dims_order: bool = True,
+    check_dims_unlimited: bool = True,
     check_vars_order: bool = True,
     check_attrs_order: bool = True,
     check_groups_order: bool = True,
     check_var_data: bool = True,
     show_n_first_different: int = 2,
     suppress_warnings: bool = False,
-    check_names: bool = False,
-    check_unlimited: bool = True,
 ) -> List[str]:
     r"""
     Compare netcdf data objects.
@@ -43,6 +43,10 @@ def dataset_differences(
     check_dims_order, check_vars_order, check_attrs_order, check_groups_order : bool, default True
         If False, no error results from the same contents in a different order,
         however unless `suppress_warnings` is True, the error string is issued as a warning.
+    check_names: bool, default False
+        Whether to warn if the names of the top-level datasets are different
+    check_dims_unlimited: bool, default True
+        Whether to compare the 'unlimited' status of dimensions
     check_var_data : bool, default True
         If True, all variable data is also checked for equality.
         If False, only dtype and shape are compared.
@@ -52,10 +56,6 @@ def dataset_differences(
     suppress_warnings : bool, default False
         When False (the default), report changes in content order as Warnings.
         When True, ignore changes in ordering.
-    check_names: bool, default False
-        Whether to warn if the names of the top-level datasets are different
-    check_unlimited: bool, default True
-        Whether to compare the 'unlimited' status of dimensions
 
     Returns
     -------
@@ -89,7 +89,7 @@ def dataset_differences(
             data_equality=check_var_data,
             suppress_warnings=suppress_warnings,
             check_names=check_names,
-            check_unlimited=check_unlimited,
+            check_unlimited=check_dims_unlimited,
             show_n_diffs=show_n_first_different,
         )
     finally:
@@ -233,20 +233,49 @@ def _attribute_differences(
     return errs
 
 
-def _variable_differences(
+def variable_differences(
     v1: NcVariable,
     v2: NcVariable,
-    group_id_string: str = None,
-    attrs_order: bool = True,
-    data_equality: bool = True,
+    check_attrs_order: bool = True,
+    check_var_data: bool = True,
+    show_n_first_different: int = 2,
     suppress_warnings: bool = False,
-    show_n_diffs: int = 2,
+    _group_id_string: str = None,
 ) -> List[str]:
+    r"""
+    Compare variables.
+
+    Parameters
+    ----------
+    v1, v2 : NcVariable
+        variables to compare
+    check_attrs_order : bool, default True
+        If False, no error results from the same contents in a different order,
+        however unless `suppress_warnings` is True, the error string is issued as a warning.
+    check_var_data : bool, default True
+        If True, all variable data is also checked for equality.
+        If False, only dtype and shape are compared.
+        NOTE: comparison of large arrays is done in-memory, so may be highly inefficient.
+    show_n_first_different: int, default 2
+        Number of value differences to display.
+    suppress_warnings : bool, default False
+        When False (the default), report changes in content order as Warnings.
+        When True, ignore changes in ordering entirely.
+    _group_id_string : str
+        (internal use only)
+
+    Returns
+    -------
+    errs : list of str
+        A list of "error" strings, describing differences between the inputs.
+        If empty, no differences were found.
+
+    """
     errs = []
 
-    show_n_diffs = int(show_n_diffs)
-    if show_n_diffs < 1:
-        msg = f"'show_n_diffs' must be >=1 : got {show_n_diffs!r}."
+    show_n_first_different = int(show_n_first_different)
+    if show_n_first_different < 1:
+        msg = f"'show_n_diffs' must be >=1 : got {show_n_first_different!r}."
         raise ValueError(msg)
 
     if v1.name == v2.name:
@@ -254,8 +283,8 @@ def _variable_differences(
     else:
         varname = f"{v1.name} / {v2.name}"
 
-    if group_id_string:
-        var_id_string = f'{group_id_string} variable "{varname}"'
+    if _group_id_string:
+        var_id_string = f'{_group_id_string} variable "{varname}"'
     else:
         var_id_string = f'Variable "{varname}"'
 
@@ -274,7 +303,7 @@ def _variable_differences(
         v1,
         v2,
         var_id_string,
-        attrs_order=attrs_order,
+        attrs_order=check_attrs_order,
         suppress_warnings=suppress_warnings,
         force_first_attrnames=[
             "_FillValue"
@@ -290,7 +319,7 @@ def _variable_differences(
     # data values
     is_str, is_str2 = (dt.kind in "SUb" for dt in (dtype, dtype2))
     # TODO: is this correct check to allow compare between different dtypes?
-    if data_equality and dims == dims2 and is_str == is_str2:
+    if check_var_data and dims == dims2 and is_str == is_str2:
         # N.B. don't check shapes here: we already checked dimensions.
         # NOTE: no attempt to use laziness here.  Could be improved.
         def getdata(var):
@@ -358,8 +387,8 @@ def _variable_differences(
             msg = (
                 f"{var_id_string} data contents differ, at {n_diffs} points: "
             )
-            ellps = ", ..." if n_diffs > show_n_diffs else ""
-            diffinds = flat_diff_inds[:show_n_diffs]
+            ellps = ", ..." if n_diffs > show_n_first_different else ""
+            diffinds = flat_diff_inds[:show_n_first_different]
             diffinds = [
                 np.unravel_index(ind, shape=data.shape) for ind in diffinds
             ]
@@ -463,14 +492,14 @@ def _group_differences(
         if varname not in varnames2:
             continue
         v1, v2 = [grp.variables[varname] for grp in (g1, g2)]
-        errs += _variable_differences(
+        errs += variable_differences(
             v1,
             v2,
-            group_id_string=group_id_string,
-            attrs_order=attrs_order,
-            data_equality=data_equality,
+            check_attrs_order=attrs_order,
+            check_var_data=data_equality,
+            show_n_first_different=show_n_diffs,
             suppress_warnings=suppress_warnings,
-            show_n_diffs=show_n_diffs,
+            _group_id_string=group_id_string,
         )
 
     # Finally, recurse over groups

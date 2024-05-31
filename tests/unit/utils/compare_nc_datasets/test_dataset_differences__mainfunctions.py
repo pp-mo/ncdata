@@ -160,7 +160,7 @@ class TestCompareDimensions:
             check_unlim
         ]
         errs = dataset_differences(
-            self.data1, self.data2, check_unlimited=do_check_unlims
+            self.data1, self.data2, check_dims_unlimited=do_check_unlims
         )
 
         if do_check_unlims:
@@ -334,7 +334,17 @@ class TestCompareAttributes:
         check(errs, expected)
 
 
-class TestCompareVariables__metadata:
+class TestCompareVariables:
+    """
+    Test variable comparison.
+
+    Mostly, this is about comparison of the variable contents of a dataset
+    or group, since variable-to-variable comparison is done by
+    variable_differences, which is tested independently elsewhere.
+    This includes testing the generation of the variable identity strings in
+    various contexts (by parametrising over group_context).
+    """
+
     @staticmethod
     def _vars_testdata(group_context):
         def data():
