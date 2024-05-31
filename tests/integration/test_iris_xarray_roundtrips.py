@@ -19,8 +19,8 @@ from ncdata.iris import from_iris
 from ncdata.iris_xarray import cubes_to_xarray
 from ncdata.netcdf4 import from_nc4
 from ncdata.threadlock_sharing import lockshare_context
+from ncdata.utils import dataset_differences
 from ncdata.xarray import from_xarray
-from tests._compare_nc_datasets import dataset_differences
 from tests.data_testcase_schemas import (
     BAD_LOADSAVE_TESTCASES,
     session_testdir,

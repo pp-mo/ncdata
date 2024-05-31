@@ -13,7 +13,7 @@ import netCDF4 as nc
 import numpy as np
 import pytest
 
-from tests._compare_nc_datasets import (
+from ncdata.utils._compare_nc_datasets import (
     _attribute_differences,
     _namelist_differences,
     dataset_differences,
@@ -97,7 +97,7 @@ class Test_attribute_differences:
         elemname = "<elem_types>"
         order = mocker.sentinel.attrs_order
         suppress = mocker.sentinel.suppress_warnings
-        tgt = "tests._compare_nc_datasets._namelist_differences"
+        tgt = "ncdata.utils._compare_nc_datasets._namelist_differences"
         patch_tgt = mocker.patch(tgt)
         _attribute_differences(
             obj1=obj1,
