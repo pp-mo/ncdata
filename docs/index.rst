@@ -5,6 +5,12 @@
 
 ncdata
 ======
+
+.. image:: _static/ncdata_logo_full.png
+   :width: 400
+   :align: center
+   :alt: ncdata logo
+
 NetCDF data interoperability.
 
 Represents generic netcdf data in Python objects, with translation to and from common
