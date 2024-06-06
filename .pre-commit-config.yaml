@@ -59,12 +59,6 @@ repos:
     -   id: blacken-docs
         types: [file, rst]
 
--   repo: https://github.com/aio-libs/sort-all
-    rev: v1.2.0
-    hooks:
-    -   id: sort-all
-        types: [file, python]
-
 -   repo: https://github.com/pycqa/pydocstyle
     rev: 6.3.0
     hooks:

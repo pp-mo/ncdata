@@ -15,8 +15,8 @@ help:
 .PHONY: help Makefile
 
 allapi:
-	rm -rf ./api
-	sphinx-apidoc -Mfe -o ./api ../lib/ncdata
+	rm -rf ./details/api
+	sphinx-apidoc -Mfe -o ./details/api ../lib/ncdata
 
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

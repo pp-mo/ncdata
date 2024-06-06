@@ -49,6 +49,35 @@ intersphinx_mapping = {
     # "netCDF4": ("https://github.com/Unidata/netcdf4-python", None),
 }
 
+# See https://pydata-sphinx-theme.readthedocs.io/en/latest/user_guide/configuring.html#configure-the-search-bar-position
+html_sidebars = {
+    "**": [
+        "search-field",
+    ]
+}
+
+# See https://pydata-sphinx-theme.readthedocs.io/en/latest/user_guide/configuring.html
+html_theme_options = {
+    "navigation_depth": 3,
+    "navigation_with_keys": False,
+    "show_toc_level": 3,
+    "show_prev_next": False,
+    # removes the search box from the top bar
+    "navbar_align": "content",
+    "navbar_end": [],
+}
+
+
+html_context = {
+    # pydata_theme
+    "github_repo": "ncdata",
+    "github_user": "pp-mo",
+    "github_version": "main",
+    "doc_path": "docs",
+    # default theme.  Also disabled the button in the html_theme_options.
+    # Info: https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/light-dark.html#configure-default-theme-mode
+    "default_mode": "auto",
+}
 
 from pathlib import Path
 
