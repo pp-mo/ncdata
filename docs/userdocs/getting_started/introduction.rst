@@ -177,6 +177,7 @@ There is also a 'rename' method of variables/attributes/groups::
             >
     >
 
+.. _renaming_dimensions:
 .. warning::
 
     Renaming a :class:`~ncdata.NcDimension` within a :class:`~ncdata.NcData`
