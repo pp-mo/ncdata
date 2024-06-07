@@ -9,7 +9,7 @@ Installation
 .. toctree::
    :maxdepth: 2
 
-   ./getting_started/installation
+   installation
 
 
 Introduction
@@ -18,4 +18,4 @@ Introduction
 .. toctree::
     :maxdepth: 2
 
-    ./getting_started/introduction.rst
+    introduction

@@ -22,6 +22,9 @@ Unreleased
 ^^^^^^^^^^
 TODO: highlights
 
+* `@pp-mo`_ initial Sphinx documentation
+  (`PR#76 <https://github.com/pp-mo/ncdata/pull/76>`_).
+
 * `@trexfeathers`_ added a Logo
   (`PR#75 <https://github.com/pp-mo/ncdata/pull/75>`_).
 

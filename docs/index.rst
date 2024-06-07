@@ -35,7 +35,7 @@ User Documentation
    :maxdepth: 2
 
    Getting Started <./userdocs/getting_started>
-   User Guide <./userdocs/user_guide>
+   User Guide <./userdocs/user_guide/user_guide>
 
 
 Reference
