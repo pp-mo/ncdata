@@ -30,6 +30,11 @@ This enables the user to freely mix+match operations from both projects, getting
 
 See : https://ncdata.readthedocs.io/en/latest/userdocs/user_guide/design_principles.html
 
+# Documentation
+On ReadTheDocs.  Please see: 
+  * [stable](https://ncdata.readthedocs.io/en/stable/index.html)
+  * [latest](https://ncdata.readthedocs.io/en/latest/index.html)
+
 # Demonstration code examples:
   * [Apply Iris regrid to xarray data](#apply-iris-regrid-to-xarray-data)
   * [Use Zarr data in Iris](#use-zarr-data-in-iris)
