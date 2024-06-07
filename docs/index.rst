@@ -34,7 +34,7 @@ User Documentation
 .. toctree::
    :maxdepth: 2
 
-   Getting Started <./userdocs/getting_started>
+   Getting Started <./userdocs/getting_started/getting_started>
    User Guide <./userdocs/user_guide/user_guide>
 
 

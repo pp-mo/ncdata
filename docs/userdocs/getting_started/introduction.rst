@@ -1,3 +1,5 @@
+.. _ncdata-introduction:
+
 This page presents a first-look overview of NcData features.
 A lot of this is presented as code examples.
 

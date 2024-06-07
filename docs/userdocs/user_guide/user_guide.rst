@@ -9,7 +9,7 @@ Beyond the basic introduction
 The User Guide is still mostly work-in-progress.
 For the present, please see the following :
 
-    * ../getting_started/introduction
+    * :ref:`Introduction <ncdata-introduction>`
     * tested `example scripts in the project repo <https://github.com/pp-mo/ncdata/tree/main/tests/integration/example_scripts>`_
     * example code snippets in the `project README <https://github.com/pp-mo/ncdata/blob/main/README.md#demonstration-code-examples>`_
 
