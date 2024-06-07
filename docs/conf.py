@@ -25,8 +25,8 @@ author = "pp-mo"
 # The complete version, including alpha/beta/rc tags
 version_parts = [str(part) for part in version_tuple]
 release = ".".join(version_parts)
-# The major version string.
-version = ".".join(version_parts[:2])
+# A version string omitting extra segments, e.g. "v0.2.0.dev3"
+version = ".".join(version_parts[:4])
 
 # -- General configuration ---------------------------------------------------
 
@@ -48,7 +48,6 @@ intersphinx_mapping = {
     # Can't make this work ??
     # "netCDF4": ("https://github.com/Unidata/netcdf4-python", None),
 }
-
 
 from pathlib import Path
 
@@ -109,8 +108,36 @@ html_theme = "pydata_sphinx_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 
+# Various scheme control settings.
+# See https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/layout.html
+
+html_sidebars = {
+    # Set content of main (lhs) sidebar to show an "ncdata on github" link.
+    # This also ensures that the sidebar is not empty even on the main page,
+    #  so the ReadTheDocs version switcher is always shown.
+    "**": ["repo", "sidebar-nav-bs"]
+}
+
 html_theme_options = {
     "logo": {
-        "text": "ncdata documentation",
-    }
+        "text": f"ncdata v{version}",
+    },
+    # NOTE: not controlling navigation or TOC depth, as 'auto' is better?
+    "navigation_with_keys": False,
+    "show_prev_next": False,
+    # Control top nav bar : default shows just the links (and a search field?)
+    "navbar_end": ["navbar-icon-links", "theme-switcher"],
+    # Control rhs sidebar : default shows edit/source buttons (let's not).
+    "secondary_sidebar_items": ["page-toc"],
+}
+
+html_context = {
+    # Possibly needed for pydata_theme?
+    "github_repo": "ncdata",
+    "github_user": "pp-mo",
+    "github_version": "main",
+    "doc_path": "docs",
+    # Default light/dark mode.
+    # Info: https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/light-dark.html#configure-default-theme-mode
+    "default_mode": "auto",
 }

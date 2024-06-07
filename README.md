@@ -22,218 +22,106 @@ This enables the user to freely mix+match operations from both projects, getting
   > temp_cube = cubes.extract_cube("air_temperature")  
   > qplt.contourf(temp_cube[0])
 
-## Contents
-  * [Motivation](#motivation)
-    * [Primary Use](#primary-use)
-    * [Secondary Uses](#secondary-uses)
-  * [Principles](#principles)
-  * [Working Usage Examples](#code-examples) 
-  * [API documentation](#api-documentation)
-  * [Installation](#installation)
-  * [Project Status](#project-status)
-    * [Change Notes](#change-notes)
-    * [Code stability](#code-stability)
-    * [Iris and Xarray version compatibility](#iris-and-xarray-compatibility)
-    * [Current Limitations](#known-limitations)
-    * [Known Problems](#known-problems)
-  * [References](#references)
-  * [Developer Notes](#developer-notes)
+# Purposes
+  * represent netcdf data as structures of Python objects
+  * easy manipulation of netcdf data with pythonic syntax
+  * Fast and efficient translation of data between Xarray and Iris objects.
+     * This allows the user to mix+match features from either package in code. 
 
-# Motivation
-## Primary Use
-Fast and efficient translation of data between Xarray and Iris objects.
+See : https://ncdata.readthedocs.io/en/latest/userdocs/user_guide/design_principles.html
 
-This allows the user to mix+match features from either package in code. 
+# Documentation
+On ReadTheDocs.  Please see: 
+  * [stable](https://ncdata.readthedocs.io/en/stable/index.html)
+  * [latest](https://ncdata.readthedocs.io/en/latest/index.html)
 
-For example:
+# Demonstration code examples:
+  * [Apply Iris regrid to xarray data](#apply-iris-regrid-to-xarray-data)
+  * [Use Zarr data in Iris](#use-zarr-data-in-iris)
+  * [Correct a mis-coded attribute in Iris input](#correct-a-miscoded-attribute-in-iris-input)
+  * [Rename a dimension in xarray output](#rename-a-dimension-in-xarray-output)
+  * [Copy selected data to a new file](#copy-selected-data-to-a-new-file)
+
+## Apply Iris regrid to xarray data
 ``` python
 from ncdata.iris_xarray import cubes_to_xarray, cubes_from_xarray
-
-# Apply Iris regridder to xarray data
 dataset = xarray.open_dataset("file1.nc", chunks="auto")
 (cube,) = cubes_from_xarray(dataset)
 cube2 = cube.regrid(grid_cube, iris.analysis.PointInCell)
 dataset2 = cubes_to_xarray(cube2)
+```
 
-# Apply Xarray statistic to Iris data
-cubes = iris.load("file1.nc")
-dataset = cubes_to_xarray(cubes)
-dataset2 = dataset.group_by("time.dayofyear").argmin()
-cubes2 = cubes_from_xarray(dataset2)
-``` 
-  * data conversion is equivalent to writing to a file with one library, and reading it
-    back with the other ..
-    * .. except that no actual files are written
-  * both real (numpy) and lazy (dask) variable data arrays are transferred directly, 
-    without copying or computing
-
-
-## Secondary Uses
-### Exact control of file formatting
-Ncdata can also be used as a transfer layer between Iris or Xarray file i/o and the
-exact format of data stored in files.  
-I.E. adjustments can be made to file data before loading it into Iris/Xarray; or
-Iris/Xarray saved output can be adjusted before writing to a file.
-
-This allows the user to workaround any package limitations in controlling storage
-aspects such as : data chunking; reserved attributes; missing-value processing; or 
-dimension control.
-
-For example:
+## Use Zarr data in Iris
 ``` python
-from ncdata.xarray import from_xarray
-from ncdata.iris import to_iris
-from ncdata.netcdf4 import to_nc4, from_nc4
+from ncdata.threadlock_sharing import enable_lockshare
+enable_lockshare(iris=True, xarray=True)
+import xarray as xr
+dataset = xr.open_dataset(input_zarr_path, engine="zarr", chunks="auto")
+input_cubes = cubes_from_xarray(dataset)
+output_cubes = my_process(input_cubes)
+dataset2 = cubes_to_xarray(output_cubes)
+dataset2.to_zarr(output_zarr_path)
+``` 
 
-# Rename a dimension in xarray output
+## Correct a miscoded attribute in Iris input
+``` python
+from ncdata.iris import to_iris
+enable_lockshare(iris=True)
+ncdata = from_nc4(input_path)
+for var in ncdata.variables.values():
+    if "coords" in var.attributes:
+      var.attributes.rename("coords", "coordinates")
+cubes = to_iris(ncdata)
+```
+
+## Rename a dimension in xarray output
+``` python
+enable_lockshare(xarray=True)
 dataset = xr.open_dataset("file1.nc")
 xr_ncdata = from_xarray(dataset)
-dim = xr_ncdata.dimensions.pop("dim0")
-dim.name = "newdim"
-xr_ncdata.dimensions["newdim"] = dim
+xr_ncdata.dimensions.rename("dim0", "newdim")
+# N.B. must also replace the name in dimension-lists of variables
 for var in xr_ncdata.variables.values():
     var.dimensions = ["newdim" if dim == "dim0" else dim for dim in var.dimensions]
 to_nc4(ncdata, "file_2a.nc")
+```
 
-# Fix chunking in Iris input
+## Copy selected data to a new file
+``` python
+from ncdata.netcdf4 import from_nc4, to_nc4
 ncdata = from_nc4("file1.nc")
-for var in ncdata.variables:
-    # custom chunking() mimics the file chunks we want
-    var.chunking = lambda: (100.0e6 if dim == "dim0" else -1 for dim in var.dimensions)
-cubes = to_iris(ncdata)
-``` 
 
-### Manipulation of data
-ncdata can also be used for data extraction and modification, similar to the scope of
-CDO and NCO command-line operators but without file operations.  
-However, this type of usage is as yet still undeveloped :  There is no inbuilt support
-for data consistency checking, or obviously useful operations such as indexing by
-dimension. 
-This could be added in future, but it is also true that many such operations (like
-indexing) may be better done using Iris/Xarray.
+# Make a list of partial names to select the wanted variables
+keys = ["air_", "surface"]
 
+# Explicitly add dimension names, to include all the dimension variables
+keys += + list(ncdata.dimensions)
 
-# Principles
-  * ncdata represents NetCDF data as Python objects
-  * ncdata objects can be freely manipulated, independent of any data file
-  * ncdata variables can contain either real (numpy) or lazy (Dask) arrays
-  * ncdata can be losslessly converted to and from actual NetCDF files
-  * Iris or Xarray objects can be converted to and from ncdata, in the same way that 
-    they are read from and saved to NetCDF files
-  * **_translation_** between Xarray and Iris is based on conversion to ncdata, which
-    is in turn equivalent to file i/o
-     * thus, Iris/Xarray translation is equivalent to _saving_ from one
-       package into a file, then _loading_ the file in the other package
-  * ncdata exchanges variable data directly with Iris/Xarray, with no copying of real
-    data or computing of lazy data
-  * ncdata exchanges lazy arrays with files using Dask 'streaming', thus allowing
-    transfer of arrays larger than memory  
+# Identify the wanted variables
+select_vars = [
+    var
+    for var in ncdata.variables.values()
+    if any(key in var.name for key in keys)
+]
 
+# Add any referenced coordinate variables
+for var in list(select_vars):
+    var = ncdata.variables[varname]
+    for coordname in var.attributes.get("coordinates", "").split(" "):
+        select_vars.append(ncdata.variables[coordname])
 
-# Code Examples
-  * mostly TBD
-  * proof-of-concept script for
-    [netCDF4 file i/o](https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts/ex_ncdata_netcdf_conversion.py)
-  * proof-of-concept script for
-    [iris-xarray conversions](https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts/ex_iris_xarray_conversion.py)    
+# Replace variables with only the wanted ones
+ncdata.variables.clear()
+ncdata.variables.addall(select_vars)
 
-
-# API documentation
-  * see the [ReadTheDocs build](https://ncdata.readthedocs.io/en/latest/index.html)
-
-
-# Installation
-Install from conda-forge with conda
-```
-conda install -c conda-forge ncdata
+# Save
+to_nc4(ncdata, "pruned.nc")
 ```
 
-Or from PyPI with pip
-```
-pip install ncdata
-```
 
-# Project Status
-
-## Code Stability
-We intend to follow [PEP 440](https://peps.python.org/pep-0440/) or (older) [SemVer](https://semver.org/) versioning principles.
-
-Minor release version is at **"v0.1"**.  
-This is a first complete implementation, with functional operational of all public APIs.  
-
-The code is however still experimental, and APIs are not stable (hence no major version yet).  
-
-## Change Notes
-### v0.1.1
-Small tweaks + bug fixes.  
-**Note:** [#62](https://github.com/pp-mo/ncdata/pull/62) and [#59](https://github.com/pp-mo/ncdata/pull/59) are important fixes to achieve intended performance goals,
-i.e. moving arbitrarily large data via Dask without running out of memory.
-
-* Stop non-numpy attribute values from breaking attribute printout.  [#63](https://github.com/pp-mo/ncdata/pull/63)
-* Stop ``ncdata.iris.from_iris()`` consuming full data memory for each variable. [#62](https://github.com/pp-mo/ncdata/pull/62)
-* Provide convenience APIs for ncdata component dictionaries and attribute values. [#61](https://github.com/pp-mo/ncdata/pull/61)
-* Use dask ``chunks="auto"`` in ``ncdata.netcdf4.from_nc4()``.  [#59](https://github.com/pp-mo/ncdata/pull/59)
-
-### v0.1.0
-First release
-
-## Iris and Xarray Compatibility
-* C.I. tests GitHub PRs and merges, against latest releases of Iris and Xarray
-* compatible with iris >= v3.7.0
-  * see : [support added in v3.7.0](https://scitools-iris.readthedocs.io/en/stable/whatsnew/3.7.html#internal)
-
-## Known limitations
-Unsupported features : _not planned_ 
- * user-defined datatypes are not supported
-   * this includes compound and variable-length types
-
-Unsupported features : _planned for future release_ 
- * groups (not yet fully supported ?)
- * file output chunking control
-
-## Known problems
-As-of v0.1.1
- * in conversion from iris cubes with [`from_iris`](https://ncdata.readthedocs.io/en/latest/api/ncdata.iris.html#ncdata.iris.from_iris),
-   use of an `unlimited_dims` key currently causes an exception
-   * https://github.com/pp-mo/ncdata/issues/43
- * in conversion to xarray with [`to_xarray`](https://ncdata.readthedocs.io/en/latest/api/ncdata.xarray.html#ncdata.xarray.to_xarray),
-   dataset encodings are not reproduced, most notably **the "unlimited_dims" control is missing**
-   * https://github.com/pp-mo/ncdata/issues/66
-
-# References
+# Older References in Iris
   * Iris issue : https://github.com/SciTools/iris/issues/4994
   * planning presentation : https://github.com/SciTools/iris/files/10499677/Xarray-Iris.bridge.proposal.--.NcData.pdf
   * in-Iris code workings : https://github.com/pp-mo/iris/pull/75
 
 
-# Developer Notes
-## Documentation build
-  * For a full docs-build, a simple `make html` will do for now.  
-    * The ``docs/Makefile`` wipes the API docs and invokes sphinx-apidoc for a full rebuild
-    * Results are then available at ``docs/_build/html/index.html``
-  * The above is just for _local testing_ if required :
-    We have automatic builds for releases and PRs via [ReadTheDocs](https://readthedocs.org/projects/ncdata/) 
-
-## Release actions
-   1. Cut a release on GitHub : this triggers a new docs version on [ReadTheDocs](https://readthedocs.org/projects/ncdata/) 
-   1. Build the distribution
-      1. if needed, get [build](https://github.com/pypa/build)
-      2. run `python -m build`
-   2. Push to PyPI
-      1. if needed, get [twine](https://github.com/pypa/twine)
-      2. run `python -m twine upload --repository testpypi dist/*`
-         * this uploads to TestPyPI
-      3. create a new env with test dependencies `conda create -n ncdtmp python=3.11 iris xarray filelock requests pytest pip`
-         (N.B. 'filelock' and 'requests' are _test_ dependencies of iris) 
-      5. install the new package with `pip install --index-url https://test.pypi.org/simple/ ncdata` and run tests
-      6. if that checks OK, _remove_ `--repository testpypi` _and repeat_ #2
-         * --> uploads to "real" PyPI
-      7. repeat #4, _removing_ the `--index-url`, to check that `pip install ncdata` now finds the new version
-   3. Update conda to source the new version from PyPI
-      1. create a PR on the [ncdata feedstock](https://github.com/conda-forge/ncdata-feedstock)
-      1. update :
-         * [version number](https://github.com/conda-forge/ncdata-feedstock/blob/3f6b35cbdffd2ee894821500f76f2b0b66f55939/recipe/meta.yaml#L2) 
-         * [SHA](https://github.com/conda-forge/ncdata-feedstock/blob/3f6b35cbdffd2ee894821500f76f2b0b66f55939/recipe/meta.yaml#L10)
-         * Note : the [PyPI reference](https://github.com/conda-forge/ncdata-feedstock/blob/3f6b35cbdffd2ee894821500f76f2b0b66f55939/recipe/meta.yaml#L9) will normally look after itself
-         * Also : make any required changes to [dependencies](https://github.com/conda-forge/ncdata-feedstock/blob/3f6b35cbdffd2ee894821500f76f2b0b66f55939/recipe/meta.yaml#L17-L29) -- normally _no change required_
-      1. get PR merged ; wait a few hours ; check the new version appears in `conda search ncdata`

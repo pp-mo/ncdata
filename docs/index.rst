@@ -13,9 +13,11 @@ ncdata
 
 NetCDF data interoperability.
 
-Represents generic netcdf data in Python objects, with translation to and from common
-analysis packages, so that netcdf-based data can be freely exchanged between packages
-without data copying, and data storage formatting can be precisely controlled.
+Represents generic netcdf data as Python objects, equivalent to actual data
+files, but independent and freely modifiable.
+
+Also supports translation to and from common analysis packages, so that
+data can be freely exchanged between packages without data copying.
 
 In particular Ncdata exchanges data **between Xarray and Iris** as efficiently as
 possible.
@@ -28,30 +30,25 @@ This enables the user to freely mix+match operations from both projects, getting
 
 User Documentation
 ------------------
-For now, we don't yet have much documentation beyond this page, and the API notes.
-
-* a general project introduction is provide in the project README,
-  along with all the current project status information.
-
-  * Please see : `README <https://github.com/pp-mo/ncdata#readme>`_
-
-* Some simple usage examples (scripts) are provided in the codebase.
-
-  * Please see : `Testcode scripts <https://github.com/pp-mo/ncdata/blob/main/tests/integration/example_scripts>`_
-
-
-API documentation
------------------
 
 .. toctree::
-   :maxdepth: 5
+   :maxdepth: 2
 
-   api/modules
+   Getting Started <./userdocs/getting_started/getting_started>
+   User Guide <./userdocs/user_guide/user_guide>
+
+
+Reference
+---------
+.. toctree::
+   :maxdepth: 2
+
+   Python API <./details/api/ncdata>
+   Detail Topics <./details/details_index>
 
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
-* :ref:`search`
