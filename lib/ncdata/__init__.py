@@ -14,10 +14,10 @@ from ._core import NameMap, NcAttribute, NcData, NcDimension, NcVariable
 from ._version import __version__
 
 __all__ = [
-    "NameMap",
-    "NcAttribute",
     "NcData",
     "NcDimension",
     "NcVariable",
+    "NcAttribute",
+    "NameMap",
     "__version__",
 ]
