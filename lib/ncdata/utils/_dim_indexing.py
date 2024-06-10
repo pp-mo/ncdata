@@ -42,7 +42,7 @@ def index_by_dimensions(
     """
     # Start by copying the input : then modify that in-place
     ncdata = ncdata_copy(ncdata)
-    for dim_name, key in dim_index_kwargs:
+    for dim_name, key in dim_index_kwargs.items():
         # Dimension names must occur in the ncdata.
         dimension = ncdata.dimensions.get(dim_name)
         if dimension is None:
@@ -148,7 +148,7 @@ class Slicer:
             keys = [keys]
 
         n_keys = len(keys)
-        if len(keys) > self.dim_names:
+        if len(keys) > len(self.dim_names):
             msg = (
                 f"Too many index keys, {n_keys}, for the specified indexing dimension "
                 "names, {self.dim_names!r}."
