@@ -12,8 +12,8 @@ import numpy as np
 
 from ncdata import NcAttribute, NcData, NcDimension, NcVariable
 from ncdata.netcdf4 import from_nc4, to_nc4
+from ncdata.utils import dataset_differences
 from tests import testdata_dir
-from tests._compare_nc_datasets import compare_nc_datasets
 
 
 def example_nc4_load_save_roundtrip():  # noqa: D103
@@ -28,7 +28,7 @@ def example_nc4_load_save_roundtrip():  # noqa: D103
         filepath2 = tempdir_path / "temp_nc_output.nc"
         to_nc4(ncdata, filepath2)
 
-        result = compare_nc_datasets(filepath, filepath2)
+        result = dataset_differences(filepath, filepath2)
         equals_result = result == []
         print("\nFiles compare? :", equals_result)
         assert equals_result

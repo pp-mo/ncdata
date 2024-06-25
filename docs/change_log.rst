@@ -22,6 +22,9 @@ Unreleased
 ^^^^^^^^^^
 TODO: highlights
 
+* `@pp-mo`_ dataset comparison routines now a public utility.
+  (`PR#70 <https://github.com/pp-mo/ncdata/pull/70>`_).
+
 * `@pp-mo`_ initial Sphinx documentation
   (`PR#76 <https://github.com/pp-mo/ncdata/pull/76>`_).
 

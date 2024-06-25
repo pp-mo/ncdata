@@ -11,7 +11,7 @@ import iris
 import pytest
 
 from ncdata.netcdf4 import from_nc4, to_nc4
-from tests._compare_nc_datasets import compare_nc_datasets
+from ncdata.utils import dataset_differences
 from tests.data_testcase_schemas import session_testdir, standard_testcase
 from tests.integration.equivalence_testing_utils import (
     adjust_chunks,
@@ -93,7 +93,7 @@ def test_load_direct_vs_viancdata(
     if not result:
         # FOR NOW: compare with experimental ncdata comparison.
         # I know this is a bit circular, but it is useful for debugging, for now ...
-        result = compare_nc_datasets(
+        result = dataset_differences(
             from_iris(iris_cubes), from_iris(iris_ncdata_cubes)
         )
         assert result == []
@@ -144,5 +144,5 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
         print(txt)
 
     # Check equivalence
-    results = compare_nc_datasets(temp_iris_savepath, temp_ncdata_savepath)
+    results = dataset_differences(temp_iris_savepath, temp_ncdata_savepath)
     assert results == []
