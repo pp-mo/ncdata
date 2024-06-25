@@ -5,7 +5,7 @@ from copy import deepcopy
 
 import pytest
 
-from ncdata import NameMap
+from ncdata import NameMap, NcAttribute
 
 
 class NamedItem:
@@ -142,6 +142,91 @@ class TestFromItems:
         msg = r"Item expected to be of type .*\bOtherNamedItem\b"
         with pytest.raises(TypeError, match=msg):
             NameMap.from_items(arg, item_type=OtherNamedItem)
+
+
+class TestAttributesFromItems:
+    """
+    Extra constructor checks *specifically* for attributes.
+
+    Since they are treated differently in order to support the
+    "attributes={'x':1, 'y':2}" constructor style.
+    """
+
+    @pytest.fixture(
+        params=[None, NcAttribute, NamedItem],
+        ids=["none", "attrs", "nonattrs"],
+    )
+    def target_itemtype(self, request):
+        return request.param
+
+    @pytest.fixture(params=[False, True], ids=["single", "multiple"])
+    def multiple(self, request):
+        return request.param
+
+    def test_attributes__map(self, target_itemtype, multiple):
+        # Create from classic map {name: NcAttr(name, value)}
+        arg = {"x": NcAttribute("x", 1)}
+        if multiple:
+            arg["y"] = NcAttribute("y", 2)
+
+        if target_itemtype == NamedItem:
+            msg = "Item expected to be of type.*NamedItem.* got NcAttribute"
+            with pytest.raises(TypeError, match=msg):
+                NameMap.from_items(arg, item_type=target_itemtype)
+        else:
+            namemap = NameMap.from_items(arg, item_type=target_itemtype)
+            assert namemap.item_type == target_itemtype
+            # Note: this asserts that the contents are the *original* uncopied
+            # NcAttribute objects, since we don't support == on NcAttributes
+            assert namemap == arg
+
+    def test_attributes__list(self, target_itemtype, multiple):
+        # Create from a list [*NcAttr(name, value)]
+        arg = [NcAttribute("x", 1), NcAttribute("y", 2)]
+        if not multiple:
+            arg = arg[:1]
+
+        if target_itemtype == NamedItem:
+            msg = "Item expected to be of type.*NamedItem.* got NcAttribute"
+            with pytest.raises(TypeError, match=msg):
+                NameMap.from_items(arg, item_type=target_itemtype)
+        else:
+            namemap = NameMap.from_items(arg, item_type=target_itemtype)
+            assert namemap.item_type == target_itemtype
+            assert list(namemap.keys()) == [attr.name for attr in arg]
+            # Again, content is the original objects
+            assert list(namemap.values()) == arg
+
+    def test_attributes__namevaluemap(self, target_itemtype, multiple):
+        # Create from a newstyle map {name: value}
+        arg = {"x": 1}
+        if multiple:
+            arg["y"] = 2
+        if target_itemtype != NcAttribute:
+            if target_itemtype is None:
+                msg = "Item has no '.name' property"
+            else:
+                # target_itemtype == NamedItem
+                msg = "Item expected to be of type.*NamedItem"
+            with pytest.raises(TypeError, match=msg):
+                NameMap.from_items(arg, item_type=target_itemtype)
+        else:
+            namemap = NameMap.from_items(arg, item_type=target_itemtype)
+            assert namemap.item_type == target_itemtype
+            assert list(namemap.keys()) == list(arg.keys())
+            # Note: a bit of a fuss because we don't have == for NcAttributes
+            vals = list(namemap.values())
+            assert all(isinstance(el, NcAttribute) for el in vals)
+            vals = [val.value for val in vals]
+            assert vals == list(arg.values())
+
+    @pytest.mark.parametrize(
+        "arg", [[], {}, None], ids=["list", "map", "none"]
+    )
+    def test_attributes_empty(self, arg):
+        # Just check correct construction from empty args.
+        namemap = NameMap.from_items(arg, item_type=NcAttribute)
+        assert namemap == {} and namemap is not arg
 
 
 class Test_copy:

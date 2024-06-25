@@ -22,6 +22,9 @@ Unreleased
 ^^^^^^^^^^
 TODO: highlights
 
+* `@pp-mo`_ data constructors support `attributes={name:value, ..}`.
+  (`PR#71 <https://github.com/pp-mo/ncdata/pull/71>`_).
+
 * `@pp-mo`_ dataset comparison routines now a public utility.
   (`PR#70 <https://github.com/pp-mo/ncdata/pull/70>`_).
 

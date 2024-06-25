@@ -147,7 +147,10 @@ class NameMap(dict):
 
         If 'arg' is an iterable, its contents are added.
 
-        If 'arg' is a mapping, it must have (key == arg[key].name) for all keys.
+        If 'arg' is a mapping, it normally must have (key == arg[key].name)
+        for all keys.  As a special case, only if `item_type` ==
+        :class:`NcAttribute`, a plain name: value map can be provided, which
+        is converted to name: NcAttribute(name, value).
 
         If 'arg'' is a NameMap of the same 'item_type' (including None), then 'arg'
         is returned unchanged as the result.
@@ -169,6 +172,20 @@ class NameMap(dict):
             if arg is not None:
                 # We expect either another type of dictionary, or a list of items.
                 if isinstance(arg, Mapping):
+                    if (
+                        item_type == NcAttribute
+                        and len(arg) > 0
+                        and not isinstance(
+                            next(iter(arg.values())), NcAttribute
+                        )
+                    ):
+                        # for attributes only, also allow simple name=value map
+                        # for which, convert each value to an NcAttribute
+                        arg = {
+                            name: NcAttribute(name, value)
+                            for name, value in arg.items()
+                        }
+                    # existing mapping of NameMap type
                     # ignore mapping keys, and set [name]=item.name for each value.
                     result.addall(arg.values())
                 elif isinstance(arg, Iterable):

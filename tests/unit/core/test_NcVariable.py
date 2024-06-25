@@ -172,9 +172,7 @@ class TestNcVariable__str__repr:
         assert result == expected
 
     def test_oneattr(self):
-        var = NcVariable(
-            "var_w_attrs", attributes={"a1": NcAttribute("a1", 1)}
-        )
+        var = NcVariable("var_w_attrs", attributes={"a1": 1})
         result = str(var)
         expected = "\n".join(
             [
@@ -188,10 +186,7 @@ class TestNcVariable__str__repr:
     def test_multiattrs(self):
         var = NcVariable(
             "var_multi",
-            attributes={
-                "a1": NcAttribute("a1", 1),
-                "a2": NcAttribute("a2", ["one", "three"]),
-            },
+            attributes={"a1": 1, "a2": ["one", "three"]},
         )
         result = str(var)
         expected = "\n".join(
@@ -218,7 +213,7 @@ class TestNcVariable__str__repr:
         var = NcVariable(
             "var",
             dimensions=("x", "y"),
-            attributes=[NcAttribute("a1", 1)],
+            attributes={"a1": 1},
         )
         result = repr(var)
         expected = f"<ncdata._core.NcVariable object at 0x{id(var):012x}>"
