@@ -336,8 +336,8 @@ def _define_simple_testcases():
     return testcases
 
 
-# ADD_IRIS_FILES = True
-ADD_IRIS_FILES = False
+ADD_IRIS_FILES = True
+# ADD_IRIS_FILES = False
 
 
 @standard_testcases_func
