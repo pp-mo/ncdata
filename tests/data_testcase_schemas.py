@@ -43,12 +43,18 @@ def data_types():
     yield "string"
 
 
-# Just confirm that the above list of types matches those used by netCDF4, except for
-# 'string' replacing 'S1'.
-assert set(data_types()) == (
-    set(nc.default_fillvals.keys()) - set(["S1"]) | set(["string"])
+# Confirm that the above list of types matches those of netCDF4, with specific fixes
+# Get the dtype list from the netCDF default fill-values.
+_nc_dtypes = set(nc.default_fillvals.keys())
+# Remove the numpy-only complex types
+_nc_dtypes = set(
+    typename for typename in _nc_dtypes if np.dtype(typename).kind != "c"
 )
-
+# Also replace 'S1' with our own 'string' type marker
+_nc_dtypes.remove("S1")
+_nc_dtypes.add("string")
+# This should match the list of dtypes which we support (and test against)
+assert set(data_types()) == _nc_dtypes
 
 # Suitable test values for each attribute/data type.
 _INT_Approx_2x31 = int(2**31 - 1)
@@ -509,7 +515,17 @@ BAD_LOADSAVE_TESTCASES = {
     },
     "xarray": {
         # We think Xarray can load ~anything (maybe returning nothing)
-        "load": [],
+        "load": [
+            # .. except a few specific bounds variables generate a peculiar error
+            # """
+            #   xarray.core.variable.MissingDimensionsError: 'time_bnd' has more than
+            #   1-dimension and the same name as one of its dimensions
+            #   ('time', 'time_bnd'). xarray disallows such variables because they
+            #   conflict with the coordinates used to label dimensions.
+            # """
+            "small_rotPole_precipitation",
+            "small_FC_167",
+        ],
         # Xarray can save ~anything
         "save": [r"test_monotonic_coordinate"],
     },
