@@ -515,7 +515,17 @@ BAD_LOADSAVE_TESTCASES = {
     },
     "xarray": {
         # We think Xarray can load ~anything (maybe returning nothing)
-        "load": [],
+        "load": [
+            # .. except a few specific bounds variables generate a peculiar error
+            # """
+            #   xarray.core.variable.MissingDimensionsError: 'time_bnd' has more than
+            #   1-dimension and the same name as one of its dimensions
+            #   ('time', 'time_bnd'). xarray disallows such variables because they
+            #   conflict with the coordinates used to label dimensions.
+            # """
+            "small_rotPole_precipitation",
+            "small_FC_167",
+        ],
         # Xarray can save ~anything
         "save": [r"test_monotonic_coordinate"],
     },
