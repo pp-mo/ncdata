@@ -22,6 +22,13 @@ To be fixed
    * `issue#66 <https://github.com/pp-mo/ncdata/issues/66>`_
 
 
+.. _todo:
+
+Incomplete Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^
+(PLACEHOLDER: documentation is incomplete, please fix me !)
+
+
 Identified Design Limitations
 -----------------------------
 

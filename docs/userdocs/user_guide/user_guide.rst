@@ -20,6 +20,6 @@ For the present, please see the following :
     design_principles
     data_objects
     (TODO : empty) General topics <https://github.com/pp-mo/ncdata/issues/77>
-    (TODO : empty) How-tos <https://github.com/pp-mo/ncdata/issues/77>
+    howtos
     known_issues
     ../../change_log
