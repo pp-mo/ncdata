@@ -1,14 +1,11 @@
 """Utility to copy NcData objects, but not copying any contained data arrays."""
 
-from ncdata import NameMap, NcAttribute, NcData, NcDimension, NcVariable
+from ncdata import NameMap, NcAttribute, NcData
 
 
 def _attributes_copy(attrs: NameMap) -> NameMap:
     return NameMap.from_items(
-        [
-            NcAttribute(name=attr.name, value=attr.value)
-            for attr in attrs.values()
-        ],
+        [attr.copy() for attr in attrs.values()],
         item_type=NcAttribute,
     )
 
@@ -32,21 +29,9 @@ def ncdata_copy(ncdata: NcData) -> NcData:
 
     """
     return NcData(
+        name=ncdata.name,
         attributes=_attributes_copy(ncdata.attributes),
-        dimensions=[
-            NcDimension(dim.name, size=dim.size, unlimited=dim.unlimited)
-            for dim in ncdata.dimensions.values()
-        ],
-        variables=[
-            NcVariable(
-                name=var.name,
-                dimensions=var.dimensions,
-                dtype=var.dtype,
-                data=var.data,
-                attributes=_attributes_copy(var.attributes),
-                group=var.group,
-            )
-            for var in ncdata.variables.values()
-        ],
+        dimensions=[dim.copy() for dim in ncdata.dimensions.values()],
+        variables=[var.copy() for var in ncdata.variables.values()],
         groups=[ncdata_copy(group) for group in ncdata.groups.values()],
     )
