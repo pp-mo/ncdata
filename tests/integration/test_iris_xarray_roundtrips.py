@@ -78,6 +78,9 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
             "testdata____ugrid__21_triangle_example",
             # Problem with units on time bounds
             "label_and_climate__small_FC_167",
+            # Broken UGRID files now won't load in Iris >= 3.10
+            "unstructured_grid__mesh_C12",
+            "_unstructured_grid__theta_nodal_xios",
         ]
     )
     if any(key in standard_testcase.name for key in exclude_case_keys):
