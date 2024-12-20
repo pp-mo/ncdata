@@ -147,3 +147,32 @@ class Test_NcAttribute__str_repr:
         result = str(attr)
         expected = repr(attr)
         assert result == expected
+
+
+class Test_NcAttribute_copy:
+    @staticmethod
+    def eq(attr1, attr2):
+        # Capture the expected equality of an original
+        # attribute and its copy.
+        # In the case of its value, if it is a numpy array,
+        # then it should be the **same identical object**
+        # -- i.e. not a copy (not even a view).
+        result = attr1 is not attr2
+        if result:
+            result = attr1.name == attr1.name and np.all(
+                attr1.value == attr2.value
+            )
+        if result and hasattr(attr1.value, "dtype"):
+            result = attr1.value is attr2.value
+        return result
+
+    def test_empty(self):
+        attr = NcAttribute("x", None)
+        result = attr.copy()
+        assert self.eq(result, attr)
+
+    def test_value(self, datatype, structuretype):
+        value = attrvalue(datatype, structuretype)
+        attr = NcAttribute("x", value=value)
+        result = attr.copy()
+        assert self.eq(result, attr)
