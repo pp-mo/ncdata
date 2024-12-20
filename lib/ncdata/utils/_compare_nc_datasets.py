@@ -317,7 +317,14 @@ def variable_differences(
         errs.append(msg)
 
     # data values
-    is_str, is_str2 = (dt.kind in "SUb" for dt in (dtype, dtype2))
+    def _is_strtype(dt):
+        if dt is None:
+            result = False
+        else:
+            result = dt.kind in "SUb"
+        return result
+
+    is_str, is_str2 = (_is_strtype(dt) for dt in (dtype, dtype2))
     # TODO: is this correct check to allow compare between different dtypes?
     if check_var_data and dims == dims2 and is_str == is_str2:
         # N.B. don't check shapes here: we already checked dimensions.
@@ -332,6 +339,11 @@ def variable_differences(
                 # (check for obscure property NOT provided by mimics)
                 assert hasattr(var, "use_nc_get_vars")
                 data = var[:]
+
+            if data is None:
+                # Empty variables still "sort of" work.
+                data = np.array((), dtype=float)
+
             # Return 0D as 1D, as this makes results simpler to interpret.
             if data.ndim == 0:
                 data = data.flatten()

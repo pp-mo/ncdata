@@ -48,3 +48,15 @@ class Test_NcData__init__:
 
 # Note: str() and repr() of NcData are too complex to test unit-wise.
 # See integration tests for some sample results.
+
+
+class Test_NcData_copy:
+    # We only need to check that this calls "ncdata_copy", which is tested elsewhere.
+    def test(self, mocker):
+        mock_copied_ncdata = mocker.sentinel.copied_result
+        mock_copycall = mocker.Mock(return_value=mock_copied_ncdata)
+        mocker.patch("ncdata.utils.ncdata_copy", mock_copycall)
+        ncdata = NcData()
+        result = ncdata.copy()
+        assert mock_copycall.called_once_witk(mocker.call(ncdata))
+        assert result == mock_copied_ncdata

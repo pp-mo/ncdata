@@ -57,3 +57,15 @@ class Test_NcDimension__str_repr:
         sample = NcDimension("this", size)
         result = str(sample)
         assert result == repr(sample)
+
+
+class Test_NcDimension_copy:
+    @pytest.mark.parametrize("size", [0, 2])
+    @pytest.mark.parametrize("unlim", [False, True])
+    def test(self, size, unlim):
+        sample = NcDimension("this", size, unlimited=unlim)
+        result = sample.copy()
+        assert result is not sample
+        assert result.name == sample.name
+        assert result.size == sample.size
+        assert result.unlimited == sample.unlimited
