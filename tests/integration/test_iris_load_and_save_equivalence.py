@@ -48,18 +48,26 @@ set_tiny_chunks(_USE_TINY_CHUNKS)
 def test_load_direct_vs_viancdata(
     standard_testcase, use_irislock, adjust_chunks
 ):
-    source_filepath = standard_testcase.filepath
-    ncdata = from_nc4(source_filepath)
-
-    if (
-        "label_and_climate__small_FC_167_mon_19601101"
-        in standard_testcase.name
-    ):
+    specific_excludes = [
         # This one has latitude points which exceed the valid_min/max attributes
         # The netcdf-variable-like transform in Nc4VariableLike._data_array don't
         # yet account for this.
         # TODO: fix in Nc4VariableLike, when we are sure of the interpretation
+        "label_and_climate__small_FC_167_mon_19601101",
+        # Some of the legacy UGRID unstructured files have incorrect encodings
+        # which are currently causing loading errors in Iris since UGRID loading
+        # became an always-on thing in v3.11
+        "unstructured_grid__theta_nodal_xios",
+        "ugrid__21_triangle_example",
+    ]
+    if any(
+        name_fragment in standard_testcase.name
+        for name_fragment in specific_excludes
+    ):
         pytest.skip("excluded testcase")
+
+    source_filepath = standard_testcase.filepath
+    ncdata = from_nc4(source_filepath)
 
     # _Debug = True
     _Debug = False
@@ -103,15 +111,29 @@ def test_load_direct_vs_viancdata(
 
 
 def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
+    specific_excludes = [
+        # Generally not-working for saves
+        "ds_Empty",
+        "ds__singleattr",
+        "ds__dimonly",
+        # Some of the legacy UGRID unstructured files have incorrect encodings
+        # which are currently causing loading errors in Iris since UGRID loading
+        # became an always-on thing in v3.11
+        "unstructured_grid__theta_nodal_xios",
+        "unstructured_grid__mesh_C12",
+        "ugrid__21_triangle_example",
+    ]
+    if any(
+        name_fragment in standard_testcase.name
+        for name_fragment in specific_excludes
+    ):
+        pytest.skip("excluded testcase")
+
     source_filepath = standard_testcase.filepath
     ncdata = from_nc4(source_filepath)
 
     # Load the testcase into Iris.
     iris_cubes = iris.load(source_filepath)
-
-    if standard_testcase.name in ("ds_Empty", "ds__singleattr", "ds__dimonly"):
-        # Iris can't save an empty dataset.
-        pytest.skip("excluded testcase")
 
     # Re-save from iris
     temp_iris_savepath = tmp_path / "temp_save_iris.nc"
