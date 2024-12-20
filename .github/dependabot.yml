@@ -7,8 +7,11 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      # Check for updates to GitHub Actions every weekday
-      interval: "daily"
+      # When to check for updates to GitHub Actions
+      interval: "weekly"
+      day: "thursday"
+      time: "01:00"
+      timezone: "Europe/London"
     labels:
       - "new: pull request"
       - "bot"
