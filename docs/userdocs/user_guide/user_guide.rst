@@ -18,7 +18,7 @@ For the present, please see the following :
     :maxdepth: 2
 
     design_principles
-    (TODO : empty) Data object descriptions <https://github.com/pp-mo/ncdata/issues/77>
+    data_objects
     (TODO : empty) General topics <https://github.com/pp-mo/ncdata/issues/77>
     (TODO : empty) How-tos <https://github.com/pp-mo/ncdata/issues/77>
     known_issues
