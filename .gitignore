@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# setuptools-scm version control
+lib/ncdata/_version.py
 
 # Packages
 .Python
