@@ -11,6 +11,7 @@ Purpose
 * allow analysis packages (Iris, Xarray) to exchange data efficiently,
   including lazy data operations and streaming
 
+.. _design-principles:
 
 Design Principles
 -----------------

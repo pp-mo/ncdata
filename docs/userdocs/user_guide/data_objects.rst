@@ -45,14 +45,33 @@ all.  A variable has a ``.dtype``, which may be set if creating with no data.
 However, at present, after creation ``.data`` and ``.dtype`` can be reassigned and there
 is no further checking of any sort.
 
+Variable Data Arrays
+""""""""""""""""""""
+When a variable does have a ``.data`` property, this will be an array, with at least
+the usual ``shape``, ``dtype`` and ``__getitem__`` properties.  In practice we assume
+for now that we will have real (numpy) or lazy (dask) arrays.
+
+When data is exchanged with an actual file, it is simply written if real, and streamed
+(via :meth:`dask.array.store`) if lazy.
+
+When data is exchanged with supported data analysis packages (i.e. Iris or Xarray, so
+far), these arrays are transferred directly without copying or making duplicates (such
+as numpy views).
+This is a core principle (see :ref:`design-principles`), but may require special support in
+those packages.
+
+
 :class:`~ncdata.NcAttribute`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Represents an attribute, with name and value.  The value is always a either a scalar
 or a 1-D numpy array -- this is enforced as a computed property (read and write).
 
+Attribute Data Arrays
+"""""""""""""""""""""
+
 
 Correctness and Consistency
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+---------------------------
 In practice, to support flexibility in construction and manipulation, it is simply
 impractical to require that ncdata structures represent valid netCDF data structures at
 all times, since this makes it cumbersome to make structural changes.
@@ -94,12 +113,15 @@ Core Object Constructors
 ------------------------
 The ``__init__`` methods of the core classes are designed to make in-line definition of
 new objects in user code reasonably legible.  So, when initialising one of the container
-properties you can pass a pre-created or existing container, or similar dictionary-like
-object,
+properties, the utility method :meth:`ncdata.NameMap.from_items` enables you to pass a
+pre-created or existing container, or similar dictionary-like object :
 
 .. code-block:: python
 
-    >>> ds1 = NcData(groups={'x':NcData('x'), 'y':NcData('y')})
+    >>> ds1 = NcData(groups={
+    ...    'x':NcData('x'),
+    ...    'y':NcData('y')
+    ... })
     >>> print(ds1)
     <NcData: <'no-name'>
         groups:
@@ -109,14 +131,15 @@ object,
             >
     >
 
-or just a list of suitable data object contents, like this...
+or **more usefully**, just a *list* of suitable data objects, like this...
 
 .. code-block:: python
 
     >>> ds2 = NcData(
-    ...          variables=[
-    ...             NcVariable('v1', ('x',), data=[1,2]),
-    ...             NcVariable('v2', ('x',), data=[2,3])]
+    ...    variables=[
+    ...        NcVariable('v1', ('x',), data=[1,2]),
+    ...        NcVariable('v2', ('x',), data=[2,3])
+    ...    ]
     ... )
     >>> print(ds2)
     <NcData: <'no-name'>
@@ -125,19 +148,20 @@ or just a list of suitable data object contents, like this...
             <NcVariable(int64): v2(x)>
     >
 
-Or, in the *special case* of attributes, a regular dictionary of name: value form will
-be converted to a  NameMap of name: NcAttribute(name: value) form.
+Or, in the **special case of attributes**, a regular dictionary of ``name: value`` form
+will be automatically converted to a NameMap of ``name: NcAttribute(name: value)`` :
 
 .. code-block:: python
 
     >>> var = NcVariable(
-    ...           'v3',
-    ...           attributes={'x':'this', 'b':1.4}
+    ...    'v3',
+    ...    attributes={'x':'this', 'b':1.4, 'arr': [1, 2, 3]}
     ... )
     >>> print(var)
     <NcVariable(<no-dtype>): v3()
         v3:x = 'this'
-        v3:b = 1.4
+        v3:b = 1.4,
+        v3:arr = array([1, 2, 3])
     >
 
 
