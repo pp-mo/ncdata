@@ -3,18 +3,22 @@ Core Data Objects
 Ncdata uses Python objects to represent netCDF data, and allows the user to freely
 inspect and/or modify it, aiming to do this is the most natural and pythonic way.
 
+.. _data-model:
+
 Data Classes
 ------------
-Each core data model component simply parallels an element of the
-`NetCDF Classic Data Model`_ : that is, a Dataset(File) consisting of Dimensions,
-Variables, Attributes and Groups.
+The data model components are elements of the
+`NetCDF Classic Data Model`_ , plus **groups** (from the 'enhanced' netCDF model).
+
+That is, a Dataset(File) consists of just Dimensions, Variables, Attributes and
+Groups.
 
 .. note::
     We are not, as yet, explicitly supporting the NetCDF4 extensions to variable-length
-    and user types
+    and user types.  See : :ref:`data-types`
 
-The core classes representing the Data Model components are :class:`~ncdata.NcData`,
-:class:`~ncdata.NcDimension`, :class:`~ncdata.NcVariable` and
+The core ncdata classes representing these Data Model components are
+:class:`~ncdata.NcData`, :class:`~ncdata.NcDimension`, :class:`~ncdata.NcVariable` and
 :class:`~ncdata.NcAttribute`.
 
 Notes :
@@ -22,7 +26,7 @@ Notes :
 * There is no "NcGroup" class : :class:`~ncdata.NcData` is used for both the "group" and
   "dataset" (aka file).
 
-* All data objects have a ``.name`` property, but this can be empty when it is not
+* All data objects have a ``.name`` property, but this can be empty (``None``) when it is not
   contained in a parent object as a component.  See :ref:`components-and-containers`,
   below.
 
