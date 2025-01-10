@@ -17,15 +17,20 @@ The core classes representing the Data Model components are :class:`~ncdata.NcDa
 :class:`~ncdata.NcDimension`, :class:`~ncdata.NcVariable` and
 :class:`~ncdata.NcAttribute`.
 
-There is no "NcGroup" class : :class:`~ncdata.NcData` is used for both the "group" and
-"dataset" (aka file).
+Notes :
+
+* There is no "NcGroup" class : :class:`~ncdata.NcData` is used for both the "group" and
+  "dataset" (aka file).
+
+* All data objects have a ``.name`` property, but this can be empty when it is not
+  contained in a parent object as a component.  See :ref:`components-and-containers`,
+  below.
+
 
 :class:`~ncdata.NcData`
 ^^^^^^^^^^^^^^^^^^^^^^^
 This represents a dataset containing variables, attributes and groups.
 It is also used to represent groups.
-
-When it is a dataset, its ``.name`` may be empty.
 
 :class:`~ncdata.NcDimension`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -45,6 +50,8 @@ all.  A variable has a ``.dtype``, which may be set if creating with no data.
 However, at present, after creation ``.data`` and ``.dtype`` can be reassigned and there
 is no further checking of any sort.
 
+.. _variable-dtypes:
+
 Variable Data Arrays
 """"""""""""""""""""
 When a variable does have a ``.data`` property, this will be an array, with at least
@@ -60,61 +67,110 @@ as numpy views).
 This is a core principle (see :ref:`design-principles`), but may require special support in
 those packages.
 
+See also : :ref:`data-types`
 
 :class:`~ncdata.NcAttribute`
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Represents an attribute, with name and value.  The value is always a either a scalar
+Represents an attribute, with name and value.  The value is always either a scalar
 or a 1-D numpy array -- this is enforced as a computed property (read and write).
 
-Attribute Data Arrays
-"""""""""""""""""""""
+.. _attribute-dtypes:
+
+Attribute Values
+""""""""""""""""
+Attribute ``.value`` s are actually numpy arrays, but restricted to one dimension.
+They can be written from python values : numbers, strings or sequences, or from numpy
+arrays or scalars.  They read back as numpy numeric scalars or arrays, or as strings.
+
+See also : :ref:`data-types`
 
 
 Correctness and Consistency
 ---------------------------
-In practice, to support flexibility in construction and manipulation, it is simply
-impractical to require that ncdata structures represent valid netCDF data structures at
-all times, since this makes it cumbersome to make structural changes.
-For example, you could not extract a group from a dataset which refers to a dimension
-*outside* the group.
+In practice, to support flexibility in construction and manipulation, it is
+not practical for ncdata structures to represent valid netCDF at
+all times, since this would makes changing things awkward.
+For example, if a group refers to a dimension *outside* the group, you could not simply
+extract it from the dataset because it is not valid in isolation.
 
-Thus, it is an inevitable possibility that ncdata structures represent *invalid* netCDF
-data, for example circular references, missing dimensions or naming mismatches.
+Thus, we do allow that ncdata structures represent *invalid* netCDF data.
+For example, circular references, missing dimensions or naming mismatches.
 Effectively there are a set of data validity rules, which are summarised in the
 :func:`ncdata.utils.save_errors` routine.
 
-In practice, there is a minimum set of requirements for creating ncdata objects, and
-additional requirements for when ncdata is converted to actual netCDF.  For example,
+In practice, there a minimal set of runtime rules for creating ncdata objects, and
+additional requirements when ncdata is converted to actual netCDF.  For example,
 variables can be initially created with no data.  But if subsequently written to a file,
 data must be assigned first.
 
 .. Note::
-  These issues are not necessarily fully resolved.  Caution required !
+  These issues are not necessarily all fully resolved.  Caution required !
 
+.. _components-and-containers:
 
 Components, Containers and Names
 --------------------------------
 Each dimension, variable, attribute or group normally exists as a component in a
-parent dataset (or group), where it is stored in the relevant parent object's container
-property, i.e. either ``.dimensions``, ``.variables``, ``.attributes`` or ``.groups``.
+parent dataset (or group), where it is stored in a "container" property of the parent,
+i.e. either its ``.dimensions``, ``.variables``, ``.attributes`` or ``.groups``.
 
-These properties all have the type of the :class:`~ncdata._core.NameMap` class, which
-is a dictionary type mapping a string (name) to a specific core data class type.
+Each of the "container" properties is a :class:`~ncdata._core.NameMap` object, which
+is a dictionary type mapping a string (name) to a specific type of components.
+The dictionary``.keys()`` are a sequence of component names, and its ``.values()`` are
+the corresponding contained components.
 
-Each core object also has a ``.name`` property.  By this, it is implicit that you
-**could** have a difference between the name by which the object is indexed in the
-container it lives in, and its own ``.name``.  This is to be avoided !
-The :meth:`~ncdata.NameMap` container class is provided mostly to make this smoother :
-the convenience methods such as :meth:`~ncdata.NameMap.add` and
-:meth:`~ncdata.NameMap.rename` should help.
+Every component object also has a ``.name`` property.  By this, it is implicit that you
+**could** have a difference between the name by which the object is indexed in its
+container, and its ``.name``.  This is to be avoided !
+The :meth:`~ncdata.NameMap` container class is provided with convenience methods which
+aim to make this easier, such as :meth:`~ncdata.NameMap.add` and
+:meth:`~ncdata.NameMap.rename`.
+
+NcData and NcVariable ".attributes" components
+----------------------------------------------
+Note that the contents of a ".attributes" are :class:`~ncdata.NcAttributes` objects,
+not attribute values.
+Thus to fetch an attribute you might write, for example one of these :
+
+.. code-block::
+
+    units1 = dataset.variables['var1'].get_attrval('units')
+    units1 = dataset.variables['var1'].attributes['units'].as_python_value()
+
+but **not** ``unit = dataset.variables['x'].attributes['attr1']``
+or  ``unit = dataset.variables['x'].attributes['attr1']``
+
+or, likewise, to set values, one of
+
+.. code-block::
+
+    dataset.variables['var1'].set_attrval('units', "K")
+    dataset.variables['var1'].attributes['units'] = NcAttribute("units", K)
+
+but **not** ``dataset.variables['x'].attributes['units'].value = "K"``
+
+
+Component ordering
+^^^^^^^^^^^^^^^^^^
+The order of elements of a container is technically significant, and does constitute a
+potential difference between datasets (or files).  The
+:meth:`ncdata.NameMap.rename` method preserves the order of an element,
+while :meth:`ncdata.NameMap.add` adds the new components at the end.
+The :func:`ncdata.utils.dataset_differences` utility provides various keywords allowing
+you to ignore ordering in comparisons, when required.
+
+Other :class:`~ncdata.NameMap` methods
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The :class:`~ncdata.NameMap` class also provides
 
 
 Core Object Constructors
 ------------------------
 The ``__init__`` methods of the core classes are designed to make in-line definition of
 new objects in user code reasonably legible.  So, when initialising one of the container
-properties, the utility method :meth:`ncdata.NameMap.from_items` enables you to pass a
-pre-created or existing container, or similar dictionary-like object :
+properties, the keyword/args defining component parts use the utility method
+:meth:`ncdata.NameMap.from_items` so that you can specify a group of components in a variety of ways :
+either a pre-created container or a similar dictionary-like object :
 
 .. code-block:: python
 
