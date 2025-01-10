@@ -8,6 +8,7 @@ import numpy as np
 import pytest
 
 from ncdata import NcAttribute, NcVariable
+from ncdata.utils import variable_differences
 
 
 class Test_NcVariable__init__:
@@ -218,3 +219,36 @@ class TestNcVariable__str__repr:
         result = repr(var)
         expected = f"<ncdata._core.NcVariable object at 0x{id(var):012x}>"
         assert result == expected
+
+
+class Test_NcVariable_copy:
+    @staticmethod
+    def check_var_iscopy(trial, reference):
+        # capture expected copy equivalence check.
+        # Which is : equal but distinct, containing same data array
+        assert trial is not reference
+        assert not variable_differences(trial, reference)
+        assert trial.data is reference.data
+
+    def test_minimal_nodata(self):
+        var = NcVariable(name="x")
+        result = var.copy()
+        assert var.data is None
+        self.check_var_iscopy(result, var)
+
+    def test_populated(self):
+        var = NcVariable(
+            name="x",
+            dimensions=(
+                "y",
+                "x",
+            ),
+            attributes={
+                "a": 1,
+                "v": np.array([1, 2, 3]),
+                "s": "some characters",
+            },
+            data=np.array([[1.0, 2, 3], [11, 12, 13]]),
+        )
+        result = var.copy()
+        self.check_var_iscopy(result, var)

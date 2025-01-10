@@ -326,6 +326,17 @@ class NcData(_AttributeAccessMixin):
     # NOTE: for 'repr', an interpretable literal string is too complex.
     # So just retain the default "object" address-based representation.
 
+    def copy(self):
+        """
+        Copy self.
+
+        This duplicates structure with new ncdata core objects, but does not duplicate
+        data arrays.  See :func:`ncdata.utils.ncdata_copy`.
+        """
+        from ncdata.utils import ncdata_copy
+
+        return ncdata_copy(self)
+
 
 class NcDimension:
     """
@@ -358,6 +369,10 @@ class NcDimension:
 
     def __str__(self):  # noqa: D105
         return repr(self)
+
+    def copy(self):
+        """Copy self."""
+        return NcDimension(self.name, size=self.size, unlimited=self.unlimited)
 
 
 class NcVariable(_AttributeAccessMixin):
@@ -452,6 +467,25 @@ class NcVariable(_AttributeAccessMixin):
     # NOTE: as for NcData, an interpretable 'repr' string is too complex.
     # So just retain the default "object" address-based representation.
 
+    def copy(self):
+        """
+        Copy self.
+
+        Does not duplicate arrays oin data or attribute content.
+        See :func:`ncdata.utils.ncdata_copy`.
+        """
+        from ncdata.utils._copy import _attributes_copy
+
+        var = NcVariable(
+            name=self.name,
+            dimensions=self.dimensions,
+            dtype=self.dtype,
+            data=self.data,
+            attributes=_attributes_copy(self.attributes),
+            group=self.group,
+        )
+        return var
+
 
 class NcAttribute:
     """
@@ -528,3 +562,12 @@ class NcAttribute:
 
     def __str__(self):  # noqa: D105
         return repr(self)
+
+    def copy(self):
+        """
+        Copy self.
+
+        Does not duplicate array content.
+        See :func:`ncdata.utils.ncdata_copy`.
+        """
+        return NcAttribute(self.name, self.value)
