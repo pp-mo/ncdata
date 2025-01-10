@@ -50,7 +50,9 @@ Note that ``.dimensions`` is simply a list of names (strings) : they are not
 dataset, so *actual* dimensions are only identified dynamically, when they need to be.
 
 Variables can be created with either real (numpy) or lazy (dask) arrays, or no data at
-all.  A variable has a ``.dtype``, which may be set if creating with no data.
+all.
+
+A variable has a ``.dtype``, which may be set if creating with no data.
 However, at present, after creation ``.data`` and ``.dtype`` can be reassigned and there
 is no further checking of any sort.
 
@@ -60,7 +62,7 @@ Variable Data Arrays
 """"""""""""""""""""
 When a variable does have a ``.data`` property, this will be an array, with at least
 the usual ``shape``, ``dtype`` and ``__getitem__`` properties.  In practice we assume
-for now that we will have real (numpy) or lazy (dask) arrays.
+for now that we will always have real (numpy) or lazy (dask) arrays.
 
 When data is exchanged with an actual file, it is simply written if real, and streamed
 (via :meth:`dask.array.store`) if lazy.
@@ -82,12 +84,35 @@ or a 1-D numpy array -- this is enforced as a computed property (read and write)
 
 Attribute Values
 """"""""""""""""
-Attribute ``.value`` s are actually numpy arrays, but restricted to one dimension.
-They can be written from python values : numbers, strings or sequences, or from numpy
-arrays or scalars.  They read back as numpy numeric scalars or arrays, or as strings.
+In actual netCDF data, the value of an attribute is effectively limited to a one-dimensional
+array of certain valid netCDF types, and one-element arrays are exactly equivalent to scalar values.
+
+In ncdata, the ``.value`` of an :class:`ncdata.NcAttribute` must always be a numpy array, and
+when creating one the provided ``.value`` is cast with :func:`numpy.asanyarray`.
+
+However you are not prevented from setting an attributes ``.value`` to something other than
+an array, which may cause an error.  So for now, if setting the value of an existing attribute,
+ensure you always write compatible numpy data, or use :meth:`ncdata.NameMap.set_attrval` which is safe.
+
+For *reading* attributes, it is best to use :meth:`ncdata.NameMap.get_attrval` or (equivalently)
+:meth:`ncdata.NcAttribute.as_python_value()` :  These consistently return either
+``None`` (if missing); a numpy scalar; or array; or a Python string.  Those results are
+intended to be equivalent to what you should get from storing in an actual file and reading back,
+including re-interpreting a length-one vector as a scalar value.
+
+.. attention::
+   The correct handling and (future) discrimination of string data as character arrays ("char" in netCDF terms)
+   and/or variable-length strings ("string" type) is still to be determined.
+
+   For now, we are converting **all** string attributes to python strings.
+
+   There is **also** a longstanding known problem with the low-level C (and FORTRAN) interface, which forbids the
+   creation of vector character attributes, which appear as single concatenated strings.  So for now, **all**
+   string-type attributes appear as single Python strings (you never get an array of strings or list of strings).
 
 See also : :ref:`data-types`
 
+.. _correctness-checks:
 
 Correctness and Consistency
 ---------------------------
@@ -126,6 +151,7 @@ the corresponding contained components.
 Every component object also has a ``.name`` property.  By this, it is implicit that you
 **could** have a difference between the name by which the object is indexed in its
 container, and its ``.name``.  This is to be avoided !
+
 The :meth:`~ncdata.NameMap` container class is provided with convenience methods which
 aim to make this easier, such as :meth:`~ncdata.NameMap.add` and
 :meth:`~ncdata.NameMap.rename`.
@@ -134,6 +160,7 @@ NcData and NcVariable ".attributes" components
 ----------------------------------------------
 Note that the contents of a ".attributes" are :class:`~ncdata.NcAttributes` objects,
 not attribute values.
+
 Thus to fetch an attribute you might write, for example one of these :
 
 .. code-block::
@@ -142,9 +169,10 @@ Thus to fetch an attribute you might write, for example one of these :
     units1 = dataset.variables['var1'].attributes['units'].as_python_value()
 
 but **not** ``unit = dataset.variables['x'].attributes['attr1']``
-or  ``unit = dataset.variables['x'].attributes['attr1']``
 
-or, likewise, to set values, one of
+And not ``unit = dataset.variables['x'].attributes['attr1']``
+
+Or, likewise, to ***set*** values, one of
 
 .. code-block::
 
@@ -157,9 +185,11 @@ but **not** ``dataset.variables['x'].attributes['units'].value = "K"``
 Component ordering
 ^^^^^^^^^^^^^^^^^^
 The order of elements of a container is technically significant, and does constitute a
-potential difference between datasets (or files).  The
-:meth:`ncdata.NameMap.rename` method preserves the order of an element,
+potential difference between datasets (or files).
+
+The :meth:`ncdata.NameMap.rename` method preserves the order of an element,
 while :meth:`ncdata.NameMap.add` adds the new components at the end.
+
 The :func:`ncdata.utils.dataset_differences` utility provides various keywords allowing
 you to ignore ordering in comparisons, when required.
 
@@ -167,6 +197,7 @@ Other :class:`~ncdata.NameMap` methods
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The :class:`~ncdata.NameMap` class also provides
 
+.. _data-constructors:
 
 Core Object Constructors
 ------------------------
