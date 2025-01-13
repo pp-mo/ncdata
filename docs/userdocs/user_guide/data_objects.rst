@@ -182,8 +182,8 @@ Or, likewise, to ***set*** values, one of
 but **not** ``dataset.variables['x'].attributes['units'].value = "K"``
 
 
-Component ordering
-^^^^^^^^^^^^^^^^^^
+Container ordering
+------------------
 The order of elements of a container is technically significant, and does constitute a
 potential difference between datasets (or files).
 
@@ -193,9 +193,16 @@ while :meth:`ncdata.NameMap.add` adds the new components at the end.
 The :func:`ncdata.utils.dataset_differences` utility provides various keywords allowing
 you to ignore ordering in comparisons, when required.
 
-Other :class:`~ncdata.NameMap` methods
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-The :class:`~ncdata.NameMap` class also provides
+
+Container methods
+-----------------
+The :class:`~ncdata.NameMap` class also provides a variety of manipulation methods,
+both normal dictionary operations and some extra ones.
+
+The most notable ones are : ``del``, ``pop``, ``add``, ``addall``, ``rename`` and of
+course  ``__setitem__`` .
+
+See :ref:`common_operations` section.
 
 .. _data-constructors:
 

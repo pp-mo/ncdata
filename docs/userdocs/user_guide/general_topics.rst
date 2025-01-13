@@ -1,3 +1,5 @@
+.. _common_operations:
+
 Common Operations
 =================
 A group of common operations are available on all the core component types,
@@ -98,7 +100,7 @@ Note : here, the variables were created before the dimensions
 Equality Checks
 ---------------
 We provide a simple ``==`` check for all the core objects but this can be very costly,
-at least for variables, because it will check al the data (!).
+at least for variables, because it will check all the data, even in lazy arrays (!).
 
 You can use :func:`ncdata.utils.dataset_differences` for much more nuanced and controllable
 checking.
