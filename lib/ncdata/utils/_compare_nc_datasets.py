@@ -385,7 +385,7 @@ def variable_differences(
             isnans, isnans2 = (np.isnan(arr) for arr in (flatdata, flatdata2))
             if np.any(isnans) or np.any(isnans2):
                 nandiffs = np.where(isnans != isnans2)[0]
-                if nandiffs:
+                if nandiffs.size > 0:
                     flat_diff_inds += list(nandiffs)
                 anynans = isnans | isnans2
                 flatdata[anynans] = safe_fill_const
