@@ -150,29 +150,70 @@ class Test_NcAttribute__str_repr:
 
 
 class Test_NcAttribute_copy:
-    @staticmethod
-    def eq(attr1, attr2):
-        # Capture the expected equality of an original
-        # attribute and its copy.
-        # In the case of its value, if it is a numpy array,
-        # then it should be the **same identical object**
-        # -- i.e. not a copy (not even a view).
-        result = attr1 is not attr2
-        if result:
-            result = attr1.name == attr1.name and np.all(
-                attr1.value == attr2.value
-            )
-        if result and hasattr(attr1.value, "dtype"):
-            result = attr1.value is attr2.value
-        return result
-
     def test_empty(self):
         attr = NcAttribute("x", None)
         result = attr.copy()
-        assert self.eq(result, attr)
+        assert result == attr
 
     def test_value(self, datatype, structuretype):
         value = attrvalue(datatype, structuretype)
         attr = NcAttribute("x", value=value)
         result = attr.copy()
-        assert self.eq(result, attr)
+        assert result == attr
+        assert result.name == attr.name
+        assert result.value is not attr.value
+        assert (
+            result.value.dtype == attr.value.dtype
+            and result.value.shape == attr.value.shape
+            and np.all(result.value == attr.value)
+        )
+
+
+class Test_NcAttribute__eq__:
+    def test_eq(self, datatype, structuretype):
+        value = attrvalue(datatype, structuretype)
+        attr1 = NcAttribute("x", value=value)
+        attr2 = NcAttribute("x", value=value)
+        assert attr1 == attr2
+
+    def test_neq_name(self):
+        attr1 = NcAttribute("x", value=1)
+        attr2 = NcAttribute("y", value=1)
+        assert attr1 != attr2
+
+    def test_neq_dtype(self):
+        attr1 = NcAttribute("x", value=1)
+        attr2 = NcAttribute("x", value=np.array(1, dtype=np.int32))
+        assert attr1 != attr2
+
+    def test_neq_shape(self):
+        attr1 = NcAttribute("x", value=1)
+        attr2 = NcAttribute("x", value=[1, 2])
+        assert attr1 != attr2
+
+    def test_neq_value_numeric(self):
+        attr1 = NcAttribute("x", value=1.0)
+        attr2 = NcAttribute("x", value=1.1)
+        assert attr1 != attr2
+
+    def test_neq_value_string(self):
+        attr1 = NcAttribute("x", value="ping")
+        attr2 = NcAttribute("x", value="pong")
+        assert attr1 != attr2
+
+    def test_eq_onechar_arrayofonestring(self):
+        # NOTE: vector of char is really no different to vector of string,
+        # but we will get an 'U1' (single char length) dtype
+        attr1 = NcAttribute("x", value="t")
+        attr2 = NcAttribute("x", value=np.array("t"))
+        assert attr1 == attr2
+        assert attr1.value.dtype == "<U1"
+
+    def test_eq_onestring_arrayofonestring(self):
+        # NOTE: but ... vectors of string don't actually work in netCDF files at present
+        attr1 = NcAttribute("x", value="this")
+        attr2 = NcAttribute("x", value=np.array("this"))
+        assert attr1 == attr2
+        assert attr1.value.dtype == "<U4"
+
+    # NOTE: **not** testing a vector of multiple strings, since this has no function at present

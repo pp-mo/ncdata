@@ -374,6 +374,14 @@ class NcDimension:
         """Copy self."""
         return NcDimension(self.name, size=self.size, unlimited=self.unlimited)
 
+    def __eq__(self, other):
+        """Support simply equality testing."""
+        return (
+            self.name == other.name
+            and self.size == other.size
+            and self.unlimited == other.unlimited
+        )
+
 
 class NcVariable(_AttributeAccessMixin):
     """
@@ -581,4 +589,20 @@ class NcAttribute:
         Does not duplicate array content.
         See :func:`ncdata.utils.ncdata_copy`.
         """
-        return NcAttribute(self.name, self.value)
+        return NcAttribute(self.name, self.value.copy())
+
+    def __eq__(self, other):
+        """Support simple equality testing."""
+        if not isinstance(other, NcAttribute):
+            result = NotImplemented
+        else:
+            result = self.name == other.name
+            if result:
+                v1 = self.value
+                v2 = other.value
+                result = (
+                    v1.shape == v2.shape
+                    and v1.dtype == v2.dtype
+                    and np.all(v1 == v2)
+                )
+        return result

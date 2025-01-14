@@ -78,19 +78,35 @@ class Test:
         result = ncdata_copy(sample)
         assert not differences_or_duplicated_objects(sample, result)
 
-    def test_sample_data(self, sample):
-        # Check that data arrays are *not* copied, in both variables and attributes
-        arr1 = np.array([9.1, 7, 4])
-        sample.set_attrval("extra", arr1)
-        assert sample.attributes["extra"].value is arr1
-
+    def test_sample_variable_data(self, sample):
+        # Check that data arrays are *not* copied
         result = ncdata_copy(sample)
 
-        assert (
-            result.attributes["extra"].value
-            is sample.attributes["extra"].value
-        )
         data_arr = sample.variables["a"].data
         assert result.variables["a"].data is data_arr
         assert result.groups["g1"].variables["a"].data is data_arr
         assert result.groups["g2"].variables["a"].data is data_arr
+
+    def test_sample_attribute_arraydata(self, sample):
+        # Check that attributes arrays *are* copied
+        arr1 = np.array([9.1, 7, 4])
+        sample.set_attrval("extra", arr1)
+        sva = sample.variables["a"]
+        sva.set_attrval("xx2", arr1)
+
+        result = ncdata_copy(sample)
+        rva = result.variables["a"]
+
+        assert (
+            result.attributes["extra"].value
+            is not sample.attributes["extra"].value
+        ) and np.all(
+            result.attributes["extra"].value
+            == sample.attributes["extra"].value
+        )
+
+        assert (
+            rva.attributes["xx2"].value is not sva.attributes["xx2"].value
+        ) and np.all(
+            rva.attributes["xx2"].value == sva.attributes["xx2"].value
+        )
