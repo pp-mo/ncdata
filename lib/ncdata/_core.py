@@ -503,11 +503,22 @@ class NcAttribute:
         #: attribute name
         self.name: str = name
         # Attribute values are arraylike, have dtype
-        # TODO: may need to regularise string representations?
-        if not hasattr(value, "dtype"):
-            value = np.asanyarray(value)
         #: attribute value
         self.value: np.ndarray = value
+
+    @property
+    def value(self):  # noqa: D102
+        return self._value
+
+    @value.setter
+    def value(self, value):
+        if not hasattr(value, "dtype"):
+            value = np.asanyarray(value)
+        if value.ndim > 1:
+            raise ValueError(
+                "Attribute value should only be 0- or 1-dimensional."
+            )
+        self._value = value
 
     def as_python_value(self):
         """
