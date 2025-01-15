@@ -208,9 +208,7 @@ def to_nc4(
             nc4ds.close()
 
 
-def _from_nc4_group(
-    nc4ds: Union[nc.Dataset, nc.Group],
-) -> NcData:
+def _from_nc4_group(nc4ds: Union[nc.Dataset, nc.Group], dim_chunks) -> NcData:
     """
     Inner routine for :func:`from_nc4`.
 
@@ -261,8 +259,9 @@ def _from_nc4_group(
             variable_name=varname,
             group_names_path=group_names_path,
         )
+        chunks = [dim_chunks.get(name, "auto") for name in var.dimensions]
         var.data = da.from_array(
-            proxy, chunks="auto", asarray=True, meta=np.ndarray
+            proxy, chunks=chunks, asarray=True, meta=np.ndarray
         )
 
         for attrname in nc4var.ncattrs():
@@ -277,13 +276,16 @@ def _from_nc4_group(
 
     # And finally, groups -- by the magic of recursion ...
     for group_name, group in nc4ds.groups.items():
-        ncdata.groups[group_name] = _from_nc4_group(nc4ds.groups[group_name])
+        ncdata.groups[group_name] = _from_nc4_group(
+            nc4ds.groups[group_name], dim_chunks=dim_chunks
+        )
 
     return ncdata
 
 
 def from_nc4(
-    nc4_dataset_or_file: Union[nc.Dataset, nc.Group, Path, str]
+    nc4_dataset_or_file: Union[nc.Dataset, nc.Group, Path, str],
+    dim_chunks: Dict[str, Union[int, str]] = None,
 ) -> NcData:
     """
     Load NcData from a :class:`netCDF4.Dataset` or netCDF file.
@@ -294,10 +296,31 @@ def from_nc4(
         source of load data.  Can be either a :class:`netCDF4.Dataset`,
         a :class:`netCDF4.Group`, a :class:`pathlib.Path` or a string.
 
+    dim_chunks
+        a dictionary of chunk sizes (number, or -1 or "auto") for specific
+        dimensions, specified by dimension name.
+        Defaults to "auto" for all unspecified dimensions.
+
     Returns
     -------
     ncdata : NcData
+
+    Examples
+    --------
+    For example, to avoid cases where a simple dask ``from_array(chunks="auto")``
+    will fail
+
+        >>> from ncdata.netcdf4 import from_nc4
+        >>> from tests import testdata_dir
+        >>> path = testdata_dir / "toa_brightness_temperature.nc"
+        >>> ds = from_nc4(path, dim_chunks={"x": 15})
+        >>> ds.variables["data"].data.chunksize
+        (160, 15)
+        >>>
+
     """
+    if dim_chunks is None:
+        dim_chunks = {}
     caller_owns_dataset = hasattr(nc4_dataset_or_file, "variables")
     if caller_owns_dataset:
         nc4ds = nc4_dataset_or_file
@@ -305,7 +328,7 @@ def from_nc4(
         nc4ds = nc.Dataset(nc4_dataset_or_file)
 
     try:
-        ncdata = _from_nc4_group(nc4ds)
+        ncdata = _from_nc4_group(nc4ds, dim_chunks)
     finally:
         if not caller_owns_dataset:
             nc4ds.close()
