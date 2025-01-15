@@ -330,8 +330,8 @@ class NcData(_AttributeAccessMixin):
         """
         Copy self.
 
-        This duplicates structure with new ncdata core objects, but does not duplicate
-        data arrays.  See :func:`ncdata.utils.ncdata_copy`.
+        This duplicates structure with all-new ncdata core objects, but does not
+        duplicate variable data arrays.  See :func:`ncdata.utils.ncdata_copy`.
         """
         from ncdata.utils import ncdata_copy
 
@@ -373,6 +373,14 @@ class NcDimension:
     def copy(self):
         """Copy self."""
         return NcDimension(self.name, size=self.size, unlimited=self.unlimited)
+
+    def __eq__(self, other):
+        """Support simply equality testing."""
+        return (
+            self.name == other.name
+            and self.size == other.size
+            and self.unlimited == other.unlimited
+        )
 
 
 class NcVariable(_AttributeAccessMixin):
@@ -471,7 +479,7 @@ class NcVariable(_AttributeAccessMixin):
         """
         Copy self.
 
-        Does not duplicate arrays oin data or attribute content.
+        Does not duplicate arrays in data content.
         See :func:`ncdata.utils.ncdata_copy`.
         """
         from ncdata.utils._copy import _attributes_copy
@@ -575,10 +583,21 @@ class NcAttribute:
         return repr(self)
 
     def copy(self):
-        """
-        Copy self.
+        """Copy self, including any array value content."""
+        return NcAttribute(self.name, self.value.copy())
 
-        Does not duplicate array content.
-        See :func:`ncdata.utils.ncdata_copy`.
-        """
-        return NcAttribute(self.name, self.value)
+    def __eq__(self, other):
+        """Support simple equality testing."""
+        if not isinstance(other, NcAttribute):
+            result = NotImplemented
+        else:
+            result = self.name == other.name
+            if result:
+                v1 = self.value
+                v2 = other.value
+                result = (
+                    v1.shape == v2.shape
+                    and v1.dtype == v2.dtype
+                    and np.all(v1 == v2)
+                )
+        return result

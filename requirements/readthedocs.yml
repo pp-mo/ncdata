@@ -4,13 +4,15 @@ channels:
   - conda-forge
 
 dependencies:
-  - netCDF4>=1.4
-  - numpy <2.0
   - iris
-  - xarray
-  - filelock
   - iris-sample-data
+  - filelock
+  - netCDF4>=1.4
+  - numpy
+  - pip
+  - pydata-sphinx-theme
   - pytest
+  - python<3.13
   - sphinx
   - sphinxcontrib-napoleon
-  - pydata-sphinx-theme
+  - xarray
