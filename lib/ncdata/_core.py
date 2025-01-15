@@ -330,8 +330,8 @@ class NcData(_AttributeAccessMixin):
         """
         Copy self.
 
-        This duplicates structure with new ncdata core objects, but does not duplicate
-        data arrays.  See :func:`ncdata.utils.ncdata_copy`.
+        This duplicates structure with all-new ncdata core objects, but does not
+        duplicate variable data arrays.  See :func:`ncdata.utils.ncdata_copy`.
         """
         from ncdata.utils import ncdata_copy
 
@@ -479,7 +479,7 @@ class NcVariable(_AttributeAccessMixin):
         """
         Copy self.
 
-        Does not duplicate arrays oin data or attribute content.
+        Does not duplicate arrays in data content.
         See :func:`ncdata.utils.ncdata_copy`.
         """
         from ncdata.utils._copy import _attributes_copy
@@ -583,12 +583,7 @@ class NcAttribute:
         return repr(self)
 
     def copy(self):
-        """
-        Copy self.
-
-        Does not duplicate array content.
-        See :func:`ncdata.utils.ncdata_copy`.
-        """
+        """Copy self, including any array value content."""
         return NcAttribute(self.name, self.value.copy())
 
     def __eq__(self, other):

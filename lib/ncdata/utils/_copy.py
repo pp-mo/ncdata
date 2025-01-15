@@ -14,8 +14,8 @@ def ncdata_copy(ncdata: NcData) -> NcData:
     """
     Return a copy of the data.
 
-    The operation makes fresh copies of all ncdata objects, but does not copy arrays in
-    variable data.
+    The operation makes fresh copies of all ncdata objects, but does not copy variable
+    data arrays.
 
     Parameters
     ----------
