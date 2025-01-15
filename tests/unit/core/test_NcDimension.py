@@ -69,3 +69,37 @@ class Test_NcDimension_copy:
         assert result.name == sample.name
         assert result.size == sample.size
         assert result.unlimited == sample.unlimited
+
+
+class Test_NcDimension_eq:
+    @pytest.fixture(params=["isunlimited", "notunlimited"])
+    def unlimited(self, request):
+        return request.param == "isunlimited"
+
+    @pytest.fixture(params=[0, 3])
+    def size(self, request):
+        return request.param
+
+    @pytest.fixture()
+    def refdim(self, unlimited, size):
+        return NcDimension(name="ref_name", size=size, unlimited=unlimited)
+
+    def test_eq(self, refdim, size, unlimited):
+        thisdim = NcDimension("ref_name", size=size, unlimited=unlimited)
+        assert thisdim == refdim
+
+    def test_noneq_name(self, refdim, size, unlimited):
+        thisdim = NcDimension("other_name", size=size, unlimited=unlimited)
+        assert thisdim != refdim
+
+    def test_noneq_size(self, refdim, size, unlimited):
+        if unlimited:
+            pytest.skip("unsupported case")
+        thisdim = NcDimension("ref_name", size=7)
+        assert thisdim != refdim
+
+    def test_noneq_unlim(self, refdim, size, unlimited):
+        if size == 0:
+            pytest.skip("unsupported case")
+        thisdim = NcDimension("ref_name", size=size, unlimited=not unlimited)
+        assert thisdim != refdim
