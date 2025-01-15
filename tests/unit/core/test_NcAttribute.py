@@ -217,3 +217,17 @@ class Test_NcAttribute__eq__:
         assert attr1.value.dtype == "<U4"
 
     # NOTE: **not** testing a vector of multiple strings, since this has no function at present
+
+
+class Test_NcAttribute__value_assign:
+    def test_set(self, datatype, structuretype):
+        attr = NcAttribute("x", None)
+
+        set_value = attrvalue(datatype, structuretype)
+        attr.value = set_value
+
+        expected_array = np.asanyarray(set_value)
+        assert isinstance(attr.value, np.ndarray)
+        assert attr.value.dtype == expected_array.dtype
+        assert attr.value.shape == expected_array.shape
+        assert np.all(attr.value == expected_array)
