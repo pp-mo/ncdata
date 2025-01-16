@@ -1,0 +1,116 @@
+.. _common_operations:
+
+Common Operations
+=================
+A group of common operations are available on all the core component types,
+i.e. the operations of extract/remove/insert/rename/copy on the ``.datasets``, ``.groups``,
+``.dimensions``, ``.variables`` and ``.attributes`` properties of the core objects.
+
+Most of these are hopoefully "obvious" Pythonic methods of the container objects.
+
+Extract and Remove
+------------------
+These are implemented as :meth:`~ncdata.NameMap.__delitem__` and :meth:`~ncdata.NameMap.pop`
+methods, which work in the usual way.
+
+Examples :
+
+* ``var_x = dataset.variables.pop("x")``
+* ``del data.variables["x"]``
+
+Insert / Add
+------------
+A new content (component) can be added under its own name with the
+:meth:`~ncdata.NameMap.add` method.
+
+Example : ``dataset.variables.add(NcVariable("x", dimensions=["x"], data=my_data))``
+
+An :meth:`~ncdata.NcAttribute` can also be added or set (if already present) with the special
+:meth:`~ncdata.NameMap.set_attrval` method.
+
+Example : ``dataset.variables["x"].set_attrval["units", "m s-1")``
+
+Rename
+------
+A component can be renamed with the :meth:`~ncdata.NameMap.rename` method.  This changes
+both the name in the container **and** the component's own name -- it is not recommended
+ever to set ``component.name`` directly, as this obviously can become inconsistent.
+
+Example : ``dataset.variables.rename("x", "y")``
+
+.. warning::
+    Renaming a dimension will not rename references to it (i.e. in variables), which
+    obviously may cause problems.
+    We may add a utility to do this safely this in future.
+
+Copying
+-------
+All core objects support a ``.copy()`` method, which however does not copy array content
+(e.g. variable data or attribute arrays).  See for instance :meth:`ncdata.NcData.copy`.
+
+There is also a utility function :func:`ncdata.utils.ncdata_copy`, this is effectively
+the same as the NcData object copy.
+
+
+Equality Checking
+-----------------
+We provide a simple, comprehensive  ``==`` check for :mod:`~ncdata.NcDimension` and
+:mod:`~ncdata.NcAttribute` objects, but not at present :mod:`~ncdata.NcVariable` or
+:mod:`~ncdata.NcData`.
+
+So, using ``==`` on :mod:`~ncdata.NcVariable` or :mod:`~ncdata.NcData` objects
+will only do an identity check -- that is, it tests ``id(A) == id(B)``, or ``A is B``.
+
+However, these objects **can** be properly compared with the dataset comparison
+utilities, :func:`ncdata.utils.dataset_differences` and
+:func:`ncdata.utils.variable_differences` :  By default, these operations are very
+comprehensive and may be very costly for instance comparing large data arrays, but they
+also allow more nuanced and controllable checking, e.g. to skip data array comparisons
+or ignore variable ordering.
+
+
+Onject Creation
+---------------
+The constructors should allow reasonably readable inline creation of data.
+See here : :ref:`data-constructors`
+
+Ncdata is deliberately not very fussy about 'correctness', since it is not tied to an actual
+dataset which must "make sense".   see : :ref:`correctness-checks` .
+
+Hence, there is no great need to install things in the 'right' order (e.g. dimensions
+before variables which need them).  You can create objects in one go, like this :
+
+.. code-block::
+
+    data = NcData(
+        dimensions=[
+            NcDimension("y", 2),
+            NcDimension("x", 3),
+        ],
+        variables=[
+            NcVariable("y", dimensions=["y"], data=[10, 11]),
+            NcVariable("x", dimensions=["y"], data=[20, 21, 22]),
+            NcVariable("dd", dimensions=["y", "x"], data=[[0, 1, 2], [3, 4, 5]])
+        ]
+    )
+
+
+or iteratively, like this :
+
+.. code-block::
+
+    data = NcData()
+    dims = [("y", 2), ("x", 3)]
+    data.variables.addall([
+        NcVariable(nn, dimensions=[nn], data=np.arange(ll))
+        for ll, nn in dims
+    ])
+    data.variables.add(
+        NcVariable("dd", dimensions=["y", "x"],
+        data=np.arange(6).reshape(2,3))
+    )
+    data.dimensions.addall([NcDimension(nn, ll) for nn, ll in dims])
+
+Note : here, the variables were created before the dimensions
+
+

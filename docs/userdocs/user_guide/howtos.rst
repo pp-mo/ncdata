@@ -274,6 +274,35 @@ It can be freely overwritten by the user.
     valid dimensions, and that ``.data`` arrays match the dimensions.
 
 
+Read data from a NetCDF file
+----------------------------
+Use the :func:`ncdata.netcdf4.from_nc4` function to load a dataset from a netCDF file.
+
+.. code-block:: python
+
+    >>> from ncdata.netcdf4 from_nc4
+    >>> ds = from_nc4(filepath)
+    >>> print(ds)
+    <NcData: /
+        dimensions:
+            time = 10
+
+        variables:
+            <NcVariable(int64): x(time)
+    >
+
+
+Control chunking in a netCDF read
+---------------------------------
+Use the ``dim_chunks`` argument in the :func:`ncdata.netcdf4.from_nc4` function
+
+.. code-block:: python
+
+    >>> from ncdata.netcdf4 from_nc4
+    >>> ds = from_nc4(filepath, dim_chunks={"time": 3})
+    >>> print(ds.variables["x"].data.chunksize)
+    (3,)
+
 
 Save data to a new file
 -----------------------

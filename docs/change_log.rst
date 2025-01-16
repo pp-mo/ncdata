@@ -1,22 +1,22 @@
 Versions and Change Notes
 =========================
 
-Project Status
---------------
+Project Development Status
+--------------------------
 We intend to follow `PEP 440 <https://peps.python.org/pep-0440/>`_,
 or (older) `SemVer <https://semver.org/>`_ versioning principles.
 This means the version string has the basic form **"major.minor.bugfix[special-types]"**.
 
-Current release version is at **"v0.1"**.
+Current release version is at **"v0.2"**.
 
-This is a first complete implementation,
-with functional operational of all public APIs.
+This is a complete implementation, with functional operational of all public APIs.
 The code is however still experimental, and APIs are not stable
 (hence no major version yet).
 
 
 Change Notes
 ------------
+Summary of key features by release number
 
 Unreleased
 ^^^^^^^^^^

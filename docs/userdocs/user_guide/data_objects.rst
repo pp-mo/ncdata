@@ -265,10 +265,6 @@ will be automatically converted to a NameMap of ``name: NcAttribute(name: value)
 
 Relationship to File Storage
 ----------------------------
-Note that file-specific storage aspects, such as chunking, data-paths or compression
-strategies, are not recorded in the core objects.  However, array representations in
-variable and attribute data (notably dask lazy arrays) may hold such information.
-The concept of "unlimited" dimensions is arguably an exception.  However, this is a
-core provision in the NetCDF data model itself (see "Dimension" in the `NetCDF Classic Data Model`_).
+See :ref:`file-storage`
 
 .. _NetCDF Classic Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#classic_model

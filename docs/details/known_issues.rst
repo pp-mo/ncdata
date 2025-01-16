@@ -43,7 +43,7 @@ There are no current plans to address these, but could be considered in future
     * notably, includes compound and variable-length types
 
     * ..and especially **variable-length strings in variables**.
-      see : :ref:`string_and_character_data`
+      see : :ref:`string-and-character-data`, ref:`data-types`
 
 
 Features planned

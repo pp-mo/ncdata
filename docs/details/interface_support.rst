@@ -35,6 +35,7 @@ array has the actual variable dtype, and the "scale_factor" and
 
 The existence of a "_FillValue" attribute controls how.. TODO
 
+.. _file-storage:
 
 File storage control
 ^^^^^^^^^^^^^^^^^^^^
@@ -44,13 +45,21 @@ control the data compression and translation facilities of the NetCDF file
 library.
 If required, you should use :mod:`iris` or :mod:`xarray` for this.
 
+Although file-specific storage aspects, such as chunking, data-paths or compression
+strategies, are not recorded in the core objects.  However, array representations in
+variable and attribute data (notably dask lazy arrays) may hold such information.
+
+The concept of "unlimited" dimensions is also, arguably an exception.  However, this is a
+core provision in the NetCDF data model itself (see "Dimension" in the `NetCDF Classic Data Model`_).
+
 
 Dask chunking control
 ^^^^^^^^^^^^^^^^^^^^^
 Loading from netcdf files generates  variables whose data arrays are all Dask
 lazy arrays.  These are created with the "chunks='auto'" setting.
-There is currently no control for this : If required, load via Iris or Xarray
-instead.
+
+There is simple user override API available to control this on a per-dimension basis.
+See :func:`ncdata.netcdf4.from_nc4`.
 
 
 Xarray Compatibility
@@ -94,3 +103,4 @@ see : `support added in v3.7.0 <https://scitools-iris.readthedocs.io/en/stable/w
 
 
 .. _Continuous Integration testing on GitHub: https://github.com/pp-mo/ncdata/blob/main/.github/workflows/ci-tests.yml
+.. _NetCDF Classic Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#classic_model
