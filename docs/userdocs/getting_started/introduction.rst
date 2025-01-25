@@ -21,7 +21,7 @@ The following code snippets demonstrate the absolute basics.
 
     Likewise, internal consistency is not checked, so it is possible to create
     data that cannot be stored in an actual file.
-    See :func:`ncdata.utils.save_errors`.
+    See :ref:`correctness-checks`.
 
     We may revisit this in later releases to make data manipulation "safer".
 
@@ -109,7 +109,7 @@ which behaves like a dictionary::
 Attributes
 ^^^^^^^^^^
 Variables live in the ``attributes`` property of a :class:`~ncdata.NcData`
-or :class:`~ncdata.Variable`::
+or :class:`~ncdata.NcVariable`::
 
     >>> var.set_attrval('a', 1)
     NcAttribute('a', 1)
@@ -249,7 +249,7 @@ Thread safety
         >>> from ndata.threadlock_sharing import enable_lockshare
         >>> enable_lockshare(iris=True, xarray=True)
 
-    See details at :mod:`ncdata.threadlock_sharing`
+    See details at :ref:`thread_safety`.
 
 
 Working with NetCDF files

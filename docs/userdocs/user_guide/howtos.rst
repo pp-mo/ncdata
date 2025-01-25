@@ -552,3 +552,41 @@ or, to convert xarray data variable output to masked integers :
     >>> var.set_attrval("_FillValue", -9999)
     >>> to_nc4(ncdata, "output.nc")
 
+
+.. _howto_load_variablewidth_strings:
+
+Load a file containing variable-width string variables
+------------------------------------------------------
+You must supply a ``dim_chunks`` keyword to the :meth:`ncdata.netcdf.from_nc4` method,
+specifying how to chunk the dimension(s) which the string variable uses.
+
+.. code-block:: python
+
+    >>> from ncdata.netcdf4 import from_nc4
+    >>> # if we have a "string" type variable using the "date" dimension
+    >>> # : don't chunk that dimension.
+    >>> dataset = from_nc4(filepath, dim_chunks={"date": -1})
+
+This is needed to avoid a Dask error like
+``"auto-chunking with dtype.itemsize == 0 is not supported, please pass in `chunks`
+explicitly."``
+
+When you have done this, Dask will return the variable data as a numpy *object* array containing Python strings.
+You probably still need to (manually) convert that to something more tractable to work with it effectively.
+
+For example, something like :
+
+.. code-block:: python
+
+    >>> var = dataset.variables['name']
+    >>> data = var.data.compute()
+    >>> maxlen = max(len(s) for s in var.data)
+
+    >>> # convert to fixed-width character array
+    >>> data = np.array([[s.ljust(maxlen, "\0") for s in var.data]])
+    >>> print(data.shape, data.dtype)
+    (1010, 12) <U1
+
+    >>> dataset.dimensions.add(NcDimension('name_strlen', maxlen))
+    >>> var.dimensions = var.dimensions + ("name_strlen",)
+    >>> var.data = data

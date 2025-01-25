@@ -8,7 +8,8 @@ inspect and/or modify it, aiming to do this is the most natural and pythonic way
 Data Classes
 ------------
 The data model components are elements of the
-`NetCDF Classic Data Model`_ , plus **groups** (from the 'enhanced' netCDF model).
+`NetCDF Classic Data Model`_ , plus **groups** (from the
+`"enhanced" netCDF data model <NetCDF Enhanced Data Model>`_ ).
 
 That is, a Dataset(File) consists of just Dimensions, Variables, Attributes and
 Groups.
@@ -87,28 +88,25 @@ Attribute Values
 In actual netCDF data, the value of an attribute is effectively limited to a one-dimensional
 array of certain valid netCDF types, and one-element arrays are exactly equivalent to scalar values.
 
-In ncdata, the ``.value`` of an :class:`ncdata.NcAttribute` must always be a numpy array, and
-when creating one the provided ``.value`` is cast with :func:`numpy.asanyarray`.
+The ``.value`` of an :class:`ncdata.NcAttribute` must always be a numpy scalar or 1-dimensional array.
 
-However you are not prevented from setting an attributes ``.value`` to something other than
-an array, which may cause an error.  So for now, if setting the value of an existing attribute,
-ensure you always write compatible numpy data, or use :meth:`ncdata.NameMap.set_attrval` which is safe.
+When assigning a ``.value``, or creating a new :class:`ncdata.NcAttribute`, the value
+is cast with :func:`numpy.asanyarray`, and if this fails, or yields a multidimensional array
+then an error is raised.
 
-For *reading* attributes, it is best to use :meth:`ncdata.NameMap.get_attrval` or (equivalently)
-:meth:`ncdata.NcAttribute.as_python_value()` :  These consistently return either
-``None`` (if missing); a numpy scalar; or array; or a Python string.  Those results are
-intended to be equivalent to what you should get from storing in an actual file and reading back,
+When *reading* attributes, for consistent results it is best to use the
+:meth:`ncdata.NcVariable.get_attrval` method or (equivalently) :meth:`ncdata.NcAttribute.as_python_value` :
+These return either ``None`` (if missing); a numpy scalar; or array; or a Python string.
+These are intended to be equivalent to what you would get from storing in an actual file and reading back,
 including re-interpreting a length-one vector as a scalar value.
 
 .. attention::
-   The correct handling and (future) discrimination of string data as character arrays ("char" in netCDF terms)
-   and/or variable-length strings ("string" type) is still to be determined.
+    The correct handling and (future) discrimination of attribute values which are character arrays
+    ("char" in netCDF terms) and/or variable-length strings ("string" type) is still to be determined.
+    ( We do not yet properly support any variable-length types. )
 
-   For now, we are converting **all** string attributes to python strings.
-
-   There is **also** a longstanding known problem with the low-level C (and FORTRAN) interface, which forbids the
-   creation of vector character attributes, which appear as single concatenated strings.  So for now, **all**
-   string-type attributes appear as single Python strings (you never get an array of strings or list of strings).
+    For now, we are simply converting **all** string-like attributes by
+    :meth:`ncdata.NcAttribute.as_python_value` to python strings.
 
 See also : :ref:`data-types`
 
@@ -116,21 +114,21 @@ See also : :ref:`data-types`
 
 Correctness and Consistency
 ---------------------------
-In practice, to support flexibility in construction and manipulation, it is
-not practical for ncdata structures to represent valid netCDF at
-all times, since this would makes changing things awkward.
-For example, if a group refers to a dimension *outside* the group, you could not simply
-extract it from the dataset because it is not valid in isolation.
-
-Thus, we do allow that ncdata structures represent *invalid* netCDF data.
+In order to allow flexibility in construction and manipulation, it is not practical
+for ncdata structures to represent valid netCDF at all times, since this would makes
+changing things awkward.
+For example, if a group refers to a dimension *outside* the group, strict correctness
+would not allow you to simply extract it from the dataset, because it is not valid in isolation.
+Thus, we do allow ncdata structures to represent *invalid* netCDF data.
 For example, circular references, missing dimensions or naming mismatches.
-Effectively there are a set of data validity rules, which are summarised in the
-:func:`ncdata.utils.save_errors` routine.
 
-In practice, there a minimal set of runtime rules for creating ncdata objects, and
-additional requirements when ncdata is converted to actual netCDF.  For example,
-variables can be initially created with no data.  But if subsequently written to a file,
-data must be assigned first.
+In practice, there are a minimal set of rules which apply when initially creating
+ncdata objects, and additional requirements which apply when creating actual netCDF files.
+For example, a variable can be initially created with no data.  But if subsequently written
+to a file, some data must be defined.
+
+The full set of data validity rules are summarised in the
+:func:`ncdata.utils.save_errors` routine.
 
 .. Note::
   These issues are not necessarily all fully resolved.  Caution required !
@@ -268,3 +266,4 @@ Relationship to File Storage
 See :ref:`file-storage`
 
 .. _NetCDF Classic Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#classic_model
+.. _NetCDF Enhanced Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#enhanced_model

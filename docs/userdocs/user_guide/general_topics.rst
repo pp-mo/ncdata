@@ -2,7 +2,7 @@
 
 General Topics
 ==============
-Odd discussion topics realting to core ncdata classes + data management
+Odd discussion topics relating to core ncdata classes + data management
 
 Validity Checking
 -----------------
@@ -72,16 +72,28 @@ may contain zero bytes so that they convert to variable-width (Python) strings u
 maximum width.  The string (maximum) length is a separate dimension, which is recorded
 as a normal netCDF dimension like any other.
 
+.. note::
+
+    Although it is not tested, it has proved possible (and useful) at present to load
+    files with variables containing variable-length string data, but it is
+    necessary to supply an explicit user chunking to workaround limitations in Dask.
+    Please see the :ref:`howto example <howto_load_variablewidth_strings>`.
+
 Characters in Attribute Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Character data in string *attribute* values can be written simply as Python
 strings.  They are stored in an :class:`~ncdata.NcAttribute`'s ``.value`` as a
 character array of dtype "<U?", or are returned from
 :meth:`ncdata.NcAttribute.as_python_value` as a simple Python string.
-A vector of strings does also function as an attribute value, but bear in mind that a
-vector of strings is not currently supported in netCFD4 implementations.
+
+A vector of strings is also permitted an attribute value, but bear in mind that
+**a vector of strings is not currently supported in netCFD4 implementations**.
+Thus, you cannot have an array or list of strings as an attribute value in an actual file,
+and if stored to a file such an attribute will be concatenated into a single string value.
+
 Unicode is supported, and encodes/decodes seamlessly into actual files.
 
+.. _thread_safety:
 
 Thread Safety
 -------------

@@ -14,17 +14,7 @@ Datatypes
 ^^^^^^^^^
 Ncdata supports all the regular datatypes of netcdf, but *not* the
 variable-length and user-defined datatypes.
-
-This means, notably, that all string variables will have the basic numpy type
-'S1', equivalent to netcdf 'NC_CHAR'.  Thus, multi-character string variables
-must always have a definite "string-length" dimension.
-
-Attribute values, by contrast, are treated as Python strings with the normal
-variable length support.  Their basic dtype can be any numpy string dtype,
-but will be converted when required.
-
-The NetCDF C library and netCDF4-python do not support arrays of strings in
-attributes, so neither does NcData.
+Please see : :ref:`data-types`.
 
 
 Data Scaling, Masking and Compression
@@ -45,7 +35,7 @@ control the data compression and translation facilities of the NetCDF file
 library.
 If required, you should use :mod:`iris` or :mod:`xarray` for this.
 
-Although file-specific storage aspects, such as chunking, data-paths or compression
+File-specific storage aspects, such as chunking, data-paths or compression
 strategies, are not recorded in the core objects.  However, array representations in
 variable and attribute data (notably dask lazy arrays) may hold such information.
 
@@ -58,7 +48,7 @@ Dask chunking control
 Loading from netcdf files generates  variables whose data arrays are all Dask
 lazy arrays.  These are created with the "chunks='auto'" setting.
 
-There is simple user override API available to control this on a per-dimension basis.
+However there is a simple per-dimension chunking control available on loading.
 See :func:`ncdata.netcdf4.from_nc4`.
 
 
