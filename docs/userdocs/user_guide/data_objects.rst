@@ -115,7 +115,7 @@ See also : :ref:`data-types`
 Correctness and Consistency
 ---------------------------
 In order to allow flexibility in construction and manipulation, it is not practical
-for ncdata structures to represent valid netCDF at all times, since this would makes
+for ncdata structures to represent valid netCDF at all times, since this would make
 changing things awkward.
 For example, if a group refers to a dimension *outside* the group, strict correctness
 would not allow you to simply extract it from the dataset, because it is not valid in isolation.
