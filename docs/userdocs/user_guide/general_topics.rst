@@ -29,7 +29,7 @@ So, this does ***not*** include the user-defined, enumerated or variable-length 
 
     We hope to extend support to the more general `NetCDF Enhanced Data Model`_ in future.
 
-For reference, the currently supported + tested datatypes are currently :
+For reference, the currently supported + tested datatypes are :
 
 * unsigned byte = numpy "u1"
 * unsigned short = numpy "u2"
