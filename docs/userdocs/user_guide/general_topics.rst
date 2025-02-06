@@ -52,7 +52,7 @@ For reference, the currently supported + tested datatypes are :
 
 Character and String Data Handling
 ----------------------------------
-NetCDF can can contain string and character data in at least 3 different contexts :
+NetCDF can contain string and character data in at least 3 different contexts :
 
 Characters in Data Component Names
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
