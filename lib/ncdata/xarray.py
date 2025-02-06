@@ -1,12 +1,15 @@
-"""
+r"""
 Interface routines for converting data between ncdata and xarray.
 
-Converts :class:`~ncdata.NcData` to and from Xarray :class:`~xarray.Dataset` objects.
-
-This embeds a certain amount of Xarray knowledge (and dependency), hopefully a minimal
-amount.  The structure of an NcData object makes it fairly painless.
+Converts :class:`ncdata.NcData`\s to and from :class:`xarray.Dataset` objects.
 
 """
+
+# NOTE: This embeds a certain amount of Xarray knowledge (and dependency).
+# Hopefully a minimal amount.
+# The structure of an NcData object makes it fairly painless.
+#
+
 from pathlib import Path
 from typing import AnyStr, Union
 
@@ -159,12 +162,14 @@ def to_xarray(ncdata: NcData, **xarray_load_kwargs) -> xr.Dataset:
     """
     Convert :class:`~ncdata.NcData` to an xarray :class:`~xarray.Dataset`.
 
+    Behaves (ideally, somewhat) like an :func:`xarray.load_dataset` call.
+
     Parameters
     ----------
     ncdata : NcData
         source data
 
-    kwargs : dict
+    xarray_load_kwargs : dict
         additional xarray "load keywords", passed to :meth:`xarray.Dataset.load_store`
 
     Returns
@@ -182,12 +187,14 @@ def from_xarray(
     """
     Convert an xarray :class:`xarray.Dataset` to a :class:`NcData`.
 
+    Behaves (ideally, somewhat) like an :meth:`xarray.Dataset.to_netcdf` call.
+
     Parameters
     ----------
     xrds : :class:`xarray.Dataset`
         source data
 
-    kwargs : dict
+    xarray_save_kwargs : dict
         additional xarray "save keywords", passed to
         :meth:`xarray.Dataset.dump_to_store`
 

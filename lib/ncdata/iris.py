@@ -1,13 +1,18 @@
 r"""
 Interface routines for converting data between ncdata and Iris.
 
-Convert :class:`~ncdata.NcData` to and from Iris :class:`~iris.cube.Cube`\\s.
-
-This uses the :class:`ncdata.dataset_like` interface ability to mimic netCDF4.Dataset
-objects, which are used like files to load and save Iris data.
-This means that all we need to know of Iris is its netcdf load+save interfaces.
+Convert :class:`~ncdata.NcData`\s to and from Iris :class:`~iris.cube.Cube`\s.
 
 """
+#
+# NOTE:  This uses the :mod:`ncdata.dataset_like` interface ability to mimic a
+# :class:`netCDF4.Dataset` object, which can then be loaded like a file into Iris.
+# The Iris netcdf loader now has specific support for loading an open dataset object,
+# see : https://github.com/SciTools/iris/pull/5214.
+# This means that, hopefully, all we need to know of Iris itself is the load and save,
+# though we do specifically target the netcdf format interface.
+#
+
 from typing import Any, AnyStr, Dict, Iterable, Union
 
 import iris
@@ -18,10 +23,6 @@ from . import NcData
 from .dataset_like import Nc4DatasetLike
 
 __all__ = ["from_iris", "to_iris"]
-
-#
-# The primary conversion interfaces
-#
 
 
 def to_iris(ncdata: NcData, **iris_load_kwargs: Dict[AnyStr, Any]) -> CubeList:
@@ -40,7 +41,7 @@ def to_iris(ncdata: NcData, **iris_load_kwargs: Dict[AnyStr, Any]) -> CubeList:
 
     Returns
     -------
-    cubes : CubeList
+    cubes : iris.cube.CubeList
         loaded results
     """
     dslike = Nc4DatasetLike(ncdata)
@@ -61,7 +62,7 @@ def from_iris(
     cubes : :class:`iris.cube.Cube`, or iterable of Cubes
         cube or cubes to "save" to an NcData object.
     iris_save_kwargs : dict
-        additional keys passed to :func:`iris.save` operation.
+        additional keys passed to :func:`iris.fileformats.netcdf.save` operation.
 
     Returns
     -------

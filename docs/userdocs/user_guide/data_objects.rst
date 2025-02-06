@@ -143,7 +143,7 @@ i.e. either its ``.dimensions``, ``.variables``, ``.attributes`` or ``.groups``.
 
 Each of the "container" properties is a :class:`~ncdata._core.NameMap` object, which
 is a dictionary type mapping a string (name) to a specific type of components.
-The dictionary``.keys()`` are a sequence of component names, and its ``.values()`` are
+The dictionary ``.keys()`` are a sequence of component names, and its ``.values()`` are
 the corresponding contained components.
 
 Every component object also has a ``.name`` property.  By this, it is implicit that you
@@ -179,6 +179,8 @@ Or, likewise, to ***set*** values, one of
 
 but **not** ``dataset.variables['x'].attributes['units'].value = "K"``
 
+
+.. _container-ordering:
 
 Container ordering
 ------------------
