@@ -41,7 +41,7 @@ Example : ``dataset.variables.rename("x", "y")``
 .. warning::
     Renaming a dimension will not rename references to it (i.e. in variables), which
     obviously may cause problems.
-    We may add a utility to do this safely this in future.
+    We may add a utility to do this safely in future.
 
 Copying
 -------
