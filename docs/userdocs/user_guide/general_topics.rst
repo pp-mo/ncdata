@@ -87,7 +87,7 @@ character array of dtype "<U?", or are returned from
 :meth:`ncdata.NcAttribute.as_python_value` as a simple Python string.
 
 A vector of strings is also permitted an attribute value, but bear in mind that
-**a vector of strings is not currently supported in netCFD4 implementations**.
+**a vector of strings is not currently supported in netCDF4 implementations**.
 Thus, you cannot have an array or list of strings as an attribute value in an actual file,
 and if stored to a file such an attribute will be concatenated into a single string value.
 
