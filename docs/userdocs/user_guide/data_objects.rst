@@ -1,7 +1,7 @@
 Core Data Objects
 =================
 Ncdata uses Python objects to represent netCDF data, and allows the user to freely
-inspect and/or modify it, aiming to do this is the most natural and pythonic way.
+inspect and/or modify it, aiming to do this in the most natural and pythonic way.
 
 .. _data-model:
 
