@@ -69,7 +69,7 @@ also allow more nuanced and controllable checking, e.g. to skip data array compa
 or ignore variable ordering.
 
 
-Onject Creation
+Object Creation
 ---------------
 The constructors should allow reasonably readable inline creation of data.
 See here : :ref:`data-constructors`
