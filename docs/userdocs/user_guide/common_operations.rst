@@ -63,7 +63,7 @@ will only do an identity check -- that is, it tests ``id(A) == id(B)``, or ``A i
 
 However, these objects **can** be properly compared with the dataset comparison
 utilities, :func:`ncdata.utils.dataset_differences` and
-:func:`ncdata.utils.variable_differences` :  By default, these operations are very
+:func:`ncdata.utils.variable_differences`.  By default, these operations are very
 comprehensive and may be very costly for instance comparing large data arrays, but they
 also allow more nuanced and controllable checking, e.g. to skip data array comparisons
 or ignore variable ordering.
