@@ -148,6 +148,49 @@ def _attribute_arrays_eq(a1, a2):
     return result
 
 
+def _array_element_str(x):
+    """Make a string representation of a numpy array element (scalar).
+
+    Does *not* rely on numpy array printing.
+    Instead converts to an equivalent Python object, and takes str(that).
+    Hopefully delivers independence of numpy version (a lesson learned the hard way
+    way in Iris development !)
+    """
+    if not isinstance(x, np.ndarray) or not hasattr(x.dtype, "kind"):
+        result = str(x)
+    elif np.ma.is_masked(x):
+        result = "masked"
+    else:
+        kind = x.dtype.kind
+        if kind in "iu":
+            result = int(x)
+        elif kind == "f":
+            result = float(x)
+        else:
+            # Strings, and possibly other things.
+            # Not totally clear what other things might occur here.
+            result = str(x)
+        result = str(result)
+    return result
+
+
+def _attribute_str(x):
+    """Make a string representing an attribute value.
+
+    Like the above, not depending on numpy array printing.
+    """
+    if isinstance(x, str):
+        result = f"'{x}'"
+    elif not isinstance(x, np.ndarray):
+        result = str(x)
+    elif x.ndim < 1:
+        result = _array_element_str(x)
+    else:
+        els = [_array_element_str(el) for el in x]
+        result = f"[{', '.join(els)}]"
+    return result
+
+
 def _attribute_differences(
     obj1,
     obj2,
@@ -159,7 +202,7 @@ def _attribute_differences(
     """
     Compare attribute name lists.
 
-    Does not return results, but appends error messages to 'errs'.
+    Return a list of error messages.
     """
     attrnames, attrnames2 = [
         list(obj.attributes.keys()) if _isncdata(obj) else list(obj.ncattrs())
@@ -227,7 +270,7 @@ def _attribute_differences(
                 # N.B. special comparison to handle strings and NaNs
                 msg = (
                     f'{elemname} "{attrname}" attribute values differ : '
-                    f"{attr!r} != {attr2!r}"
+                    f"{_attribute_str(attr)} != {_attribute_str(attr2)}"
                 )
                 errs.append(msg)
     return errs
@@ -404,10 +447,16 @@ def variable_differences(
             diffinds = [
                 np.unravel_index(ind, shape=data.shape) for ind in diffinds
             ]
-            diffinds_str = ", ".join(repr(tuple(x)) for x in diffinds)
+            diffinds_str = ", ".join(
+                str(tuple([int(ind) for ind in x])) for x in diffinds
+            )
             inds_str = f"[{diffinds_str}{ellps}]"
-            points_lhs_str = ", ".join(repr(data[ind]) for ind in diffinds)
-            points_rhs_str = ", ".join(repr(data2[ind]) for ind in diffinds)
+            points_lhs_str = ", ".join(
+                _array_element_str(data[ind]) for ind in diffinds
+            )
+            points_rhs_str = ", ".join(
+                _array_element_str(data2[ind]) for ind in diffinds
+            )
             points_lhs_str = f"[{points_lhs_str}{ellps}]"
             points_rhs_str = f"[{points_rhs_str}{ellps}]"
             msg += (
@@ -435,8 +484,7 @@ def _group_differences(
     """
     Inner routine to compare either whole datasets or subgroups.
 
-    Note that, rather than returning a list of error strings, it appends them to the
-    passed arg `errs`.  This just makes recursive calling easier.
+    Returns a list of error strings.
     """
     errs = []
 

@@ -130,7 +130,9 @@ class Test_NcAttribute__str_repr:
             # All single values appear as scalars.
             value = np.array(value).flatten()[0]
 
-        value_repr = repr(value)
+        value_repr = str(value)
+        if "string" in datatype and not is_multiple:
+            value_repr = f"'{value_repr}'"
 
         is_non_numpy = "custom" in datatype or "none" in datatype
         if is_non_numpy or (is_multiple and "string" not in datatype):

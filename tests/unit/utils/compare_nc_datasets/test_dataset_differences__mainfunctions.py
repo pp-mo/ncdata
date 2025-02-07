@@ -270,7 +270,7 @@ class TestCompareAttributes:
             value_string = "11"
         expected = [
             f'{self.location_string} "att1" attribute values differ : '
-            f"array({value_string}) != array(999)"
+            f"{value_string} != 999"
         ]
         check(errs, expected)
 

@@ -257,7 +257,7 @@ class Test_attribute_differences:
         assert errs == [
             (
                 '<object attributes> "a" attribute values differ : '
-                "array([0, 1, 2]) != array([0, 1])"
+                "[0, 1, 2] != [0, 1]"
             )
         ]
 
@@ -271,7 +271,7 @@ class Test_attribute_differences:
         assert errs == [
             (
                 '<object attributes> "a" attribute values differ : '
-                "array([1, 2, 3]) != array([  1,   2, 777])"
+                "[1, 2, 3] != [1, 2, 777]"
             )
         ]
 
@@ -293,7 +293,7 @@ class Test_attribute_differences:
         assert errs == [
             (
                 '<object attributes> "a" attribute values differ : '
-                "array([1., 2., 3.]) != array([ 1., nan,  3.])"
+                "[1.0, 2.0, 3.0] != [1.0, nan, 3.0]"
             )
         ]
 
