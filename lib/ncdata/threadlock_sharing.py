@@ -44,9 +44,9 @@ or::
         result_cube = data_cube.regrid(grid_cube)
         iris.save(result_cube, output_filepath)
 
-.. NOTE::
-    This solution is at present still experimental, and not itself fully thread-safe,
-    so probably only suitable for top-level global application.
+.. WARNING::
+    The solution in this module is at present still experimental, and not itself
+    thread-safe.  So probably can only be applied at the outer level of an operation.
 
 """
 from contextlib import contextmanager

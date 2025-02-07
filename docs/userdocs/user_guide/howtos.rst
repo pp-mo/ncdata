@@ -454,23 +454,24 @@ Remove or rewrite specific attributes
 
 Save selected variables to a new file
 -------------------------------------
-Load input with :func:`ncdata.netcdf4.from_nc4`; use :meth:`ncdata.NameMap.add` to add
-selected elements into a new :class:`ncdata.Ncdata`, and then save it
-with :func:`ncdata.netcdf4.to_nc4`.
+Load an input dataset with :func:`ncdata.netcdf4.from_nc4`; make a new empty dataset
+with :class:`~ncdata.NcData`\ ();  use ``dataset.dimensions.add()``,
+``dataset.variables.add()`` and similar to add/copy selected elements into it; then
+save it with :func:`ncdata.netcdf4.to_nc4`.
 
 For a simple case with no groups, it could look something like this:
 
 .. code-block:: python
 
-    >>> input = from_nc4(input_filepath)
-    >>> output = NcData()
+    >>> ds_in = from_nc4(input_filepath)
+    >>> ds_out = NcData()
     >>> for varname in ('data1', 'data2', 'dimx', 'dimy'):
-    >>> var = input.variables[varname]
-    >>> output.variables.add(var)
-    >>> for name in var.dimensions if name not in output.dimensions:
-    >>>     output.dimensions.add(input.dimensions[dimname])
+    >>>     var = ds_in.variables[varname]
+    >>>     ds_out.variables.add(var)
+    >>>     for name in var.dimensions if name not in ds_out.dimensions:
+    >>>         ds_out.dimensions.add(ds_in.dimensions[dimname])
     ...
-    >>> to_nc4(output, output_filepath)
+    >>> to_nc4(ds_out, output_filepath)
 
 Sometimes it's simpler to load the input, delete content **not** wanted, then re-save.
 It's perfectly safe to do that, since the original file will be unaffected.
@@ -479,7 +480,7 @@ It's perfectly safe to do that, since the original file will be unaffected.
 
     >>> data = from_nc4(input_filepath)
     >>> for name in ('extra1', 'extra2', 'unwanted'):
-    >>> del data.variables[varname]
+    >>>     del data.variables[varname]
     ...
     >>> del data.dimensions['pressure']
     >>> to_nc4(data, output_filepath)
@@ -557,7 +558,7 @@ or, to convert xarray data variable output to masked integers :
 
 Load a file containing variable-width string variables
 ------------------------------------------------------
-You must supply a ``dim_chunks`` keyword to the :meth:`ncdata.netcdf.from_nc4` method,
+You must supply a ``dim_chunks`` keyword to the :meth:`ncdata.netcdf4.from_nc4` method,
 specifying how to chunk all dimension(s) which the "string" type variable uses.
 
 .. code-block:: python
