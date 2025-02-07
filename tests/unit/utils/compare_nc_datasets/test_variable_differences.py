@@ -303,3 +303,39 @@ class TestDataCheck__difference_reports:
             "@INDICES[(1,)] : LHS=[1.0], RHS=[2.0]"
         ]
         check(errs, expected)
+
+    @pytest.mark.parametrize(
+        "ndiffs", [0, 1, 2], ids=["no_diffs", "one_diff", "two_diffs"]
+    )
+    def test_string_data(self, ndiffs):
+        # FOR NOW test only with character arrays, encoded as expected ("S1" dtype)
+        strings = ["one", "three", "", "seventeen"]
+        str_len = max(len(x) for x in strings)
+        chararray = np.zeros((4, str_len), dtype="S1")
+        for ind, el in enumerate(strings):
+            chararray[ind, 0 : len(el)] = list(el)
+        self.var1, self.var2 = [
+            NcVariable("vx", ("x"), data=chararray.copy()) for ind in range(2)
+        ]
+
+        if ndiffs > 0:
+            self.var2.data[1, 1] = "X"  # modify one character
+        if ndiffs > 1:
+            self.var2.data[3, 3:] = ""  # (also) cut short this string
+
+        # compare + check results
+        errs = variable_differences(self.var1, self.var2)
+
+        expected = []
+        if ndiffs == 1:
+            expected = [
+                'Variable "vx" data contents differ, at 1 points: '
+                "@INDICES[(1, 1)] : LHS=[b'h'], RHS=[b'X']"
+            ]
+        elif ndiffs == 2:
+            expected = [
+                'Variable "vx" data contents differ, at 7 points: '
+                "@INDICES[(1, 1), (3, 3), ...] : "
+                "LHS=[b'h', b'e', ...], RHS=[b'X', b'', ...]"
+            ]
+        check(errs, expected)
