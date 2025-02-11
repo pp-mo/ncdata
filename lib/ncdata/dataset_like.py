@@ -212,7 +212,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     *  The ``._data_array`` property read/write interface then applies/removes any
        scaling and masking as it is to be "seen" from the outside.
 
-    That suits how *Iris* reads netCFD4 data, but it won't work if the user wants to
+    That suits how *Iris* reads netCDF4 data, but it won't work if the user wants to
     control the masking/saving behaviour, as you can do in netCDF4.
     Thus, at present, we do *not* provide any of the
     ``set_auto_mask/scale/maskandscale()`` methods.

@@ -10,8 +10,8 @@ i.e. wrong turns and gotchas, with brief descriptions of why.
 
 .. _howto_access:
 
-Access a data object
---------------------
+Access a variable, dimension, attribute or group
+------------------------------------------------
 Index by component names to get the object which represents a particular element.
 
 .. code-block:: python
@@ -35,8 +35,8 @@ in a parent property which is a "component container" dictionary.
 
 .. _howto_add_something:
 
-Add a data object
------------------
+Add a variable, dimension, attribute or group
+---------------------------------------------
 Use the :meth:`~ncdata.NameMap.add` method of a component-container property to insert
 a new item.
 
@@ -58,8 +58,8 @@ If not, an error will be raised.
 
 .. _howto_remove_something:
 
-Remove a data object
---------------------
+Remove a variable, dimension, attribute or group
+------------------------------------------------
 The standard Python ``del`` operator can be applied to a component property to remove
 something by its name.
 
@@ -72,8 +72,8 @@ something by its name.
 
 .. _howto_rename_something:
 
-Rename a data object
---------------------
+Rename a variable, attribute or group
+-------------------------------------
 Use the :meth:`~ncdata.NameMap.rename` method to rename a component.
 
 .. code-block::
@@ -124,11 +124,11 @@ method, which returns either a single (scalar) number, a numeric array, or a str
 
 .. code-block:: python
 
-    >>> variable.get_attr("x")
+    >>> variable.get_attrval("x")
     3.0
-    >>> dataset.get_attr("context")
+    >>> dataset.get_attrval("context")
     "Results from experiment A301.7"
-    >>> dataset.variables["q"].get_attr("level_settings")
+    >>> dataset.variables["q"].get_attrval("level_settings")
     [1.0, 2.5, 3.7]
 
 **Given an isolated** :class:`ncdata.NcAttribute` **instance** :
@@ -139,7 +139,7 @@ which produces the same results as the above.
     >>> variable.attributes[myname].get_python_value()
     3.0
 
-.. Note::
+.. Warning::
 
     **Why Not Just...** use ``NcAttribute.value`` ?
 
@@ -168,27 +168,24 @@ All attributes are writeable, and the type can be freely changed.
 .. code-block:: python
 
     >>> variable.set_attr("x", 3.)
-    >>> variable.get_attr("x")
+    >>> variable.get_attrval("x")
     3.0
     >>> variable.set_attr("x", "string-value")
-    >>> variable.get_attr("x")
+    >>> variable.get_attrval("x")
     "string-value"
 
-.. Note::
+**Or** if you already have an attribute object in hand, you can simply set
+``attribute.value`` directly : this a property with controlled access, so the
+assigned value is cast with :func:`numpy.asarray`.
 
-    **Why Not Just...** set ``NcAttribute.value`` directly ?
+For example
 
-    For example
+.. code-block:: python
 
-    .. code-block:: python
-
-        >>> data.variables["x"].attributes["q"].value = 4.2
-
-    This is generally unwise, because the ``.value`` should always be a numpy
-    :class:`~numpy.ndarray` array, with a suitable ``dtype``, but the
-    :class:`~ncdata.Ncattribute` type does not currently enforce this.
-    The ``set_attrval`` method both converts for convenience, and ensures that the
-    value is stored in a valid form.
+    >>> attr = data.variables["x"].attributes["q"]
+    >>> attr.value = 4.2
+    >>> print(attr.value)
+    array(4.2)
 
 
 .. _howto_create_attr:
@@ -259,6 +256,7 @@ holds a data array.
 
     >>> var.data = np.array([1, 2])
     >>> print(var.data)
+    array([1, 2])
 
 This may be either a :class:`numpy.ndarray` (real) or a :class:`dask.array.Array`
 (lazy) array.  If the data is converted from another source (file, iris or xarray),
@@ -392,7 +390,24 @@ passed using specific dictionary keywords, e.g.
 
 Combine data from different input files into one output
 -------------------------------------------------------
-This can be
+This can be easily done by pasting elements from two sources into one output dataset.
+
+You can freely modify a loaded dataset, since it is no longer connected to the input
+file.
+
+Just be careful that any shared dimensions match.
+
+.. code-block:: python
+
+    >>> from ncdata.netcdf4 import from_nc4, to_nc4
+    >>> data = from_nc4('input1.nc')
+    >>> data2 = from_nc4('input2.nc')
+    >>> # Add some known variables from file2 into file1
+    >>> wanted = ('x1', 'x2', 'x3')
+    >>> for name in wanted:
+    ...     data.variables.add(data.variables[name])
+    ...
+    >>> to_nc4('output.nc')
 
 
 Create a brand-new dataset
@@ -404,20 +419,20 @@ Contents and components can be attached on creation ...
 .. code-block:: python
 
     >>> data = NcData(
-    >>> dimensions=[NcDimension("y", 2), NcDimension("x", 3)],
-    >>> variables=[
-    >>>     NcVariable("y", ("y",), data=[0, 1]),
-    >>>     NcVariable("x", ("x",), data=[0, 1, 2]),
-    >>>     NcVariable(
-    >>>         "vyx", ("y", "x"),
-    >>>         data=np.zeros((2, 3)),
-    >>>         attributes=[
-    >>>             NcAttribute("long_name", "rate"),
-    >>>             NcAttribute("units", "m s-1")
-    >>>         ]
-    >>>     )],
-    >>> attributes=[NcAttribute("history", "imaginary")])
-    ...
+    ...     dimensions=[NcDimension("y", 2), NcDimension("x", 3)],
+    ...     variables=[
+    ...         NcVariable("y", ("y",), data=[0, 1]),
+    ...         NcVariable("x", ("x",), data=[0, 1, 2]),
+    ...         NcVariable(
+    ...             "vyx", ("y", "x"),
+    ...             data=np.zeros((2, 3)),
+    ...             attributes=[
+    ...                 NcAttribute("long_name", "rate"),
+    ...                 NcAttribute("units", "m s-1")
+    ...             ]
+    ...         )],
+    ...     attributes=[NcAttribute("history", "imaginary")]
+    ... )
     >>> print(data)
     <NcData: <'no-name'>
         dimensions:
@@ -426,7 +441,16 @@ Contents and components can be attached on creation ...
 
         variables:
             <NcVariable(int64): y(y)>
-    ...
+            <NcVariable(int64): x(x)>
+            <NcVariable(float64): vyx(y, x)
+                vyx:long_name = 'rate'
+                vyx:units = 'm s-1'
+            >
+
+        global attributes:
+            :history = 'imaginary'
+    >
+    >>>
 
 ... or added iteratively ...
 
@@ -450,6 +474,31 @@ Contents and components can be attached on creation ...
 
 Remove or rewrite specific attributes
 -------------------------------------
+Load an input dataset with :func:`ncdata.netcdf4.from_nc4`.
+
+Then you can modify, add or remove global and variable attributes at will.
+
+For example :
+
+.. code-block:: python
+
+    >>> from ncdata.netcdf4 import from_nc4, to_nc4
+    >>> ds = from_nc4('input.nc4')
+    >>> history = ds.get_attrval("history") if "history" in ds.attributes else ""
+    >>> ds.set_attrval("history", history + ": modified to SPEC-FIX.A")
+    >>> removes = ("grid_x", "review")
+    >>> for name in removes:
+    ...     if name in ds.attributes:
+    ...         del ds.attributes.[name]
+    ...
+    >>> for var in ds.variables.values():
+    ...     if "coords" in var.attributes:
+    ...         var.attributes.rename("coords", "coordinates")  # common non-CF problem
+    ...     units = var.get_attrval("units")
+    ...     if units and units == "ppm":
+    ...         var.set_attrval("units", "1.e-6")  # another common non-CF problem
+    ...
+    >>> to_nc(ds, "output_fixed.nc")
 
 
 Save selected variables to a new file

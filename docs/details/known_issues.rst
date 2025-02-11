@@ -1,3 +1,5 @@
+.. _known-issues:
+
 Outstanding Issues
 ==================
 
@@ -20,6 +22,12 @@ To be fixed
    * most notably, **the "unlimited_dims" control is missing**
 
    * `issue#66 <https://github.com/pp-mo/ncdata/issues/66>`_
+
+* in conversion to/from netCDF4 files
+
+   * netCDF4 performs automatic encoding/decoding of byte data to characters, triggered
+     by the existence of an ``_Encoding`` attribute on a character type variable.
+     Ncdata does not currently account for this, and may fail to read/write correctly.
 
 
 .. _todo:

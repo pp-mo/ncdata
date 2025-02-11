@@ -12,7 +12,7 @@ created from netcdf file data, which it is either computing or storing to an
 output netcdf file.
 
 In short, this is not needed when all your data is loaded with only **one** of the data
-packages (Iris, Xarray or ncata).  The problem only occurs when you try to
+packages (Iris, Xarray or ncdata).  The problem only occurs when you try to
 realise/calculate/save results which combine data loaded from a mixture of sources.
 
 sample code::

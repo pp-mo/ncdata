@@ -45,11 +45,42 @@ Example : ``dataset.variables.rename("x", "y")``
 
 Copying
 -------
-All core objects support a ``.copy()`` method, which however does not copy array content
-(e.g. variable data or attribute arrays).  See for instance :meth:`ncdata.NcData.copy`.
+All core objects support a ``.copy()`` method.  See for instance
+:meth:`ncdata.NcData.copy`.
 
-There is also a utility function :func:`ncdata.utils.ncdata_copy`, this is effectively
-the same as the NcData object copy.
+These however do *not* copy variable data arrays (either real or lazy), but produce new
+(copied) variables referencing the same arrays.  So, for example:
+
+.. code-block::
+
+    >>> Construct a simple test dataset
+    >>> ds = NcData(
+    ...     dimensions=[NcDimension('x', 12)],
+    ...     variables=[NcVariable('vx', ['x'], np.ones(12))]
+    ... )
+
+    >>> # Make a copy
+    >>> ds_copy = ds.copy()
+
+    >>> # The new dataset has a new matching variable with a matching data array
+    >>> # The variables are different ..
+    >>> ds_copy.variables['vx'] is ds.variables['vx']
+    False
+    >>> # ... but the arrays are THE SAME ARRAY
+    >>> ds_copy.variables['vx'].data is ds.variables['vx'].data
+    True
+
+    >>> # So changing one actually CHANGES THE OTHER ...
+    >>> ds.variables['vx'].data[6:] = 777
+    >>> ds_copy.variables['vx'].data
+    array([1., 1., 1., 1., 1., 1., 777., 777., 777., 777., 777., 777.])
+
+If needed you can of course replace variable data with copies yourself, since you can
+freely assign to ``.data``.
+For real data, this is just ``var.data = var.data.copy()``.
+
+There is also a utility function :func:`ncdata.utils.ncdata_copy` :  This is
+effectively the same thing as the NcData object :meth:`~ncdata.NcData.copy` method.
 
 
 Equality Checking

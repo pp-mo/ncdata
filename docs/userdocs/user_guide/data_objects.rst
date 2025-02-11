@@ -34,7 +34,7 @@ Notes :
 
 :class:`~ncdata.NcData`
 ^^^^^^^^^^^^^^^^^^^^^^^
-This represents a dataset containing variables, attributes and groups.
+This represents a dataset containing variables, dimensions, attributes and groups.
 It is also used to represent groups.
 
 :class:`~ncdata.NcDimension`
@@ -168,9 +168,7 @@ Thus to fetch an attribute you might write, for example one of these :
 
 but **not** ``unit = dataset.variables['x'].attributes['attr1']``
 
-And not ``unit = dataset.variables['x'].attributes['attr1']``
-
-Or, likewise, to ***set*** values, one of
+Or, likewise, to **set** values, one of
 
 .. code-block::
 

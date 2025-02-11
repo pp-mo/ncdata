@@ -18,16 +18,18 @@ all use a subset of numpy **dtypes**, compatible with netcdf datatypes.
 These are effectively those defined by `netcdf4-python <https://unidata.github.io/netcdf4-python/>`_, and this
 therefore also effectively determines what we see in `dask arrays <https://docs.dask.org/en/stable/array.html>`_ .
 
-However, at present ncdata directly supports only the so-called "Primitive Types" of the
-`NetCDF Enhanced Data Model`_  : :ref:`data-model`.
-So, this does ***not*** include the user-defined, enumerated or variable-length datatypes.
+However, at present ncdata directly supports only the so-called "Primitive Types" of the NetCDF "Enhanced Data Model".
+So, it does **not** include the user-defined, enumerated or variable-length datatypes.
 
 .. attention::
 
-    In practice, we have found that at least variables of the variable-length "string" datatype do seem to function
+    In practice, we have found that at least variables of the variable-length "string" datatype **do** seem to function
     correctly at present, but this is not officially supported, and not currently tested.
 
-    We hope to extend support to the more general `NetCDF Enhanced Data Model`_ in future.
+    See also : :ref:`howto_load_variablewidth_strings`
+
+    We hope to extend support to the more general `NetCDF Enhanced Data Model`_ in future
+
 
 For reference, the currently supported + tested datatypes are :
 
@@ -43,55 +45,26 @@ For reference, the currently supported + tested datatypes are :
 * double = numpy "f8"
 * char = numpy "U1"
 
-.. _NetCDF Classic Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#classic_model
 
-.. _NetCDF Enhanced Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#enhanced_model
+Character and String Data
+-------------------------
+String and character data occurs in at least 3 different places :
 
+1. in names of components (e.g. variables)
+2. in string attributes
+3. in character-array data variables
 
-.. _string-and-character-data:
+Very briefly :
 
-Character and String Data Handling
-----------------------------------
-NetCDF can contain string and character data in at least 3 different contexts :
+* types (1) and (2) are equivalent to Python strings and may include unicode
+* type (2) are equivalent to character (byte) arrays, and normally represent only
+  fixed-length strings with the length being given as a file dimension.
 
-Characters in Data Component Names
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-(i.e. groups, variables, attributes or dimensions)
+NetCDF4 does also have provision for variable-length strings as an elemental type,
+which you can have arrays of, but ncdata does not yet properly support this.
 
-Since NetCDF version 4, the names of components within files are fully unicode compliant
-and can use virtually ***any*** characters, with the exception of the forward slash "/"
-( since in some technical cases a component name needs to specified as a "path-like" compound )
+For more details, please see : :ref:`string-and-character-data`
 
-Characters in Variable Data
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Character data in variable *data* arrays are generally stored as fixed-length arrays of
-characters (i.e. fixed-width strings), and no unicode interpretation is applied by the
-libraries (neither netCDF4 or ncdata).  In this case, the strings appear in Python as
-numpy character arrays of dtype "<U1".  All elements have the same fixed length, but
-may contain zero bytes so that they convert to variable-width (Python) strings up to a
-maximum width.  The string (maximum) length is a separate dimension, which is recorded
-as a normal netCDF dimension like any other.
-
-.. note::
-
-    Although it is not tested, it has proved possible (and useful) at present to load
-    files with variables containing variable-length string data, but it is
-    necessary to supply an explicit user chunking to workaround limitations in Dask.
-    Please see the :ref:`howto example <howto_load_variablewidth_strings>`.
-
-Characters in Attribute Values
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Character data in string *attribute* values can be written simply as Python
-strings.  They are stored in an :class:`~ncdata.NcAttribute`'s ``.value`` as a
-character array of dtype "<U?", or are returned from
-:meth:`ncdata.NcAttribute.as_python_value` as a simple Python string.
-
-A vector of strings is also permitted an attribute value, but bear in mind that
-**a vector of strings is not currently supported in netCDF4 implementations**.
-Thus, you cannot have an array or list of strings as an attribute value in an actual file,
-and if stored to a file such an attribute will be concatenated into a single string value.
-
-Unicode is supported, and encodes/decodes seamlessly into actual files.
 
 .. _thread_safety:
 
@@ -105,3 +78,9 @@ errors.
 
 In these cases you should always to use the :mod:`ncdata.threadlock_sharing` module to
 avoid such problems.  See :ref:`thread-safety`.
+
+
+.. _NetCDF Classic Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#classic_model
+
+.. _NetCDF Enhanced Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#enhanced_model
+

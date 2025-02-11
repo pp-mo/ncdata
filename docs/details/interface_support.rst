@@ -17,13 +17,24 @@ variable-length and user-defined datatypes.
 Please see : :ref:`data-types`.
 
 
-Data Scaling, Masking and Compression
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-Ncdata does not implement scaling and offset within data arrays :  The ".data"
+Data Scaling and Masking
+^^^^^^^^^^^^^^^^^^^^^^^^
+Ncdata does not implement scaling and offset within variable data arrays :  The ".data"
 array has the actual variable dtype, and the "scale_factor" and
 "add_offset" attributes are treated like any other attribute.
 
-The existence of a "_FillValue" attribute controls how.. TODO
+Likewise, Ncdata does not use masking within its variable data arrays, so that variable
+data arrays contain "raw" data, which include any "fill" values -- i.e. at any missing
+data points you will have a "fill" value rather than a masked point.
+
+The use of "scale_factor", "add_offset" and "_FillValue" attributes are standard
+conventions described in the NetCDF documentation itself, and implemented by NetCDF
+library software including the Python netCDF4 library.  To ignore these default
+interpretations, ncdata has to actually turn these features "off".  The rationale for
+this, however, is that the low-level unprocessed data content, equivalent to actual
+file storage, may be more likely to form a stable common basis of equivalence, particularly
+between different system architectures.
+
 
 .. _file-storage:
 
@@ -33,14 +44,20 @@ The :func:`ncdata.netcdf4.to_nc4` cannot control compression or storage options
 provided by :meth:`netCDF4.Dataset.createVariable`, which means you can't
 control the data compression and translation facilities of the NetCDF file
 library.
-If required, you should use :mod:`iris` or :mod:`xarray` for this.
+If required, you should use :mod:`iris` or :mod:`xarray` for this, i.e. use
+:meth:`xarray.Dataset.to_netcdf` or :func:`iris.save` instead of
+:func:`ncdata.netcdf4.to_nc4`, as these provide more special options for controlling
+netcdf file creation.
 
 File-specific storage aspects, such as chunking, data-paths or compression
 strategies, are not recorded in the core objects.  However, array representations in
 variable and attribute data (notably dask lazy arrays) may hold such information.
 
-The concept of "unlimited" dimensions is also, arguably an exception.  However, this is a
-core provision in the NetCDF data model itself (see "Dimension" in the `NetCDF Classic Data Model`_).
+The concept of "unlimited" dimensions is also, you might think, outside the abstract
+model of NetCDF data and not of concern to Ncdata .  However, in fact this concept is
+present as a core property of dimensions in the classic NetCDF data model (see
+"Dimension" in the `NetCDF Classic Data Model`_), so that is why it **is** an essential
+property of an NcDimension also.
 
 
 Dask chunking control
