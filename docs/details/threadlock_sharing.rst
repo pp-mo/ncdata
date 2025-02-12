@@ -15,7 +15,9 @@ In short, this is not needed when all your data is loaded with only **one** of t
 packages (Iris, Xarray or ncdata).  The problem only occurs when you try to
 realise/calculate/save results which combine data loaded from a mixture of sources.
 
-sample code::
+sample code:
+
+.. code-block:: python
 
     from ncdata.threadlock_sharing import enable_lockshare, disable_lockshare
     from ncdata.xarray import from_xarray
@@ -31,7 +33,9 @@ sample code::
 
     disable_lockshare()
 
-or::
+... *or* ...
+
+.. code-block:: python
 
     with lockshare_context(iris=True):
         ncdata = NcData(source_filepath)
@@ -59,16 +63,17 @@ sharing of large data arrays in memory.
 However, the python netCDF4 library (and the underlying C library) is not threadsafe
 (re-entrant) by design, neither does it implement any thread locking itself, therefore
 the “netcdf fetch” call in each input operation must be guarded by a mutex.
-Thus contention is possible unless controlled by the calling packages.
+Thus, contention is possible unless controlled by the calling packages.
 
-*Each* of Xarray, Iris and ncdata itself create input data tasks to fetch sections of
+Each of Xarray, Iris and ncdata create input data tasks to fetch sections of data from
 the input files.  Each uses a mutex lock around netcdf accesses in those tasks, to stop
 them accessing the netCDF4 interface at the same time as any of the others.
 
-This works beautifully until ncdata connects lazy data loaded with Iris (say) with
-lazy data loaded from Xarray, which unfortunately are using their own separate mutexes
-to protect the same netcdf library. Then, when we attempt to calculate or save this
-result, we may get sporadic and unpredictable system-level errors, even a core-dump.
+This works beautifully until ncdata connects (for example) lazy data loaded *with Iris*
+with lazy data loaded *from Xarray*.  These would then unfortunately each be using their
+own *separate* mutexes to protect the same netcdf library.  So, if we then attempt to
+calculate or save the result, which combines data from both sources, we could get
+sporadic and unpredictable system-level errors, even a core-dump type failure.
 
 So, the function of :mod:`ncdata.threadlock_sharing` is to connect the thread-locking
 schemes of the separate libraries, so that they cannot accidentally overlap an access
