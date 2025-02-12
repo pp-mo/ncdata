@@ -28,7 +28,7 @@ Example : ``dataset.variables.add(NcVariable("x", dimensions=["x"], data=my_data
 An :meth:`~ncdata.NcAttribute` can also be added or set (if already present) with the special
 :meth:`~ncdata.NameMap.set_attrval` method.
 
-Example : ``dataset.variables["x"].set_attrval["units", "m s-1")``
+Example : ``dataset.variables["x"].set_attrval("units", "m s-1")``
 
 Rename
 ------

@@ -177,13 +177,12 @@ There is also a 'rename' method of variables/attributes/groups::
             >
     >
 
-.. _renaming_dimensions:
 .. warning::
 
     Renaming a :class:`~ncdata.NcDimension` within a :class:`~ncdata.NcData`
-    does *not* adjust the variables which reference it, since a variables'
+    does *not* adjust the variables which reference it, since a variable's
     :attr:`~ncdata.NcVariable.dimensions` is a simple list of names.
-    See : `renaming_dimensions`_ , also :func:`ncdata.utils.save_errors`.
+    See : `howto_rename_dimension`_ , also :func:`ncdata.utils.save_errors`.
 
 
 Converting between data formats
