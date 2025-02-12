@@ -1,5 +1,9 @@
+.. _change_log:
+
 Versions and Change Notes
 =========================
+
+.. _development_status:
 
 Project Development Status
 --------------------------
@@ -13,6 +17,7 @@ This is a complete implementation, with functional operational of all public API
 The code is however still experimental, and APIs are not stable
 (hence no major version yet).
 
+.. _change_notes:
 
 Change Notes
 ------------

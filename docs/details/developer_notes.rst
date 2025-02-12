@@ -28,6 +28,12 @@ Documentation build
 Release actions
 ---------------
 
+#. Update the :ref:`change_log` page in the details section
+
+    #. ensure all major changes + PRs are referenced in the :ref:`change_notes` section
+
+    #. update the "latest version" stated in the :ref:`development_status` section
+
 #. Cut a release on GitHub : this triggers a new docs version on [ReadTheDocs](https://readthedocs.org/projects/ncdata/)
 
 #. Build the distribution
