@@ -3,8 +3,8 @@
 Common Operations
 =================
 A group of common operations are available on all the core component types,
-i.e. the operations of extract/remove/insert/rename/copy on the ``.datasets``, ``.groups``,
-``.dimensions``, ``.variables`` and ``.attributes`` properties of the core objects.
+i.e. the operations of extract/remove/insert/rename/copy on the ``.dimensions``,
+``.variables``, ``.attributes`` and ``.groups`` properties of core objects.
 
 Most of these are hopefully "obvious" Pythonic methods of the container objects.
 
