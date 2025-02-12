@@ -9,7 +9,7 @@ Data Classes
 ------------
 The data model components are elements of the
 `NetCDF Classic Data Model`_ , plus **groups** (from the
-`"enhanced" netCDF data model <NetCDF Enhanced Data Model>`_ ).
+`"enhanced" netCDF data model`_ ).
 
 That is, a Dataset(File) consists of just Dimensions, Variables, Attributes and
 Groups.
@@ -266,4 +266,4 @@ Relationship to File Storage
 See :ref:`file-storage`
 
 .. _NetCDF Classic Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#classic_model
-.. _NetCDF Enhanced Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#enhanced_model
+.. _"enhanced" netCDF data model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#enhanced_model
