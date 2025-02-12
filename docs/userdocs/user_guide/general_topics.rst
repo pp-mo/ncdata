@@ -36,14 +36,14 @@ For reference, the currently supported + tested datatypes are :
 * unsigned byte = numpy "u1"
 * unsigned short = numpy "u2"
 * unsigned int = numpy "u4"
-* unsigned long = numpy "u4"
+* unsigned int64 = numpy "u4"
 * byte = numpy "i1"
 * short = numpy "i2"
 * int = numpy "i4"
-* long = numpy "i8"
+* int64 = numpy "i8"
 * float = numpy "f4"
 * double = numpy "f8"
-* char = numpy "U1"
+* char = numpy "S1"
 
 
 Character and String Data
