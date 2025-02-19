@@ -49,11 +49,11 @@ Background
 In practice, Iris, Xarray and Ncdata are all capable of scanning netCDF files and interpreting their metadata, while
 not reading all the core variable data contained in them.
 
-This generates objects containing `Dask arrays <https://docs.dask.org/en/stable/array.html>`_ with deferred access
-to bulk file data for later access, with certain key benefits :
+This generates objects containing Dask :class:`~dask.array.Array`\s, which provide
+deferred access to bulk data in files, with certain key benefits :
 
 * no data loading or calculation happens until needed
-*  the work is divided into sectional ‘tasks’, of which only some may ultimately be needed
+*  the work is divided into sectional "tasks", of which only some may ultimately be needed
 * it may be possible to perform multiple sections of calculation (including data fetch) in parallel
 * it may be possible to localise operations (fetch or calculate) near to data distributed across a cluster
 

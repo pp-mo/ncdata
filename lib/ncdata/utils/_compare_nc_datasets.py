@@ -34,8 +34,9 @@ def dataset_differences(
     r"""
     Compare two netcdf datasets.
 
-    Accepts paths, pathstrings, open :class:`netCDF4.Dataset`\s or :class:`NcData`
-    objects.  File paths are opened with :mod:`netCDF4`.
+    Accepts paths, pathstrings, open :class:`netCDF4.Dataset`\s or
+    :class:`~ncdata.NcData` objects.
+    File paths are opened with the :mod:`netCDF4` module.
 
     Parameters
     ----------
