@@ -23,14 +23,33 @@ Change Notes
 ------------
 Summary of key features by release number
 
-Unreleased
-^^^^^^^^^^
-TODO: highlights
+v0.2.0
+^^^^^^
+Overhauled data manipulation APIs.  Expanded and improved documentation.
 
-* `@pp-mo`_ data constructors support `attributes={name:value, ..}`.
+* `@pp-mo`_ Reviewed, corrected, reorganised and expanded all documentation.
+  Added description section on core classes and operations, and how-to snippets.
+  (`PR#109 <https://github.com/pp-mo/ncdata/pull/109>`_).
+
+* `@pp-mo`_ Unpin Numpy to support versions >= 2.0
+  (`PR#112 <https://github.com/pp-mo/ncdata/pull/112>`_).
+
+* `@pp-mo`_ Added crude dimension-based load chunking control.
+  (`PR#108 <https://github.com/pp-mo/ncdata/pull/108>`_).
+
+* `@pp-mo`_ Support equality testing (==) of dimensions and attributes.
+  (`PR#107 <https://github.com/pp-mo/ncdata/pull/107>`_).
+
+* `@pp-mo`_ Enforce that NcAttribute.value is always an 0- or 1-D array.
+  (`PR#106 <https://github.com/pp-mo/ncdata/pull/106>`_).
+
+* `@pp-mo`_ Support copy as utility, and as core classes copy() methods.
+  (`PR#98 <https://github.com/pp-mo/ncdata/pull/98>`_).
+
+* `@pp-mo`_ Support a simple {name: value} map for attributes in data constructors.
   (`PR#71 <https://github.com/pp-mo/ncdata/pull/71>`_).
 
-* `@pp-mo`_ dataset comparison routines now a public utility.
+* `@pp-mo`_ Make dataset comparison routines a public utility.
   (`PR#70 <https://github.com/pp-mo/ncdata/pull/70>`_).
 
 * `@pp-mo`_ initial Sphinx documentation
