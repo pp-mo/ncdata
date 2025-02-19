@@ -57,7 +57,7 @@ String and character data occurs in at least 3 different places :
 Very briefly :
 
 * types (1) and (2) are equivalent to Python strings and may include unicode
-* type (2) are equivalent to character (byte) arrays, and normally represent only
+* type (3) are equivalent to character (byte) arrays, and normally represent only
   fixed-length strings with the length being given as a file dimension.
 
 NetCDF4 does also have provision for variable-length strings as an elemental type,
