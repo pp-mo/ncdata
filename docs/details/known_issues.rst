@@ -1,3 +1,5 @@
+.. _known-issues:
+
 Outstanding Issues
 ==================
 
@@ -21,6 +23,19 @@ To be fixed
 
    * `issue#66 <https://github.com/pp-mo/ncdata/issues/66>`_
 
+* in conversion to/from netCDF4 files
+
+   * netCDF4 performs automatic encoding/decoding of byte data to characters, triggered
+     by the existence of an ``_Encoding`` attribute on a character type variable.
+     Ncdata does not currently account for this, and may fail to read/write correctly.
+
+
+.. _todo:
+
+Incomplete Documentation
+^^^^^^^^^^^^^^^^^^^^^^^^
+(PLACEHOLDER: documentation is incomplete, please fix me !)
+
 
 Identified Design Limitations
 -----------------------------
@@ -36,7 +51,7 @@ There are no current plans to address these, but could be considered in future
     * notably, includes compound and variable-length types
 
     * ..and especially **variable-length strings in variables**.
-      see : :ref:`string_and_character_data`
+      see : :ref:`string-and-character-data`, :ref:`data-types`
 
 
 Features planned

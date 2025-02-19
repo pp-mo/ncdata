@@ -8,8 +8,9 @@ multi-threaded code.
 Most commonly, this occurs when netcdf file data is read to
 compute a Dask array, or written in a Dask delayed write operation.
 
-All 3 data-format packages can map variable data into Dask lazy arrays.  Iris and
-Xarray can also create delayed write operations (but ncdata currently does not).
+All 3 data-format packages (ncdata, Iris and xarray) can map variable data into Dask
+lazy arrays on file load.  Iris and Xarray can also create delayed write operations
+(but ncdata currently does not).
 
 However, those mechanisms cannot protect an operation of that package from
 overlapping with one in *another* package.
@@ -17,12 +18,12 @@ overlapping with one in *another* package.
 This module can ensure that all of the enabled packages use the *same* thread lock,
 so that any and all of them can safely co-operate in parallel operations.
 
-sample code::
+sample usages::
 
     from ncdata.threadlock_sharing import enable_lockshare, disable_lockshare
     from ncdata.xarray import from_xarray
-    from ncdata.iris import from_iris
-    from ncdata.netcdf4 import to_nc4
+    from ncdata.iris import from_iris, to_iris
+    from ncdata.netcdf4 import to_nc4, from_nc4
 
     enable_lockshare(iris=True, xarray=True)
 
@@ -36,10 +37,16 @@ sample code::
 or::
 
     with lockshare_context(iris=True):
-        ncdata = NcData(source_filepath)
-        ncdata.variables['x'].attributes['units'] = 'K'
-        cubes = ncdata.iris.to_iris(ncdata)
-        iris.save(cubes, output_filepath)
+        ncdata = from_nc4(source_filepath)
+        my_adjust_process(ncdata)
+        data_cube = to_iris(ncdata).extract("main_var")
+        grid_cube = iris.load_cube(grid_path, "grid_cube")
+        result_cube = data_cube.regrid(grid_cube)
+        iris.save(result_cube, output_filepath)
+
+.. WARNING::
+    The solution in this module is at present still experimental, and not itself
+    thread-safe.  So probably can only be applied at the outer level of an operation.
 
 """
 from contextlib import contextmanager
@@ -69,7 +76,7 @@ def enable_lockshare(iris: bool = False, xarray: bool = False):
 
     Notes
     -----
-    If an 'enable_lockshare' call was already established, the function does nothing,
+    If an ``enable_lockshare`` call was already established, the function does nothing,
     i.e. it is not possible to modify an existing share.  Instead, you must call
     :func:`disable_lockshare` to cancel the current sharing, before you can establish
     a new one.

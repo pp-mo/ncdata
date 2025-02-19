@@ -1,29 +1,32 @@
 r"""
-An adaptor layer making a NcData appear like a :class:`netCDF4.Dataset`.
+An adaptor layer for :mod:`ncdata` to emulate :mod:`netCDF4`.
 
-Allows an :class:`~ncdata.NcData` to masquerade as a
+Primarily, allows an :class:`ncdata.NcData` to masquerade as a
 :class:`netCDF4.Dataset` object.
 
 Note:
     This is a low-level interface, exposed publicly for extended experimental uses.
-    If you only want to convert **Iris** data to+from :class:`~ncdata.NcData`,
+    If you only want to convert **Iris** data to + from :class:`~ncdata.NcData`,
     please use the functions in :mod:`ncdata.iris` instead.
 
 ----
 
-These classes contain :class:`~ncdata.NcData` and :class:`~ncdata.NcVariable`\\s, but
-emulate the access APIs of a :class:`netCDF4.Dataset` / :class:`netCDF4.Variable`.
+These classes contain :class:`~ncdata.NcData`, :class:`~ncdata.NcDimension`,  and
+:class:`~ncdata.NcVariable` objects,  but emulate the access APIs of
+:class:`netCDF4.Dataset` :class:`netCDF4.Dimension` and :class:`netCDF4.Variable`.
 
 This is provided primarily to support a re-use of the :mod:`iris.fileformats.netcdf`
-file format load + save, to convert cubes to+from ncdata objects (and hence, especially,
-convert Iris :class:`~iris.cube.Cube`\\s to+from an Xarray :class:`~xarray.Dataset`).
+file format load + save, to convert cubes to + from ncdata objects (and hence,
+especially, to convert Iris :class:`~iris.cube.Cube`\s to + from an Xarray
+:class:`~xarray.Dataset`
+).
 
 Notes
 -----
 Currently only supports what is required for Iris load/save capability.
-It *should* be possible to use these objects with other packages expecting a
-:class:`netCDF4.Dataset` object, however the API simulation is far from complete, so
-this may need to be extended, in future, to support other such uses.
+In principle, it *should* be possible to use these objects with other packages
+expecting a :class:`netCDF4.Dataset` object.  However the API simulation is far from
+complete, so this module may need to be extended, in future, to support other such uses.
 
 """
 from typing import Any, Dict, List
@@ -85,7 +88,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
     It can be both read and written (modified) via its emulated
     :class:`netCDF4.Dataset`-like API.
 
-    The core NcData content, 'self._ncdata', is a :class:`ncdata.NcData`.
+    The core, contained content object, ``self._ncdata``, is a :class:`ncdata.NcData`.
     This completely defines the parent object state.
     If not provided on init, a new, empty dataset is created.
 
@@ -97,7 +100,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
     file_format = "NETCDF4"
 
     def __init__(self, ncdata: NcData = None):
-        """Create an    Nc4DatasetLike, wrapping an NcData."""
+        """Create an Nc4DatasetLike, wrapping an :class:`~ncdata.NcData`."""
         if ncdata is None:
             ncdata = NcData()  # an empty dataset
         #: the contained dataset.  If not provided, a new, empty dataset is created.
@@ -195,18 +198,24 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     """
     An object which contains a :class:`ncdata.NcVariable` and emulates a :class:`netCDF4.Variable`.
 
-    The core NcData content, 'self._ncdata', is a :class:`NcVariable`.
+    The core, contained content object, ``self._ncdata``, is a :class:`~ncdata.NcVariable`.
     This completely defines the parent object state.
 
-    The property "_data_array" is detected by Iris to do direct data transfer
+    The property ``._data_array`` is detected by Iris to do direct data transfer
     (copy-free and lazy-preserving).
+
     At present, this object emulates only the *default* read/write behaviour of a
-    netCDF4 Variable, i.e. the underlying NcVariable contains a 'raw' data array, and
-    the _data_array property interface applies/removes any scaling and masking as it is
-    "seen" from the outside.
-    That suits how *Iris* reads netCFD4 data, but it won't work if the user wants to
+    :class:`netCDF4.Variable`, i.e. :
+
+    *  the underlying NcVariable contains a 'raw' data array, which may be real
+       (i.e. numpy) or lazy (i.e. dask).
+    *  The ``._data_array`` property read/write interface then applies/removes any
+       scaling and masking as it is to be "seen" from the outside.
+
+    That suits how *Iris* reads netCDF4 data, but it won't work if the user wants to
     control the masking/saving behaviour, as you can do in netCDF4.
-    Thus, at present, we do *not* provide any of set_auto_mask/scale/maskandscale.
+    Thus, at present, we do *not* provide any of the
+    ``set_auto_mask/scale/maskandscale()`` methods.
 
     """
 
@@ -447,7 +456,7 @@ class Nc4DimensionLike:
     """
     An object which emulates a :class:`netCDF4.Dimension` object.
 
-    The core NcData content, 'self._ncdata', is a :class:`ncdata.NcDimension`.
+    The core, contained content object, ``self._ncdata``, is a :class:`ncdata.NcDimension`.
     This completely defines the parent object state.
 
     """

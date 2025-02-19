@@ -32,30 +32,61 @@ def dataset_differences(
     suppress_warnings: bool = False,
 ) -> List[str]:
     r"""
-    Compare netcdf data objects.
+    Compare two netcdf datasets.
 
-    Accepts paths, pathstrings, open :class:`netCDF4.Dataset`\\s or :class:`NcData` objects.
+    Accepts paths, pathstrings, open :class:`netCDF4.Dataset`\s or
+    :class:`~ncdata.NcData` objects.
+    File paths are opened with the :mod:`netCDF4` module.
 
     Parameters
     ----------
-    dataset_or_path_1, dataset_or_path_2 : str or Path or netCDF4.Dataset or NcData
-        two datasets to compare, either NcData or netCDF4
-    check_dims_order, check_vars_order, check_attrs_order, check_groups_order : bool, default True
-        If False, no error results from the same contents in a different order,
-        however unless `suppress_warnings` is True, the error string is issued as a warning.
-    check_names: bool, default False
+    dataset_or_path_1 : str or Path or netCDF4.Dataset or NcData
+        First dataset to compare : either an open :class:`netCDF4.Dataset`, a path to
+        open one, or an :class:`~ncdata.NcData` object.
+
+    dataset_or_path_2 : str or Path or netCDF4.Dataset or NcData
+        Second dataset to compare : either an open :class:`netCDF4.Dataset`, a path to
+        open one, or an :class:`~ncdata.NcData` object.
+
+    check_dims_order : bool, default True
+        If False, no error results from the same dimensions appearing in a different
+        order.  However, unless `suppress_warnings` is True, the error string is issued
+        as a warning.
+
+    check_vars_order : bool, default True
+        If False, no error results from the same variables appearing in a different
+        order. However unless `suppress_warnings` is True, the error string is issued
+        as a warning.
+
+    check_attrs_order : bool, default True
+        If False, no error results from the same attributes appearing in a different
+        order.  However unless `suppress_warnings` is True, the error string is issued
+        as a warning.
+
+    check_groups_order : bool, default True
+        If False, no error results from the same groups appearing in a different order.
+        However unless `suppress_warnings` is True, the error string is issued as a
+        warning.
+
+    check_names : bool, default False
         Whether to warn if the names of the top-level datasets are different
-    check_dims_unlimited: bool, default True
+
+    check_dims_unlimited : bool, default True
         Whether to compare the 'unlimited' status of dimensions
+
     check_var_data : bool, default True
         If True, all variable data is also checked for equality.
         If False, only dtype and shape are compared.
-        NOTE: comparison of large arrays is done in-memory, so may be highly inefficient.
-    show_n_first_different: int, default 2
+        NOTE: comparison of arrays is done in-memory, so could be highly inefficient
+        for large variable data.
+
+    show_n_first_different : int, default 2
         Number of value differences to display.
+
     suppress_warnings : bool, default False
         When False (the default), report changes in content order as Warnings.
         When True, ignore changes in ordering.
+        See also : :ref:`container-ordering`.
 
     Returns
     -------
@@ -68,6 +99,7 @@ def dataset_differences(
     ds2_was_path = not hasattr(dataset_or_path_2, "variables")
     ds1, ds2 = None, None
     try:
+        # convert path-likes to netCDF4.Dataset
         if ds1_was_path:
             ds1 = nc.Dataset(dataset_or_path_1)
         else:
@@ -77,6 +109,9 @@ def dataset_differences(
             ds2 = nc.Dataset(dataset_or_path_2)
         else:
             ds2 = dataset_or_path_2
+
+        # NOTE: Both ds1 and ds2 are now *either* NcData *or* netCDF4.Dataset
+        #  _isncdata() will be used to distinguish.
 
         errs = _group_differences(
             ds1,

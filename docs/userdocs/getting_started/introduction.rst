@@ -21,7 +21,7 @@ The following code snippets demonstrate the absolute basics.
 
     Likewise, internal consistency is not checked, so it is possible to create
     data that cannot be stored in an actual file.
-    See :func:`ncdata.utils.save_errors`.
+    See :ref:`correctness-checks`.
 
     We may revisit this in later releases to make data manipulation "safer".
 
@@ -31,7 +31,9 @@ Simple data creation
 The :class:`ncdata.NcData` object is the basic container, representing
 a dataset or group.  It contains :attr:`~ncdata.NcData.dimensions`,
 :attr:`~ncdata.NcData.variables`, :attr:`~ncdata.NcData.groups`,
-and :attr:`~ncdata.NcData.attributes`::
+and :attr:`~ncdata.NcData.attributes`:
+
+.. code-block:: python
 
     >>> from ncdata import NcData, NcDimension, NcVariable
     >>> data = NcData("myname")
@@ -58,7 +60,9 @@ Getting data to+from files
 The :mod:`ncdata.netcdf4` module provides simple means of reading and writing
 NetCDF files via the `netcdf4-python package <http://unidata.github.io/netcdf4-python/>`_.
 
-Simple example::
+Simple example:
+
+.. code-block:: python
 
     >>> from ncdata.netcdf4 import to_nc4, from_nc4
 
@@ -85,7 +89,9 @@ Please see `Converting between data formats`_ for more details.
 Variables
 ^^^^^^^^^
 Variables live in a :attr:`ncdata.NcData.variables` attribute,
-which behaves like a dictionary::
+which behaves like a dictionary:
+
+.. code-block:: python
 
     >>> var = NcVariable("vx", dimensions=["x"], dtype=float)
     >>> data.variables.add(var)
@@ -109,7 +115,9 @@ which behaves like a dictionary::
 Attributes
 ^^^^^^^^^^
 Variables live in the ``attributes`` property of a :class:`~ncdata.NcData`
-or :class:`~ncdata.Variable`::
+or :class:`~ncdata.NcVariable`:
+
+.. code-block:: python
 
     >>> var.set_attrval('a', 1)
     NcAttribute('a', 1)
@@ -150,7 +158,9 @@ and :meth:`~ncdata.NcVariable.get_attrval` of NcData/NcVariable.
 
 Deletion and Renaming
 ^^^^^^^^^^^^^^^^^^^^^
-Use python 'del' operation to remove::
+Use python 'del' operation to remove:
+
+.. code-block:: python
 
     >>> del var.attributes['a']
     >>> print(var)
@@ -158,7 +168,9 @@ Use python 'del' operation to remove::
         vx:b = 'this'
     >
 
-There is also a 'rename' method of variables/attributes/groups::
+There is also a 'rename' method of variables/attributes/groups:
+
+.. code-block:: python
 
     >>> var.attributes.rename("b", "qq")
     >>> print(var)
@@ -177,13 +189,12 @@ There is also a 'rename' method of variables/attributes/groups::
             >
     >
 
-.. _renaming_dimensions:
 .. warning::
 
     Renaming a :class:`~ncdata.NcDimension` within a :class:`~ncdata.NcData`
-    does *not* adjust the variables which reference it, since a variables'
+    does *not* adjust the variables which reference it, since a variable's
     :attr:`~ncdata.NcVariable.dimensions` is a simple list of names.
-    See : `renaming_dimensions`_ , also :func:`ncdata.utils.save_errors`.
+    See : :ref:`howto_rename_dimension` , also :func:`ncdata.utils.save_errors`.
 
 
 Converting between data formats
@@ -217,20 +228,30 @@ at :ref:`interface_support`.
 
 Example code snippets :
 
+.. code-block:: python
+
     >>> from ndata.threadlock_sharing import enable_lockshare
     >>> enable_lockshare(iris=True, xarray=True)
 
+.. code-block:: python
+
     >>> from ncdata.netcdf import from_nc4
     >>> ncdata = from_nc4("datapath.nc")
+
+.. code-block:: python
 
     >>> from ncdata.iris import to_iris, from_iris
     >>> xx, yy =  to_iris(ncdata, ['x_wind', 'y_wind'])
     >>> vv = (xx * xx + yy * yy) ** 0.5
     >>> vv.units = xx.units
 
+.. code-block:: python
+
     >>> from ncdata.xarray import to_xarray
     >>> xrds = to_xarray(from_iris(vv))
     >>> xrds.to_zarr(out_path)
+
+.. code-block:: python
 
     >>> from ncdata.iris_xarray import cubes_from_xarray
     >>> vv2 = cubes_from_xarray(xrds)
@@ -246,10 +267,12 @@ Thread safety
     prevent possible errors when computing or saving lazy data.
     For example:
 
+    .. code-block:: python
+
         >>> from ndata.threadlock_sharing import enable_lockshare
         >>> enable_lockshare(iris=True, xarray=True)
 
-    See details at :mod:`ncdata.threadlock_sharing`
+    See details at :ref:`thread_safety`.
 
 
 Working with NetCDF files

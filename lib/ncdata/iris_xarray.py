@@ -1,11 +1,12 @@
 r"""
 Interface routines for converting data between Xarray and Iris.
 
-Convert :class:`~xarray.Dataset` to and from Iris :class:`~iris.cube.Cube`\\s.
+Convert :class:`~xarray.Dataset`\s to and from Iris :class:`~iris.cube.Cube`\s.
 
 By design, these transformations should be equivalent to saving data from one package
-to a netcdf file, and re-loading into the other package.  There is also support for
-passing additional keywords to the appropriate load/save routines.
+to a netcdf file, and re-loading into the other package.  But without actually saving
+or loading data, of course.  There is also support for  passing additional keywords to
+the relevant load/save routines.
 
 """
 import xarray
@@ -57,7 +58,7 @@ def cubes_to_xarray(
     cubes, iris_save_kwargs=None, xr_load_kwargs=None
 ) -> xarray.Dataset:
     r"""
-    Convert Iris :class:`iris.cube.Cube`\\s to an xarray :class:`xarray.Dataset`.
+    Convert Iris :class:`iris.cube.Cube`\s to an xarray :class:`xarray.Dataset`.
 
     Equivalent to saving the dataset to a netcdf file, and loading that with Xarray.
 
@@ -70,8 +71,7 @@ def cubes_to_xarray(
         source data
 
     iris_save_kwargs : dict
-        additional keywords passed to :func:`iris.save`, and to
-        :func:`iris.fileformats.netcdf.saver.save`
+        additional keywords passed to :func:`iris.fileformats.netcdf.save`.
 
     xr_load_kwargs : dict
         additional keywords passed to :meth:`xarray.Dataset.load_store`

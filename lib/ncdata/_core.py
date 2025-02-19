@@ -497,12 +497,10 @@ class NcVariable(_AttributeAccessMixin):
 
 class NcAttribute:
     """
-    An object representing a netcdf variable or dataset attribute.
+    An object representing a netcdf variable, group or dataset attribute.
 
-    Associates a name to a value which is a numpy scalar or 1-D array.
-
-    We expect the value to be 0- or 1-dimensional, and an allowed dtype.
-    However none of this is checked.
+    Associates a name to a value which is always a numpy scalar or 1-D array, of an
+    allowed dtype.  See :ref:`attribute-dtypes`.
 
     In an actual netcdf dataset, a "scalar" is actually just an array of length 1.
     """
@@ -511,7 +509,7 @@ class NcAttribute:
         #: attribute name
         self.name: str = name
         # Attribute values are arraylike, have dtype
-        #: attribute value
+        #: attribute value, constrained to a suitable numpy array object.
         self.value: np.ndarray = value
 
     @property

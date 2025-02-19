@@ -318,6 +318,11 @@ def from_nc4(
         (160, 15)
         >>>
 
+    See also : :ref:`howto_load_variablewidth_strings` :  This illustrates a particular
+    case which **does** encounter an error with dask "auto" chunking, and therefore
+    also fails with a plain "from_nc4" call.  The ``dim_chunks`` keyword enables you to
+    work around the problem.
+
     """
     if dim_chunks is None:
         dim_chunks = {}
