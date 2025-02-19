@@ -405,9 +405,9 @@ Just be careful that any shared dimensions match.
     >>> # Add some known variables from file2 into file1
     >>> wanted = ('x1', 'x2', 'x3')
     >>> for name in wanted:
-    ...     data.variables.add(data.variables[name])
+    ...     data.variables.add(data2.variables[name])
     ...
-    >>> to_nc4('output.nc')
+    >>> to_nc4(data, 'output.nc')
 
 
 Create a brand-new dataset
