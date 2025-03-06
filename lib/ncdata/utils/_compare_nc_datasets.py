@@ -387,6 +387,14 @@ def variable_differences(
         ],  # for some reason, this doesn't always list consistently
     )
 
+    # shapes
+    shape, shape2 = [
+        v.data.shape if _isncdata(v) else v.shape for v in (v1, v2)
+    ]
+    if shape != shape2:
+        msg = f"{var_id_string} shapes differ : {shape!r} != {shape2!r}"
+        errs.append(msg)
+
     # dtypes
     dtype, dtype2 = [v.dtype if _isncdata(v) else v.datatype for v in (v1, v2)]
     if dtype != dtype2:
@@ -403,8 +411,12 @@ def variable_differences(
 
     is_str, is_str2 = (_is_strtype(dt) for dt in (dtype, dtype2))
     # TODO: is this correct check to allow compare between different dtypes?
-    if check_var_data and dims == dims2 and is_str == is_str2:
-        # N.B. don't check shapes here: we already checked dimensions.
+    if (
+        check_var_data
+        and dims == dims2
+        and shape == shape2
+        and is_str == is_str2
+    ):
         # NOTE: no attempt to use laziness here.  Could be improved.
         def getdata(var):
             if _isncdata(var):
