@@ -26,9 +26,7 @@ Summary of key features by release number
 
 pending-unreleased
 ^^^^^^^^^^^^^^^^^^
-* `@pp-mo`_ Added linkcheck action
-  Good link https://github.com/pp-mo/ncdata
-  Bad link https://github.com/pp-mo/ncQQQdata
+* `@pp-mo`_ Added linkcheck action, weekdays at 0800
 
 
 v0.2.0
