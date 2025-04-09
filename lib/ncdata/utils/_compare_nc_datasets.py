@@ -388,9 +388,20 @@ def variable_differences(
     )
 
     # shapes
-    shape, shape2 = [
-        v.data.shape if _isncdata(v) else v.shape for v in (v1, v2)
-    ]
+    def safe_varshape(var):
+        if _isncdata(var):
+            # NcVariable passed
+            if var.data is None:
+                # Allow for NcVariable.data to be empty
+                shape = None
+            else:
+                shape = var.data.shape
+        else:
+            # netCDF4.Variable passed
+            shape = var.shape
+        return shape
+
+    shape, shape2 = [safe_varshape(v) for v in (v1, v2)]
     if shape != shape2:
         msg = f"{var_id_string} shapes differ : {shape!r} != {shape2!r}"
         errs.append(msg)
