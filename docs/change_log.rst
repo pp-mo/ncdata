@@ -23,6 +23,12 @@ Change Notes
 ------------
 Summary of key features by release number
 
+
+pending-unreleased
+^^^^^^^^^^^^^^^^^^
+* `@pp-mo`_ Added linkcheck action, weekdays at 0800
+
+
 v0.2.0
 ^^^^^^
 Overhauled data manipulation APIs.  Expanded and improved documentation.
