@@ -193,6 +193,10 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         # return self.ncdata.encoding.get("source", "")
         return "<Nc4DatasetLike>"
 
+    def __lt__(self, other):
+        # Support "trivial" dataset comparison, so Iris can load from a list of them
+        return False
+
 
 class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
     """
