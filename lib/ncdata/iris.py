@@ -12,11 +12,12 @@ Convert :class:`~ncdata.NcData`\s to and from Iris :class:`~iris.cube.Cube`\s.
 # This means that, hopefully, all we need to know of Iris itself is the load and save,
 # though we do specifically target the netcdf format interface.
 #
-
+import dask
 from typing import Any, AnyStr, Dict, Iterable, Union, List
 
 import iris
 from iris.cube import Cube, CubeList
+import iris.fileformats.netcdf as ifn
 
 from . import NcData
 from .dataset_like import Nc4DatasetLike
