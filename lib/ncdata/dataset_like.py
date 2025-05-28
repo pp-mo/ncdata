@@ -194,7 +194,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         return "<Nc4DatasetLike>"
 
     def __lt__(self, other):
-        # Support "trivial" dataset comparison, so Iris can load from a list of them
+        # Support a trivial "comparison", just so that Iris can load a list of them.
         return False
 
 

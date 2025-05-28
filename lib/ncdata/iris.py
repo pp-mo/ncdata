@@ -32,8 +32,8 @@ def to_iris(ncdata: NcData | List[NcData], **iris_load_kwargs: Dict[AnyStr, Any]
 
     Parameters
     ----------
-    ncdata : NcData of list(NcData)
-        object(s) to be loaded, treated as equivalent netCDF4 datasets.
+    ncdata : NcData or list(NcData)
+        object(s) to be loaded into Iris, treated as equivalent to netCDF4 datasets.
 
     iris_load_kwargs : dict
         extra keywords, passed to :func:`iris.fileformats.netcdf.load_cubes`
