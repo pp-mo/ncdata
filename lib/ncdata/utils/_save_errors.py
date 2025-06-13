@@ -51,7 +51,7 @@ def _invalid_attr_errors(
     element: Union[NcData, NcVariable], name_prefix: str
 ) -> List[str]:
     errors = []
-    for attr in element.attributes.values():
+    for attr in element._attributes.values():
         dtype = attr.value.dtype
         if not _valid_attr_dtype(dtype):
             errors.append(
@@ -145,8 +145,14 @@ def _save_errors_inner(
 
     # Check that all named containers use only valid names
     for component in ("dimension", "variable", "attribute", "group"):
+        # N.B. form structural propoerty name : always pluralise ..
+        if component == "attribute":
+            # .. plus, in case of attributes, get the underlying NcAttributes
+            propname = "_attributes"
+        else:
+            propname = component + "s"
         errors += _name_errors(
-            getattr(ncdata, component + "s"),  # N.B. pluralise here
+            getattr(ncdata, propname),
             id_string=f"{ncdata_identity_prefix} {component}",
         )
 

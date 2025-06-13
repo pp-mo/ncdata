@@ -51,7 +51,7 @@ class _Nc4DatalikeWithNcattrs:
     def getncattr(self, attr: str):
         attrs = self._ncdata.attributes
         if attr in attrs:
-            result = attrs[attr].as_python_value()
+            result = attrs[attr]
         else:
             # Don't allow it to issue a KeyError, as this upsets 'getattr' usage.
             # Raise an AttributeError instead.
@@ -64,7 +64,7 @@ class _Nc4DatalikeWithNcattrs:
             value = value.decode("utf-8")
         # N.B. using the NcAttribute class for storage also ensures/requires that all
         #  attributes are cast as numpy arrays (so have shape, dtype etc).
-        self._ncdata.attributes[attr] = NcAttribute(attr, value)
+        self._ncdata.attributes[attr] = value
 
     # Extend local object attribute access to the ncattrs of the stored data item
     #  (Unpleasant, but I think the Iris load code requires it).
@@ -167,9 +167,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
             group=self._ncdata,
         )
         if fill_value is not None:
-            ncvar.attributes["_FillValue"] = NcAttribute(
-                "_FillValue", fill_value
-            )
+            ncvar.attributes["_FillValue"] = fill_value
         # Note: no valid data is initially assigned, since that is how the netCDF4 API
         # does it.
         self._ncdata.variables[varname] = ncvar
@@ -288,9 +286,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         * for byte data, there is no netCDF default fill, so the result can be None.
         """
         fv = self._ncdata.attributes.get("_FillValue", None)
-        if fv is not None:
-            fv = fv.as_python_value()
-        else:
+        if fv is None:
             if self.dtype.itemsize != 1:
                 # NOTE: single-byte types have NO default fill-value
                 dtype_code = self.dtype.str[1:]

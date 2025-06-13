@@ -271,7 +271,7 @@ def _attribute_differences(
 
         attr, attr2 = [
             (
-                obj.attributes[attrname].as_python_value()
+                obj.attributes[attrname]
                 if _isncdata(obj)
                 else obj.getncattr(attrname)
             )

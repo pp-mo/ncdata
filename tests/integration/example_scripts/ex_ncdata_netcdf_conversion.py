@@ -10,7 +10,7 @@ from shutil import rmtree
 import netCDF4 as nc
 import numpy as np
 
-from ncdata import NcAttribute, NcData, NcDimension, NcVariable
+from ncdata import NcData, NcDimension, NcVariable
 from ncdata.netcdf4 import from_nc4, to_nc4
 from ncdata.utils import dataset_differences
 from tests import testdata_dir
@@ -55,7 +55,7 @@ def example_nc4_save_reload_unlimited_roundtrip():
         # Just an an attribute for the sake of it.
         attributes={"varattr1": 1},
     )
-    ncdata.attributes["globalattr1"] = NcAttribute("globalattr1", "one")
+    ncdata.attributes["globalattr1"] = "one"
     print("Source ncdata object:")
     print(ncdata)
 
@@ -96,10 +96,10 @@ def example_nc4_save_reload_unlimited_roundtrip():
         varx = ds_back.variables["var_x"]
 
         assert list(varx.attributes.keys()) == ["varattr1"]
-        assert varx.attributes["varattr1"].value == 1
+        assert varx.attributes["varattr1"] == 1
 
         assert list(ds_back.attributes.keys()) == ["globalattr1"]
-        assert ds_back.attributes["globalattr1"].value == "one"
+        assert ds_back.attributes["globalattr1"] == "one"
 
     finally:
         rmtree(tempdir_path)

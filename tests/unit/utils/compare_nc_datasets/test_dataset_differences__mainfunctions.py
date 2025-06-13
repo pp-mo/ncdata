@@ -246,7 +246,7 @@ class TestCompareAttributes:
         self.data1 = data1
         self.data2 = data2
         self.location_string = location_prefix(group_context, attr_context)
-        self.attrs = location.attributes
+        self.attrs = location._attributes
 
     def test_name(self):
         self.attrs.rename("att1", "changed")

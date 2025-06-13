@@ -98,15 +98,15 @@ class Test:
         rva = result.variables["a"]
 
         assert (
-            result.attributes["extra"].value
-            is not sample.attributes["extra"].value
+            result._attributes["extra"].value
+            is not sample._attributes["extra"].value
         ) and np.all(
-            result.attributes["extra"].value
-            == sample.attributes["extra"].value
+            result._attributes["extra"].value
+            == sample._attributes["extra"].value
         )
 
         assert (
-            rva.attributes["xx2"].value is not sva.attributes["xx2"].value
+            rva._attributes["xx2"].value is not sva._attributes["xx2"].value
         ) and np.all(
-            rva.attributes["xx2"].value == sva.attributes["xx2"].value
+            rva._attributes["xx2"].value == sva._attributes["xx2"].value
         )

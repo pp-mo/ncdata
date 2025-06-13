@@ -36,7 +36,7 @@ class Test_NcVariable__init__:
         dims = [f"dimname_{i}" for i in range(3)]
         # note: variable dims and shape **don't have to agree**.
         data = np.array((3.0, 2, 1))
-        attrs = [NcAttribute(f"attr_{i}", i) for i in range(6)]
+        attrs = {f"attr_{i}": i for i in range(6)}
         dtype = "f8"  # match the provided data for correct matching
         group = ""
         sample1 = NcVariable(
@@ -52,8 +52,7 @@ class Test_NcVariable__init__:
         assert sample1.dimensions == tuple(dims)
         assert sample1.data is data
         assert sample1.dtype == np.dtype(dtype)
-        assert list(sample1.attributes.values()) == attrs
-        assert sample1.attributes.item_type == NcAttribute
+        assert sample1.attributes == attrs
         assert sample1.group is group
         # Also check construction with arguments alone (no keywords).
         sample2 = NcVariable(name, dims, data, dtype, attrs, group)
