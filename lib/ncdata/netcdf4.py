@@ -44,7 +44,7 @@ def _to_nc4_group(
     for varname, var in ncdata.variables.items():
         fillattr = "_FillValue"
         if fillattr in var.attributes:
-            fill_value = var.attributes[fillattr].value
+            fill_value = var.attributes[fillattr]
         else:
             fill_value = None
 
@@ -72,9 +72,9 @@ def _to_nc4_group(
 
         # Assign attributes.
         # N.B. must be done before writing data, to enable scale+offset controls !
-        for attrname, attr in var.attributes.items():
+        for attrname, attrval in var.attributes.items():
             if attrname != "_FillValue":
-                nc4var.setncattr(attrname, attr.as_python_value())
+                nc4var.setncattr(attrname, attrval)
 
         data = var.data
         if hasattr(data, "compute"):
@@ -82,8 +82,8 @@ def _to_nc4_group(
         else:
             nc4var[:] = data
 
-    for attrname, attr in ncdata.attributes.items():
-        nc4object.setncattr(attrname, attr.as_python_value())
+    for attrname, attrval in ncdata.attributes.items():
+        nc4object.setncattr(attrname, attrval)
 
     for groupname, group in ncdata.groups.items():
         nc4group = nc4object.createGroup(groupname)
@@ -265,14 +265,10 @@ def _from_nc4_group(nc4ds: Union[nc.Dataset, nc.Group], dim_chunks) -> NcData:
         )
 
         for attrname in nc4var.ncattrs():
-            var.attributes[attrname] = NcAttribute(
-                attrname, nc4var.getncattr(attrname)
-            )
+            var.attributes[attrname] = nc4var.getncattr(attrname)
 
     for attrname in nc4ds.ncattrs():
-        ncdata.attributes[attrname] = NcAttribute(
-            attrname, nc4ds.getncattr(attrname)
-        )
+        ncdata.attributes[attrname] = nc4ds.getncattr(attrname)
 
     # And finally, groups -- by the magic of recursion ...
     for group_name, group in nc4ds.groups.items():

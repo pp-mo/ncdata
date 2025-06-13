@@ -17,6 +17,8 @@ slash "/", since in some technical cases a component name needs to specified as 
 "path-like" compound.
 
 
+.. _character-attributes:
+
 Characters in Attribute Values
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 Character data in string *attribute* values can likewise be read and written simply as
