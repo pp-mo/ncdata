@@ -11,7 +11,9 @@ Current limitations :
 of dimensions referenced by variables.
 
 """
-from typing import Dict, Iterable, Mapping, Optional, Tuple, Union
+from functools import wraps
+from typing import \
+    Any, Dict, Iterable, Mapping, Optional, Tuple, Union, MutableMapping
 
 import numpy
 import numpy as np
@@ -203,6 +205,61 @@ class NameMap(dict):
 as_namemap = NameMap.from_items
 
 
+class AttributesDict(MutableMapping):
+    """
+    A container for the attribute values of an NcData or NcVariable object.
+
+    Its values are actually stored in the ._attributes of the parent object, which is a
+    :class:`NameMap` of :class:`NcAttribute` objects.
+    This means that all attribute values are cast to/from valid NcAttribute values,
+    i.e. numpy arrays of selected dtypes and <=1 dimensions.
+
+    This allows "data.attributes" to provide the easy-access form {name: value},
+    while "data._attributes" is the NameMap {name: NcAttribute}.
+
+    """
+    def __init__(self, attrs: NameMap):
+        self._attrs = attrs
+
+    def __getitem__(self, key):
+        return self._attrs[key].as_python_value()
+
+    def __setitem__(self, key, value):
+        self._attrs[key] = NcAttribute(key, value)
+
+    #
+    # Provide the minimal set of methods required for a MutableMapping
+    #
+    def __len__(self):
+        return len(self._attrs)
+
+    def __iter__(self):
+        return iter(self._attrs)
+
+    def __delitem__(self, key):
+        self._attrs.__delitem__(key)
+
+    #
+    # Provide a convenient string representation, somewhat consistent with how we print
+    #  the attributes in the printout of an NcData / NcVariable
+    #
+    def __str__(self):
+        text = "AttributesDict("
+        if not self._attrs:
+            text += ")"
+        else:
+            for attr in self._attrs.values():
+                text += f"\n    {attr.name}: {attr._print_value()}"
+            text += "\n)"
+
+        return text
+
+    # Also really nice-to-have : the "rename" operation, as implemented by NameMap
+    @wraps(NameMap.rename)
+    def rename(self, name: str, new_name: str):
+        self._attrs.rename(name, new_name)
+
+
 class _AttributeAccessMixin:
     """
     A mixin with attribute access conveniences for NcData and NcVariable.
@@ -210,22 +267,53 @@ class _AttributeAccessMixin:
     This assists in assigning and extracting attributes as python values.
     See :meth:`NcAttribute.get_python_value()` for how different types are handled.
     """
+    @property
+    def attributes(self):
+        """
+        A dictionary of an NcData or NcVariable's attribute values.
 
-    def get_attrval(self, name: str):
+        This is used for the ``data.attributes`` property, which is a simple
+        {keyname: value} map.  Numeric values are presented as numpy scalars, i.e.
+        integers or strings.  The advantage of this is that they retain an exact dtype,
+        e.g. np.int16 or np.float32.  These are almost entirely interchangeable with
+        Python ints and floats.
+        Multiple values are represented as 1-D numpy arrays.  These are iterable, so
+        largely interchangeable with lists.
+        String attributes are simply given as Python strings.
+        See :ref:`attribute-dtypes`.
+
+        The attributes of an NcData or NcVariable are actually always **stored** in a
+        private ``data._attributes`` property, which is a :class:`NameMap` of
+        :class:`NcAttribute` objects, whose values are numpy arrays.
+        So, this is **not** that map, but is a view onto it, with the contents converted
+        to simple values for convenience -- see :meth:`NcAttribute.as_python_value`.
+        """
+        if not hasattr(self, "_attrmap"):
+            self._attrmap = AttributesDict(self._attributes)
+        return self._attrmap
+
+    def get_attrval(self, name: str) -> Any:
         """
         Get the Python value of a named attribute in self.attributes.
 
         If no such attribute exists, returns None.
+
+        .. warning::
+            This legacy method is now deprecated, and will be removed in a future release.
+
         """
-        attr = self.attributes.get(name)
-        if attr is not None:
-            attr = attr.as_python_value()
-        return attr
+        return self.attributes.get(name, None)
 
     def set_attrval(self, name: str, value) -> "NcAttribute":
-        """Set the Python value of a named attribute in self.attributes."""
-        attr = NcAttribute(name, value)
-        self.attributes[name] = attr
+        """
+        Set the Python value of a named attribute in self.attributes.
+
+        .. warning::
+            This legacy method is now deprecated, and will be removed in a future release.
+
+        """
+        self.attributes[name] = value
+        attr = self.attributes[name]
         return attr
 
 
@@ -269,7 +357,7 @@ class NcData(_AttributeAccessMixin):
             variables, NcVariable
         )
         #: group/dataset global attributes
-        self.attributes: Dict[str, "NcAttribute"] = as_namemap(
+        self._attributes: Dict[str, "NcAttribute"] = as_namemap(
             attributes, NcAttribute
         )
         #: sub-groups
@@ -298,7 +386,7 @@ class NcData(_AttributeAccessMixin):
                     # NOTE: #2 show like variable attributes, but *no parent name*.
                     attrs_lines = [
                         f":{attr._print_content()}"
-                        for attr in self.attributes.values()
+                        for attr in self._attributes.values()
                     ]
                     lines += _addlines_indent(
                         "\n".join(attrs_lines), _indent * 2
@@ -438,7 +526,7 @@ class NcVariable(_AttributeAccessMixin):
         #: variable data (an array-like, typically a dask or numpy array)
         self.data = data  # Supports lazy, and normally provides a dtype
         #: variable attributes
-        self.attributes: NameMap = as_namemap(attributes, NcAttribute)
+        self._attributes: NameMap = as_namemap(attributes, NcAttribute)
         #: parent group
         self.group: Optional[NcData] = group
 
@@ -463,7 +551,7 @@ class NcVariable(_AttributeAccessMixin):
             lines = [hdr]
             attrs_lines = [
                 f"{self.name}:{attr._print_content()}"
-                for attr in self.attributes.values()
+                for attr in self._attributes.values()
             ]
             lines += _addlines_indent("\n".join(attrs_lines), _indent)
             lines += [">"]
@@ -489,7 +577,7 @@ class NcVariable(_AttributeAccessMixin):
             dimensions=self.dimensions,
             dtype=self.dtype,
             data=self.data,
-            attributes=_attributes_copy(self.attributes),
+            attributes=_attributes_copy(self._attributes),
             group=self.group,
         )
         return var

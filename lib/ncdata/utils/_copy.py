@@ -30,7 +30,7 @@ def ncdata_copy(ncdata: NcData) -> NcData:
     """
     return NcData(
         name=ncdata.name,
-        attributes=_attributes_copy(ncdata.attributes),
+        attributes=_attributes_copy(ncdata._attributes),
         dimensions=[dim.copy() for dim in ncdata.dimensions.values()],
         variables=[var.copy() for var in ncdata.variables.values()],
         groups=[ncdata_copy(group) for group in ncdata.groups.values()],

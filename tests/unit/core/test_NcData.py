@@ -18,7 +18,7 @@ class Test_NcData__init__:
         name = "data_name"
         dims = [NcDimension(f"dimname_{i}", i) for i in range(3)]
         vars = [NcVariable(f"varname_{i}", (), int) for i in range(5)]
-        attrs = [NcAttribute(f"attrname_{i}", i) for i in range(6)]
+        attrs = {f"attrname_{i}":  i for i in range(6)}
         grps = [NcData(f"groupname_{i}") for i in range(3)]
         sample1 = NcData(
             name=name,
@@ -35,8 +35,7 @@ class Test_NcData__init__:
         assert sample1.variables.item_type == NcVariable
         assert list(sample1.groups.values()) == grps
         assert sample1.groups.item_type == NcData
-        assert list(sample1.attributes.values()) == attrs
-        assert sample1.attributes.item_type == NcAttribute
+        assert sample1.attributes == attrs
 
         # Also check construction with arguments alone (no keywords).
         sample2 = NcData(name, dims, vars, attrs, grps)
