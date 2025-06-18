@@ -12,12 +12,12 @@ Convert :class:`~ncdata.NcData`\s to and from Iris :class:`~iris.cube.Cube`\s.
 # This means that, hopefully, all we need to know of Iris itself is the load and save,
 # though we do specifically target the netcdf format interface.
 #
-
-from typing import Any, AnyStr, Dict, Iterable, Union
+import dask
+from typing import Any, AnyStr, Dict, Iterable, Union, List
 
 import iris
-import iris.fileformats.netcdf as ifn
 from iris.cube import Cube, CubeList
+import iris.fileformats.netcdf as ifn
 
 from . import NcData
 from .dataset_like import Nc4DatasetLike
@@ -25,7 +25,7 @@ from .dataset_like import Nc4DatasetLike
 __all__ = ["from_iris", "to_iris"]
 
 
-def to_iris(ncdata: NcData, **iris_load_kwargs: Dict[AnyStr, Any]) -> CubeList:
+def to_iris(ncdata: NcData | List[NcData], **iris_load_kwargs: Dict[AnyStr, Any]) -> CubeList:
     """
     Read Iris cubes from an :class:`~ncdata.NcData`.
 
@@ -33,8 +33,8 @@ def to_iris(ncdata: NcData, **iris_load_kwargs: Dict[AnyStr, Any]) -> CubeList:
 
     Parameters
     ----------
-    ncdata : NcData
-        object to be loaded, treated as equivalent to a netCDF4 dataset.
+    ncdata : NcData or list(NcData)
+        object(s) to be loaded into Iris, treated as equivalent to netCDF4 datasets.
 
     iris_load_kwargs : dict
         extra keywords, passed to :func:`iris.fileformats.netcdf.load_cubes`
@@ -44,8 +44,11 @@ def to_iris(ncdata: NcData, **iris_load_kwargs: Dict[AnyStr, Any]) -> CubeList:
     cubes : iris.cube.CubeList
         loaded results
     """
-    dslike = Nc4DatasetLike(ncdata)
-    cubes = CubeList(ifn.load_cubes(dslike, **iris_load_kwargs))
+    if isinstance(ncdata, Iterable):
+        dslikes = [Nc4DatasetLike(data) for data in ncdata]
+    else:
+        dslikes = Nc4DatasetLike(ncdata)
+    cubes = CubeList(iris.load(dslikes, **iris_load_kwargs))
     return cubes
 
 
