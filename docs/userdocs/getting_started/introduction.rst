@@ -38,7 +38,7 @@ and :attr:`~ncdata.NcData.attributes`:
     >>> from ncdata import NcData, NcDimension, NcVariable
     >>> data = NcData("myname")
     >>> data
-    <ncdata._core.NcData object at 0x7f88118dd700>
+    <ncdata._core.NcData object at ...>
     >>> print(data)
     <NcData: myname
     >
@@ -50,7 +50,6 @@ and :attr:`~ncdata.NcData.attributes`:
         dimensions:
             x = 3
     >
-
     >>> data.dimensions['x'] is dim
     True
 
@@ -73,9 +72,9 @@ Simple example:
     >>> print(check_output('ncdump -h tmp.nc', shell=True).decode())
     netcdf tmp {
     dimensions:
-        x = 3 ;
+    	x = 3 ;
     }
-
+    <BLANKLINE>
     >>> data2 = from_nc4(filepath)
     >>> print(data2)
     <NcData: /
@@ -97,7 +96,7 @@ which behaves like a dictionary:
     >>> data.variables.add(var)
 
     >>> data.variables
-    {'vx': <ncdata._core.NcVariable object at ... >}
+    {'vx': <ncdata._core.NcVariable object at ...
 
     >>> data.variables['vx'] is var
     True
@@ -106,7 +105,7 @@ which behaves like a dictionary:
     <NcData: myname
         dimensions:
             x = 3
-
+    <BLANKLINE>
         variables:
             <NcVariable(float64): vx(x)>
     >
@@ -137,7 +136,7 @@ or :class:`~ncdata.NcVariable`:
     <NcData: myname
         dimensions:
             x = 3
-
+    <BLANKLINE>
         variables:
             <NcVariable(float64): vx(x)
                 vx:a = 1
@@ -182,7 +181,7 @@ There is also a 'rename' method of variables/attributes/groups:
     <NcData: myname
         dimensions:
             x = 3
-
+    <BLANKLINE>
         variables:
             <NcVariable(float64): vx(x)
                 vx:qq = 'this'
@@ -230,18 +229,18 @@ Example code snippets :
 
 .. code-block:: python
 
-    >>> from ndata.threadlock_sharing import enable_lockshare
+    >>> from ncdata.threadlock_sharing import enable_lockshare
     >>> enable_lockshare(iris=True, xarray=True)
 
 .. code-block:: python
 
     >>> from ncdata.netcdf import from_nc4
-    >>> ncdata = from_nc4("datapath.nc")
+    >>> data = from_nc4("tmp.nc")
 
 .. code-block:: python
 
     >>> from ncdata.iris import to_iris, from_iris
-    >>> xx, yy =  to_iris(ncdata, ['x_wind', 'y_wind'])
+    >>> xx, yy =  to_iris(data, ['x_wind', 'y_wind'])
     >>> vv = (xx * xx + yy * yy) ** 0.5
     >>> vv.units = xx.units
 

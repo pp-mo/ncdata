@@ -16,12 +16,19 @@ Index by component names to get the object which represents a particular element
 
 .. code-block:: python
 
-    >>> dataset.attributes["experiment"]
-    NcAttribute("'experiment', 'A301.7')
-    >>> dataset.dimensions["x"]
+    >>> from ncdata import NcData, NcAttribute, NcDimension, NcVariable
+    >>> data = NcData(
+    ...   dimensions=[NcDimension("x", 3)],
+    ...   variables=[NcVariable("vx", attributes={"units": "m.s-1"})],
+    ...   attributes={"experiment": "A301.7"}
+    ... )
+    ...
+    >>> data.attributes["experiment"]
+    NcAttribute('experiment', 'A301.7')
+    >>> data.dimensions["x"]
     NcDimension('x', 3)
-    >>> dataset.variables['vx'].attributes['units']
-    NcAttribute("'unit', 'm s-1')
+    >>> data.variables['vx'].attributes['units']
+    NcAttribute('units', 'm.s-1')
 
 Variable, attributes, dimensions and sub-groups are all stored by name like this,
 in a parent property which is a "component container" dictionary.
@@ -42,7 +49,7 @@ a new item.
 
     >>> data.dimensions.add(NcDimension("y", 4))
     >>> data.dimensions
-    {'x': NcDimension('x', 3) 'y': NcDimension('y', 3)}
+    {'x': NcDimension('x', 3), 'y': NcDimension('y', 4)}
 
 The item must be of the correct type, in this case a :class:`~ncdata.NcDimension`.
 If not, an error will be raised.

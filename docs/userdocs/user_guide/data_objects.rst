@@ -214,6 +214,7 @@ either a pre-created container or a similar dictionary-like object :
 
 .. code-block:: python
 
+    >>> from ncdata import NcData, NcVariable
     >>> ds1 = NcData(groups={
     ...    'x':NcData('x'),
     ...    'y':NcData('y')
@@ -256,7 +257,7 @@ will be automatically converted to a NameMap of ``name: NcAttribute(name: value)
     >>> print(var)
     <NcVariable(<no-dtype>): v3()
         v3:x = 'this'
-        v3:b = 1.4,
+        v3:b = 1.4
         v3:arr = array([1, 2, 3])
     >
 
