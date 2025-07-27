@@ -27,6 +27,8 @@ Summary of key features by release number
 pending-unreleased
 ^^^^^^^^^^^^^^^^^^
 * `@pp-mo`_ Added linkcheck action, weekdays at 0800
+  (`PR#123 <https://github.com/pp-mo/ncdata/pull/123>`_),
+  (`PR#125 <https://github.com/pp-mo/ncdata/pull/125>`_).
 
 
 v0.2.0
