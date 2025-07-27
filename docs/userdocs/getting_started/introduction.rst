@@ -72,7 +72,7 @@ Simple example:
     >>> print(check_output('ncdump -h tmp.nc', shell=True).decode())
     netcdf tmp {
     dimensions:
-    	x = 3 ;
+    ...x = 3 ;
     }
     <BLANKLINE>
     >>> data2 = from_nc4(filepath)
@@ -234,21 +234,33 @@ Example code snippets :
 
 .. code-block:: python
 
-    >>> from ncdata.netcdf import from_nc4
+    >>> from ncdata.netcdf4 import from_nc4
     >>> data = from_nc4("tmp.nc")
 
 .. code-block:: python
 
     >>> from ncdata.iris import to_iris, from_iris
-    >>> xx, yy =  to_iris(data, ['x_wind', 'y_wind'])
+    >>> data = NcData(
+    ...    dimensions=[NcDimension("x", 3)],
+    ...    variables=[
+    ...       NcVariable("vx0", ["x"], data=[1, 2, 1],
+    ...                  attributes={"long_name": "vx", "units": "m.s-1"}),
+    ...       NcVariable("vx1", ["x"], data=[3, 4, 6],
+    ...                  attributes={"long_name": "vy", "units": "m.s-1"})
+    ...    ]
+    ... )
+    >>> xx, yy =  to_iris(data, constraints=['vx', 'vy'])
+    >>> print(xx)
+    unknown / (m.s-1)                   (-- : 3)
     >>> vv = (xx * xx + yy * yy) ** 0.5
-    >>> vv.units = xx.units
+    >>> print(vv)
+    unknown / (m.s-1)                   (-- : 3)
 
 .. code-block:: python
 
     >>> from ncdata.xarray import to_xarray
     >>> xrds = to_xarray(from_iris(vv))
-    >>> xrds.to_zarr(out_path)
+    >>> xrds.to_zarr("./zarr1")
 
 .. code-block:: python
 
@@ -268,7 +280,7 @@ Thread safety
 
     .. code-block:: python
 
-        >>> from ndata.threadlock_sharing import enable_lockshare
+        >>> from ncdata.threadlock_sharing import enable_lockshare
         >>> enable_lockshare(iris=True, xarray=True)
 
     See details at :ref:`thread_safety`.
