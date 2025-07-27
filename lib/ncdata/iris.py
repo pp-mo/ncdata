@@ -4,6 +4,8 @@ Interface routines for converting data between ncdata and Iris.
 Convert :class:`~ncdata.NcData`\s to and from Iris :class:`~iris.cube.Cube`\s.
 
 """
+from typing import Any, AnyStr, Dict, Iterable, List, Union
+
 #
 # NOTE:  This uses the :mod:`ncdata.dataset_like` interface ability to mimic a
 # :class:`netCDF4.Dataset` object, which can then be loaded like a file into Iris.
@@ -12,12 +14,9 @@ Convert :class:`~ncdata.NcData`\s to and from Iris :class:`~iris.cube.Cube`\s.
 # This means that, hopefully, all we need to know of Iris itself is the load and save,
 # though we do specifically target the netcdf format interface.
 #
-import dask
-from typing import Any, AnyStr, Dict, Iterable, Union, List
-
 import iris
-from iris.cube import Cube, CubeList
 import iris.fileformats.netcdf as ifn
+from iris.cube import Cube, CubeList
 
 from . import NcData
 from .dataset_like import Nc4DatasetLike
@@ -25,7 +24,9 @@ from .dataset_like import Nc4DatasetLike
 __all__ = ["from_iris", "to_iris"]
 
 
-def to_iris(ncdata: NcData | List[NcData], **iris_load_kwargs: Dict[AnyStr, Any]) -> CubeList:
+def to_iris(
+    ncdata: NcData | List[NcData], **iris_load_kwargs: Dict[AnyStr, Any]
+) -> CubeList:
     """
     Read Iris cubes from an :class:`~ncdata.NcData`.
 

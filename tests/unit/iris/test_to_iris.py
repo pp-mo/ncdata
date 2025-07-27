@@ -10,10 +10,8 @@ covered by the generic 'roundtrip' testcases.
 """
 import dask.array as da
 import numpy as np
-import iris
 from iris._constraints import NameConstraint
 from iris.cube import CubeList
-import pytest
 
 from ncdata import NcData, NcDimension, NcVariable
 from ncdata.iris import to_iris
@@ -132,15 +130,15 @@ def test_iris_loadchain():
                 name="v_data",
                 dimensions=["x"],
                 data=[1, 2, 3],
-                attributes={"long_name": "data", "coordinates": "v_z"}
+                attributes={"long_name": "data", "coordinates": "v_z"},
             ),
             NcVariable(
                 name="v_z",
                 dimensions=[],
                 data=[1],
-                attributes={"long_name": "z"}
+                attributes={"long_name": "z"},
             ),
-        ]
+        ],
     )
 
     # Duplicate to get a second dataset, then change the z value.
