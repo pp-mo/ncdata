@@ -1,0 +1,2 @@
+Make `to_iris` use the full iris load processing, instead of netcdf load_cubes.
+This means you can use load controls such as callbacks and constraints.
