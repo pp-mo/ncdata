@@ -13,6 +13,8 @@ Converts :class:`ncdata.NcData`\s to and from :class:`xarray.Dataset` objects.
 from pathlib import Path
 from typing import AnyStr, Union
 
+import dask.array as da
+import numpy as np
 import xarray as xr
 from xarray.backends import NetCDF4DataStore
 
@@ -86,14 +88,14 @@ class _XarrayNcDataStore(NetCDF4DataStore):
         unlimited_dims = unlimited_dims or []
         # Encode the xarray data as-if-for netcdf4 output, so we convert internal forms
         # (such as strings and timedates) to file-relevant forms.
-        variables, attributes = self.encode(variables, attributes)
+        new_variables, attributes = self.encode(variables, attributes)
 
         # Install (global) attributes into self.
         for attrname, v in attributes.items():
             self.ncdata.attributes[attrname] = NcAttribute(attrname, v)
 
         # Install variables, creating dimensions as we go.
-        for varname, var in variables.items():
+        for varname, var in new_variables.items():
             if varname in self.ncdata.variables:
                 raise ValueError(f'duplicate variable : "{varname}"')
 
@@ -117,6 +119,20 @@ class _XarrayNcDataStore(NetCDF4DataStore):
             }
 
             data = var.data
+
+            if hasattr(var.dtype, "kind") and var.dtype.kind == "f":
+                # Time variables may in the original be datetime objects or numpy
+                #  datetimes, which in decoding get converted to floats.  When computed,
+                #  however, in both cases the wrapped function may in fact return ints.
+                # This is, effectively, an xarray bug, but a very subtle one since it
+                #  doesn't affect what get written to an actual file.
+                # Get the original, unencoded version of the variable.
+                oldvar = variables[varname]
+                if oldvar.data.dtype != var.dtype:
+                    # If the result type is float, but changes in decoding, then cast
+                    #  result to the 'expected' float type, to avoid problems.
+                    data = da.map_blocks(np.astype, data, var.dtype)
+
             nc_var = NcVariable(
                 name=varname,
                 dimensions=var.dims,
