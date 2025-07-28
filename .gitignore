@@ -45,3 +45,4 @@ coverage.xml
 # Docs
 docs/_build
 docs/api
+docs/details/api
