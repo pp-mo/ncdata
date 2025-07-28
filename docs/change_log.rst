@@ -25,6 +25,32 @@ Summary of key features by release number
 
 .. towncrier release notes start
 
+Ncdata 0.3.0.dev4+dirty (2025-07-28)
+====================================
+
+No significant changes.
+
+
+Ncdata 0.3.0.dev4+dirty (2025-07-28)
+====================================
+
+No significant changes.
+
+
+Ncdata 0.3.0.dev4+dirty (2025-07-28)
+====================================
+
+Features
+--------
+
+- Added regular linkcheck gha. (`ISSUE#123 <https://github.com/pp-mo/ncdata/pull/123>`_)
+
+
+Developer and Internal changes
+------------------------------
+
+- Switch to towncrier for whats-new management. (`ISSUE#116 <https://github.com/pp-mo/ncdata/pull/116>`_)
+
 
 v0.2.0
 ======

@@ -5,11 +5,19 @@ Maintenance and manual processes
 
 Change Log Maintenance
 ----------------------
-For now, development PRs should normally include additions in the common
-changelog file ``docs/change_log.rst``.
+Change log entries are now managed with `towncrier <https://towncrier.readthedocs.io/en/stable/>`_.
 
-For now, we aren't categorising changes, but intend to include a combination
-of release-page notes and a simple list of PRs.
+A new change-note fragment file should be included in each PR, but is normally created
+with a ``towncrier`` command-line command:
+
+* shortly, with ``towncrier create --content "mynotes..." <ISSUE-num>.<category>.rst``
+* ... or for longer forms, use ``towncrier create --edit``.
+* Here, "<category>" is one of feat/doc/bug/dev/misc.  Which are: user features;
+  bug fixes; documentation changes; general developer-relevant changes;
+  or "miscellaneous".
+  (For reference, these categories are configured in ``pyproject.toml``).
+* fragments live in ``docs/changelog_fragments``.
+* N.B. for this to work well, every change should link to a github issue.
 
 
 Documentation build
@@ -18,6 +26,8 @@ Documentation build
 * For a full docs-build
     * a simple ``$ make html`` will do for now
     * The ``docs/Makefile`` wipes the API docs and invokes sphinx-apidoc for a full rebuild
+    * It also calls towncrier to clear out the changelog fragments + update ``docs/change_log.rst``.
+      This should be reverted before pushing your PR -- i.e. leave changenotes in the fragments.
 
 * Results are then available at ``docs/_build/html/index.html``
     * The above is just for *local testing* if required
@@ -30,7 +40,8 @@ Release actions
 
 #. Update the :ref:`change_log` page in the details section
 
-    #. ensure all major changes + PRs are referenced in the :ref:`change_notes` section
+    #. ensure all major changes + PRs are referenced in the :ref:`change_notes` section.
+       The starting point for this is now just : ``towncrier build``.
 
     #. update the "latest version" stated in the :ref:`development_status` section
 
