@@ -10,7 +10,7 @@ covered by the generic 'roundtrip' testcases.
 """
 import dask.array as da
 import numpy as np
-from iris import NameConstraint
+from iris._constraints import NameConstraint
 from iris.cube import CubeList
 
 from ncdata import NcData, NcDimension, NcVariable
@@ -116,3 +116,47 @@ def test_kwargs__load_by_name():
     assert isinstance(cubes, CubeList)
     assert len(cubes) == 1
     assert cubes[0].name() == "var2"
+
+
+def test_iris_loadchain():
+    """Check that standard iris load-chain processing is applied, including a merge."""
+
+    # Create a pair of datasets with mergeable variables.
+    # Start by making one, with a scalar 'z' coord.
+    ncdata = NcData(
+        dimensions=[NcDimension("x", 3)],
+        variables=[
+            NcVariable(
+                name="v_data",
+                dimensions=["x"],
+                data=[1, 2, 3],
+                attributes={"long_name": "data", "coordinates": "v_z"},
+            ),
+            NcVariable(
+                name="v_z",
+                dimensions=[],
+                data=[1],
+                attributes={"long_name": "z"},
+            ),
+        ],
+    )
+
+    # Duplicate to get a second dataset, then change the z value.
+    # N.B. we need 2 datasets, as Iris won't match coords with different var-names.
+    ncdata2 = ncdata.copy()
+
+    # N.B. must **copy data array** before modifying, as var.copy() doesn't do so.
+    data = ncdata2.variables["v_z"].data
+    data = data.copy()
+    data[0] = 2
+    ncdata2.variables["v_z"].data = data
+
+    # Loading should now merge these 2 into one cube.
+    cubes = to_iris([ncdata, ncdata2])
+
+    assert isinstance(cubes, CubeList)
+    assert len(cubes) == 1
+    (cube,) = cubes
+    assert cube.long_name == "data"
+    assert cube.shape == (2, 3)
+    assert cube.coords("z", dim_coords=True)

@@ -59,18 +59,7 @@ def test_real_nocopy():
     xrds = to_xarray(ncdata)
 
     # Check that the data content is  the *SAME ARRAY*
-
-    # This exists within the Xarray variable, but wrapped in a slightly cunning way...
-    # We will embed some rather specific Xarray knowledge here, and hope that it does
-    # not break too often.
     xr_data = xrds.variables["var_x"]._data
-    from xarray.core.indexing import LazilyIndexedArray, NumpyIndexingAdapter
-
-    assert isinstance(xr_data, LazilyIndexedArray)
-    xr_data = xr_data.array
-    assert isinstance(xr_data, NumpyIndexingAdapter)
-    xr_data = xr_data.array
-
     assert xr_data is real_numpy_data
 
 
