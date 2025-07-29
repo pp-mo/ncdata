@@ -15,5 +15,6 @@ dependencies:
   - python<3.13
   - sphinx
   - sphinxcontrib-napoleon
+  - sphinx-copybutton
   - towncrier
   - xarray

@@ -37,6 +37,7 @@ extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
+    "sphinx_copybutton",
 ]
 
 intersphinx_mapping = {
@@ -107,6 +108,15 @@ html_theme = "pydata_sphinx_theme"
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
+html_css_files = ["css/hiddencode.css"]
+
+
+# -- copybutton extension -----------------------------------------------------
+# See https://sphinx-copybutton.readthedocs.io/en/latest/
+copybutton_prompt_text = r">>> |\.\.\. "
+copybutton_prompt_is_regexp = True
+copybutton_line_continuation_character = "\\"
+
 
 # Various scheme control settings.
 # See https://pydata-sphinx-theme.readthedocs.io/en/stable/user_guide/layout.html
