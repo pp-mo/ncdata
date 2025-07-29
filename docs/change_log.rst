@@ -19,20 +19,12 @@ The code is however still experimental, and APIs are not stable
 
 .. _change_notes:
 
-Change Notes
-------------
-Summary of key features by release number
+Summary of key features by release number:
 
-
-pending-unreleased
-^^^^^^^^^^^^^^^^^^
-* `@pp-mo`_ Added linkcheck action, weekdays at 0800
-  (`PR#123 <https://github.com/pp-mo/ncdata/pull/123>`_),
-  (`PR#125 <https://github.com/pp-mo/ncdata/pull/125>`_).
-
+.. towncrier release notes start
 
 v0.2.0
-^^^^^^
+~~~~~~
 Overhauled data manipulation APIs.  Expanded and improved documentation.
 
 * `@pp-mo`_ Reviewed, corrected, reorganised and expanded all documentation.
@@ -71,7 +63,7 @@ Overhauled data manipulation APIs.  Expanded and improved documentation.
 
 
 v0.1.1
-^^^^^^
+~~~~~~
 Small tweaks + bug fixes.
 **Note:** `PR#62 <https://github.com/pp-mo/ncdata/pull/62>`_, and 
 `PR#59 <https://github.com/pp-mo/ncdata/pull/59>`_ are important fixes to
@@ -94,7 +86,7 @@ i.e. moving arbitrarily large data via Dask without running out of memory.
 
 
 v0.1.0
-^^^^^^
+~~~~~~
 First release
 
 `v0.1.0 on GitHub <https://github.com/pp-mo/ncdata/releases/tag/v0.1.0>`_

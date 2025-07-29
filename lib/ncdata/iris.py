@@ -38,7 +38,7 @@ def to_iris(
         object(s) to be loaded into Iris, treated as equivalent to netCDF4 datasets.
 
     iris_load_kwargs : dict
-        extra keywords, passed to :func:`iris.fileformats.netcdf.load_cubes`
+        extra keywords, passed into the :func:`iris.load` call.
 
     Returns
     -------
@@ -66,12 +66,17 @@ def from_iris(
     cubes : :class:`iris.cube.Cube`, or iterable of Cubes
         cube or cubes to "save" to an NcData object.
     iris_save_kwargs : dict
-        additional keys passed to :func:`iris.fileformats.netcdf.save` operation.
+        additional keys passed into the :func:`iris.save` call.
 
     Returns
     -------
     ncdata : NcData
         output data created from saving ``cubes``
+
+    Notes
+    -----
+    The keys "compute" and "saver" must not appear in ``iris_save_kwargs``,
+    as these these are already used.
 
     """
     nc4like = Nc4DatasetLike()
