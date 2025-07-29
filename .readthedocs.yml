@@ -20,6 +20,7 @@ build:
       - git stash
     post_install:
       - sphinx-apidoc -Mfe -o ./docs/api ./lib/ncdata
+      - towncrier build --yes
       - git stash pop
 
 conda:

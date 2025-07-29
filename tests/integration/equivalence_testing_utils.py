@@ -8,6 +8,8 @@ import dask.array as da
 import numpy as np
 import pytest
 
+import iris.mesh
+
 
 def cubes_equal__corrected(c1, c2):
     """
@@ -84,10 +86,12 @@ def cubes_equal__corrected(c1, c2):
             )
             # Fix matching of all coords points + bounds
             for co1, co2 in zip(c1.coords(), c2.coords()):
+                if isinstance(co1, iris.mesh.MeshCoord):
+                    # Can't write MeshCoords
+                    continue
                 co1.points, co2.points = fix_arrays(
                     *(co.core_points() for co in (co1, co2))
                 )
-            for co1, co2 in zip(c1.coords(), c2.coords()):
                 co1.bounds, co2.bounds = fix_arrays(
                     *(co.core_bounds() for co in (co1, co2))
                 )
@@ -162,6 +166,9 @@ def nanmask_cube(cube):
     """Replace all NaNs with masked points, in cube data and coords."""
     cube.data = nanmask_array(cube.core_data())
     for coord in cube.coords():
+        if isinstance(coord, iris.mesh.MeshCoord):
+            # Can't write MeshCoords
+            continue
         coord.points = nanmask_array(coord.core_points())
         coord.bounds = nanmask_array(coord.core_bounds())
     return cube
