@@ -161,10 +161,24 @@ not attribute values.
 
 Thus to fetch an attribute you might write, for example one of these :
 
+.. raw:: html
+
+    <div class="hiddencode">
+
+.. code-block::
+    >>> from ncdata import NcData, NcVariable, NcAttribute
+    >>> dataset = NcData(variables=[NcVariable("var1", attributes={"units": "m"})])
+
+.. raw:: html
+
+    </div>
+
+
 .. code-block::
 
-    units1 = dataset.variables['var1'].get_attrval('units')
-    units1 = dataset.variables['var1'].attributes['units'].as_python_value()
+    >>> units1 = dataset.variables['var1'].get_attrval('units')
+    >>> units1 = dataset.variables['var1'].attributes['units'].as_python_value()
+
 
 but **not** ``unit = dataset.variables['x'].attributes['attr1']``
 
@@ -172,8 +186,9 @@ Or, likewise, to **set** values, one of
 
 .. code-block::
 
-    dataset.variables['var1'].set_attrval('units', "K")
-    dataset.variables['var1'].attributes['units'] = NcAttribute("units", K)
+    >>> dataset.variables['var1'].set_attrval('units', "K")
+    NcAttribute(...)
+    >>> dataset.variables['var1'].attributes['units'] = NcAttribute("units", "K")
 
 but **not** ``dataset.variables['x'].attributes['units'].value = "K"``
 
