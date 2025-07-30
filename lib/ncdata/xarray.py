@@ -193,12 +193,6 @@ def to_xarray(ncdata: NcData, **xarray_load_kwargs) -> xr.Dataset:
     xrds : xarray.Dataset
         converted data in the form of an Xarray :class:`xarray.Dataset`
 
-    Example
-    -------
-    >>> a = 3
-    >>> a
-    4
-
     """
     return _XarrayNcDataStore(ncdata).to_xarray(**xarray_load_kwargs)
 

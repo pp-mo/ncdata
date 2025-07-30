@@ -307,9 +307,6 @@ def from_nc4(
 
     Examples
     --------
-    For example, to avoid cases where a simple dask ``from_array(chunks="auto")``
-    will fail
-
     .. testsetup::
 
         >>> from ncdata import NcData, NcDimension, NcVariable
@@ -321,13 +318,14 @@ def from_nc4(
         >>> testfile_path = "tmp.nc"
         >>> to_nc4(testdata, testfile_path)
 
-    .. doctest::
+    For example, to avoid cases where a simple dask ``from_array(chunks="auto")``
+    will fail
 
-        >>> from ncdata.netcdf4 import from_nc4
-        >>> ds = from_nc4(testfile_path, dim_chunks={"x": 15})
-        >>> ds.variables["data"].data.chunksize
-        (15,)
-        >>>
+    >>> from ncdata.netcdf4 import from_nc4
+    >>> ds = from_nc4(testfile_path, dim_chunks={"x": 15})
+    >>> ds.variables["vx"].data.chunksize
+    (15,)
+    >>>
 
     See also : :ref:`howto_load_variablewidth_strings` :  This illustrates a particular
     case which **does** encounter an error with dask "auto" chunking, and therefore
