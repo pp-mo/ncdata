@@ -7,13 +7,24 @@
 name: ci-tests
 
 # Triggers the workflow on pull-request or push events
-on: [pull_request, push]
+on:
+  push:
+    branches:
+      - "main"
+      - "v*x"
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - "*"
+  workflow_dispatch:
 
 jobs:
   tests:
     name: "Test Python ${{ matrix.version }} session= ${{ matrix.session }}"
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         session: ["tests", "doctests-docs", "doctests-api"]
     defaults:
@@ -73,4 +84,10 @@ jobs:
         if: ${{ matrix.session }} == "doctests-docs"
         run: |
           cd docs
-          pytest --doctests-glob="*.rst"
+          pytest --doctest-glob="*.rst"
+
+      - name: "Run doctests: api"
+        if: ${{ matrix.session }} == "doctests-api"
+        run: |
+          cd lib
+          pytest --doctest-glob="*.py"
