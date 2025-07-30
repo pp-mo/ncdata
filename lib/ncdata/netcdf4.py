@@ -310,12 +310,23 @@ def from_nc4(
     For example, to avoid cases where a simple dask ``from_array(chunks="auto")``
     will fail
 
+    .. testsetup::
+
+        >>> from ncdata import NcData, NcDimension, NcVariable
+        >>> from ncdata.netcdf4 import to_nc4
+        >>> testdata = NcData(
+        ...     dimensions=[NcDimension("x", 100)],
+        ...     variables=[NcVariable("vx", ["x"], data=np.ones(100))]
+        ... )
+        >>> testfile_path = "tmp.nc"
+        >>> to_nc4(testdata, testfile_path)
+
+    .. doctest::
+
         >>> from ncdata.netcdf4 import from_nc4
-        >>> from tests import testdata_dir
-        >>> path = testdata_dir / "toa_brightness_temperature.nc"
-        >>> ds = from_nc4(path, dim_chunks={"x": 15})
+        >>> ds = from_nc4(testfile_path, dim_chunks={"x": 15})
         >>> ds.variables["data"].data.chunksize
-        (160, 15)
+        (15,)
         >>>
 
     See also : :ref:`howto_load_variablewidth_strings` :  This illustrates a particular

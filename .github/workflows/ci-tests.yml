@@ -75,19 +75,19 @@ jobs:
           mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${GITHUB_WORKSPACE}/iris_test_data_download
 
       - name: "Run tests"
-        if: ${{ matrix.session }} == 'tests'
+        if: matrix.session == 'tests'
         run: |
           ls ${GITHUB_WORKSPACE}/iris_test_data_download/test_data
           OVERRIDE_TEST_DATA_REPOSITORY=${GITHUB_WORKSPACE}/iris_test_data_download/test_data PYTHONPATH=./tests:$PYTHONPATH pytest -v ./tests
 
       - name: "Run doctests: Docs"
-        if: ${{ matrix.session }} == 'doctests-docs'
+        if: matrix.session == 'doctests-docs'
         run: |
           cd docs
           pytest --doctest-glob="*.rst"
 
       - name: "Run doctests: API"
-        if: ${{ matrix.session }} == 'doctests-api'
+        if: matrix.session == 'doctests-api'
         run: |
           cd lib
           pytest --doctest-modules
