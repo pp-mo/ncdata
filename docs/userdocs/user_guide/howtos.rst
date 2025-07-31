@@ -16,10 +16,6 @@ i.e. wrong turns and gotchas, with brief descriptions of why.
     >>> from pprint import pprint
     >>> import numpy as np
     >>> from subprocess import check_output
-    >>> def ncdump(path):
-    ...     text = check_output(f'ncdump -h {path}', shell=True).decode()
-    ...     text = text.replace("\t", " " * 3)
-    ...     print(text)
 
 .. _howto_access:
 
@@ -355,7 +351,7 @@ Use the :func:`ncdata.netcdf4.to_nc4` function to write data to a file:
 
     >>> from ncdata.netcdf4 import to_nc4
     >>> to_nc4(data, filepath)
-    >>> ncdump(filepath)
+    >>> print(check_output(f"ncdump -h {filepath}", shell=True).decode())  # doctest: +NORMALIZE_WHITESPACE
     netcdf ...{
     dimensions:
        x = 3 ;
