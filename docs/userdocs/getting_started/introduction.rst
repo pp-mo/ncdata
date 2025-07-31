@@ -38,21 +38,25 @@ and :attr:`~ncdata.NcData.attributes`:
     >>> from ncdata import NcData, NcDimension, NcVariable
     >>> data = NcData("myname")
     >>> data
-    <ncdata._core.NcData object at 0x7f88118dd700>
+    <ncdata._core.NcData object at ...>
     >>> print(data)
     <NcData: myname
     >
 
     >>> dim = NcDimension("x", 3)
     >>> data.dimensions.add(dim)
+    >>> data.dimensions['x'] is dim
+    True
+
+    >>> data.variables.add(NcVariable('vx', ["x"], dtype=float))
     >>> print(data)
     <NcData: myname
         dimensions:
             x = 3
+    <BLANKLINE>
+        variables:
+            <NcVariable(float64): vx(x)>
     >
-
-    >>> data.dimensions['x'] is dim
-    True
 
 
 Getting data to+from files
@@ -60,27 +64,39 @@ Getting data to+from files
 The :mod:`ncdata.netcdf4` module provides simple means of reading and writing
 NetCDF files via the `netcdf4-python package <http://unidata.github.io/netcdf4-python/>`_.
 
+.. testsetup::
+
+    >>> from subprocess import check_output
+    >>> def ncdump(path):
+    ...     text = check_output(f'ncdump -h {path}', shell=True).decode()
+    ...     text = text.replace("\t", " " * 3)
+    ...     print(text)
+
+
 Simple example:
 
 .. code-block:: python
 
     >>> from ncdata.netcdf4 import to_nc4, from_nc4
-
     >>> filepath = "./tmp.nc"
     >>> to_nc4(data, filepath)
 
-    >>> from subprocess import check_output
-    >>> print(check_output('ncdump -h tmp.nc', shell=True).decode())
+    >>> print(check_output("ncdump -h tmp.nc", shell=True).decode())  # doctest: +NORMALIZE_WHITESPACE
     netcdf tmp {
     dimensions:
-        x = 3 ;
+       x = 3 ;
+    variables:
+       double vx(x) ;
     }
-
+    <BLANKLINE>
     >>> data2 = from_nc4(filepath)
     >>> print(data2)
     <NcData: /
         dimensions:
             x = 3
+    <BLANKLINE>
+        variables:
+            <NcVariable(float64): vx(x)>
     >
 
 Please see `Converting between data formats`_ for more details.
@@ -93,32 +109,34 @@ which behaves like a dictionary:
 
 .. code-block:: python
 
-    >>> var = NcVariable("vx", dimensions=["x"], dtype=float)
-    >>> data.variables.add(var)
-
     >>> data.variables
-    {'vx': <ncdata._core.NcVariable object at ... >}
+    {'vx': <ncdata._core.NcVariable object at ...>}
 
-    >>> data.variables['vx'] is var
-    True
+    >>> var = NcVariable("newvar", dimensions=["x"], data=[1, 2, 3])
+    >>> data.variables.add(var)
 
     >>> print(data)
     <NcData: myname
         dimensions:
             x = 3
-
+    <BLANKLINE>
         variables:
             <NcVariable(float64): vx(x)>
+            <NcVariable(int64): newvar(x)>
     >
+
+    >>> # remove again, for simpler subsequent testing
+    >>> del data.variables["newvar"]
 
 
 Attributes
 ^^^^^^^^^^
-Variables live in the ``attributes`` property of a :class:`~ncdata.NcData`
+Attributes live in the ``attributes`` property of a :class:`~ncdata.NcData`
 or :class:`~ncdata.NcVariable`:
 
 .. code-block:: python
 
+    >>> var = data.variables["vx"]
     >>> var.set_attrval('a', 1)
     NcAttribute('a', 1)
     >>> var.set_attrval('b', 'this')
@@ -137,7 +155,7 @@ or :class:`~ncdata.NcVariable`:
     <NcData: myname
         dimensions:
             x = 3
-
+    <BLANKLINE>
         variables:
             <NcVariable(float64): vx(x)
                 vx:a = 1
@@ -182,7 +200,7 @@ There is also a 'rename' method of variables/attributes/groups:
     <NcData: myname
         dimensions:
             x = 3
-
+    <BLANKLINE>
         variables:
             <NcVariable(float64): vx(x)
                 vx:qq = 'this'
@@ -230,32 +248,65 @@ Example code snippets :
 
 .. code-block:: python
 
-    >>> from ndata.threadlock_sharing import enable_lockshare
+    >>> # (make sure that Iris and Ncdata won't conflict over netcdf access)
+    >>> from ncdata.threadlock_sharing import enable_lockshare
     >>> enable_lockshare(iris=True, xarray=True)
 
 .. code-block:: python
 
-    >>> from ncdata.netcdf import from_nc4
-    >>> ncdata = from_nc4("datapath.nc")
+    >>> from ncdata.netcdf4 import from_nc4
+    >>> data = from_nc4("tmp.nc")
 
 .. code-block:: python
 
     >>> from ncdata.iris import to_iris, from_iris
-    >>> xx, yy =  to_iris(ncdata, ['x_wind', 'y_wind'])
-    >>> vv = (xx * xx + yy * yy) ** 0.5
-    >>> vv.units = xx.units
+    >>> from iris import FUTURE
+    >>> # (avoid some irritating warnings)
+    >>> FUTURE.save_split_attrs = True
+
+    >>> data = NcData(
+    ...    dimensions=[NcDimension("x", 3)],
+    ...    variables=[
+    ...       NcVariable("vx0", ["x"], data=[1, 2, 1],
+    ...                  attributes={"long_name": "speed_x", "units": "m.s-1"}),
+    ...       NcVariable("vx1", ["x"], data=[3, 4, 6],
+    ...                  attributes={"long_name": "speed_y", "units": "m.s-1"})
+    ...    ]
+    ... )
+    >>> vx, vy =  to_iris(data, constraints=['speed_x', 'speed_y'])
+    >>> print(vx)
+    speed_x / (m.s-1)                   (-- : 3)
+    >>> vv = (0.5 * (vx * vx + vy * vy)) ** 0.5
+    >>> vv.rename("v_mag")
+    >>> print(vv)
+    v_mag / (m.s-1)                     (-- : 3)
 
 .. code-block:: python
 
     >>> from ncdata.xarray import to_xarray
-    >>> xrds = to_xarray(from_iris(vv))
-    >>> xrds.to_zarr(out_path)
+    >>> xrds = to_xarray(from_iris([vx, vy, vv]))
+    >>> print(xrds)
+    <xarray.Dataset> Size: ...
+    Dimensions:  (dim0: 3)
+    Dimensions without coordinates: dim0
+    Data variables:
+        vx0      (dim0) int64 ... dask.array<chunksize=(3,), meta=numpy.ma.MaskedArray>
+        vx1      (dim0) int64 ... dask.array<chunksize=(3,), meta=numpy.ma.MaskedArray>
+        v_mag    (dim0) float64 ... dask.array<chunksize=(3,), meta=numpy.ma.MaskedArray>
+    Attributes:
+        Conventions:  CF-1.7
 
 .. code-block:: python
 
     >>> from ncdata.iris_xarray import cubes_from_xarray
-    >>> vv2 = cubes_from_xarray(xrds)
-    >>> assert vv2 == vv
+    >>> readback = cubes_from_xarray(xrds)
+    >>> # warning: order is indeterminate!
+    >>> from iris.cube import CubeList
+    >>> readback = CubeList(sorted(readback, key=lambda cube: cube.name()))
+    >>> print(readback)
+    0: speed_x / (m.s-1)                   (-- : 3)
+    1: speed_y / (m.s-1)                   (-- : 3)
+    2: v_mag / (m.s-1)                     (-- : 3)
 
 
 Thread safety
@@ -269,7 +320,7 @@ Thread safety
 
     .. code-block:: python
 
-        >>> from ndata.threadlock_sharing import enable_lockshare
+        >>> from ncdata.threadlock_sharing import enable_lockshare
         >>> enable_lockshare(iris=True, xarray=True)
 
     See details at :ref:`thread_safety`.

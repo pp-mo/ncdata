@@ -161,10 +161,17 @@ not attribute values.
 
 Thus to fetch an attribute you might write, for example one of these :
 
-.. code-block::
+.. testsetup::
 
-    units1 = dataset.variables['var1'].get_attrval('units')
-    units1 = dataset.variables['var1'].attributes['units'].as_python_value()
+    >>> from ncdata import NcData, NcVariable, NcAttribute
+    >>> dataset = NcData(variables=[NcVariable("var1", attributes={"units": "m"})])
+
+
+.. doctest::
+
+    >>> units1 = dataset.variables['var1'].get_attrval('units')
+    >>> units1 = dataset.variables['var1'].attributes['units'].as_python_value()
+
 
 but **not** ``unit = dataset.variables['x'].attributes['attr1']``
 
@@ -172,8 +179,9 @@ Or, likewise, to **set** values, one of
 
 .. code-block::
 
-    dataset.variables['var1'].set_attrval('units', "K")
-    dataset.variables['var1'].attributes['units'] = NcAttribute("units", K)
+    >>> dataset.variables['var1'].set_attrval('units', "K")
+    NcAttribute(...)
+    >>> dataset.variables['var1'].attributes['units'] = NcAttribute("units", "K")
 
 but **not** ``dataset.variables['x'].attributes['units'].value = "K"``
 
@@ -214,6 +222,7 @@ either a pre-created container or a similar dictionary-like object :
 
 .. code-block:: python
 
+    >>> from ncdata import NcData, NcVariable
     >>> ds1 = NcData(groups={
     ...    'x':NcData('x'),
     ...    'y':NcData('y')
@@ -256,7 +265,7 @@ will be automatically converted to a NameMap of ``name: NcAttribute(name: value)
     >>> print(var)
     <NcVariable(<no-dtype>): v3()
         v3:x = 'this'
-        v3:b = 1.4,
+        v3:b = 1.4
         v3:arr = array([1, 2, 3])
     >
 

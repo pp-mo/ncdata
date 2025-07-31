@@ -4,7 +4,6 @@ build:
   os: ubuntu-20.04
   tools:
     python: mambaforge-4.10
-
   jobs:
     # Content here largely copied from Iris
     #  see : https://github.com/SciTools/iris/pull/4855
@@ -19,9 +18,10 @@ build:
     pre_install:
       - git stash
     post_install:
-      - sphinx-apidoc -Mfe -o ./docs/api ./lib/ncdata
-      - towncrier build --yes
       - git stash pop
+    pre_build:
+      - cd docs; make allapi
+      - cd docs; make towncrier
 
 conda:
   environment: requirements/readthedocs.yml

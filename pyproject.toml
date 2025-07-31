@@ -57,7 +57,6 @@ Discussions = "https://github.com/pp-mo/ncdata/discussions"
 Documentation = "https://ncdata.readthedocs.io"
 Issues = "https://github.com/pp-mo/ncdata/issues"
 
-
 [tool.setuptools]
 license-files = ["LICENSE"]
 

@@ -23,6 +23,42 @@ Summary of key features by release number:
 
 .. towncrier release notes start
 
+Ncdata 0.3.0.dev4+dirty (2025-07-31)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Features
+^^^^^^^^
+
+- Added regular linkcheck gha. (`ISSUE#123 <https://github.com/pp-mo/ncdata/pull/123>`_)
+- Make :meth:`~ncdata.iris.to_iris` use the full iris load processing,
+  instead of :meth:`iris.fileformats.netcdf.loader.load_cubes`.
+  This means you can use load controls such as callbacks and constraints. (`ISSUE#131 <https://github.com/pp-mo/ncdata/pull/131>`_)
+
+
+Developer and Internal changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Switch to towncrier for whats-new management. (`ISSUE#116 <https://github.com/pp-mo/ncdata/pull/116>`_)
+
+
+Ncdata 0.3.0.dev4+dirty (2025-07-31)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Features
+^^^^^^^^
+
+- Added regular linkcheck gha. (`ISSUE#123 <https://github.com/pp-mo/ncdata/pull/123>`_)
+- Make :meth:`~ncdata.iris.to_iris` use the full iris load processing,
+  instead of :meth:`iris.fileformats.netcdf.loader.load_cubes`.
+  This means you can use load controls such as callbacks and constraints. (`ISSUE#131 <https://github.com/pp-mo/ncdata/pull/131>`_)
+
+
+Developer and Internal changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Switch to towncrier for whats-new management. (`ISSUE#116 <https://github.com/pp-mo/ncdata/pull/116>`_)
+
+
 v0.2.0
 ~~~~~~
 Overhauled data manipulation APIs.  Expanded and improved documentation.

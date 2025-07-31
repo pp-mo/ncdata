@@ -53,7 +53,9 @@ These however do *not* copy variable data arrays (either real or lazy), but prod
 
 .. code-block::
 
-    >>> Construct a simple test dataset
+    >>> # Construct a simple test dataset
+    >>> import numpy as np
+    >>> from ncdata import NcData, NcDimension, NcVariable
     >>> ds = NcData(
     ...     dimensions=[NcDimension('x', 12)],
     ...     variables=[NcVariable('vx', ['x'], np.ones(12))]
@@ -73,7 +75,8 @@ These however do *not* copy variable data arrays (either real or lazy), but prod
     >>> # So changing one actually CHANGES THE OTHER ...
     >>> ds.variables['vx'].data[6:] = 777
     >>> ds_copy.variables['vx'].data
-    array([1., 1., 1., 1., 1., 1., 777., 777., 777., 777., 777., 777.])
+    array([  1.,   1.,   1.,   1.,   1.,   1., 777., 777., 777., 777., 777.,
+           777.])
 
 If needed you can of course replace variable data with copies yourself, since you can
 freely assign to ``.data``.
