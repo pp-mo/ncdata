@@ -16,6 +16,5 @@ dependencies:
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx-copybutton
-  - sphinx-doctest
   - towncrier
   - xarray
