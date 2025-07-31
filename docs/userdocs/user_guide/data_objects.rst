@@ -161,20 +161,13 @@ not attribute values.
 
 Thus to fetch an attribute you might write, for example one of these :
 
-.. raw:: html
+.. testsetup::
 
-    <div class="hiddencode">
-
-.. code-block::
     >>> from ncdata import NcData, NcVariable, NcAttribute
     >>> dataset = NcData(variables=[NcVariable("var1", attributes={"units": "m"})])
 
-.. raw:: html
 
-    </div>
-
-
-.. code-block::
+.. doctest::
 
     >>> units1 = dataset.variables['var1'].get_attrval('units')
     >>> units1 = dataset.variables['var1'].attributes['units'].as_python_value()

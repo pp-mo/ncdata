@@ -7,12 +7,7 @@ documentation to describe concepts and technical details.
 **"Why Not Just..."** sections highlight warnings for what *not* to do,
 i.e. wrong turns and gotchas, with brief descriptions of why.
 
-
-.. raw:: html
-
-    <div class="hiddencode">
-
-.. code-block::
+.. testsetup::
 
     >>> import xarray
     >>> import iris
@@ -26,18 +21,13 @@ i.e. wrong turns and gotchas, with brief descriptions of why.
     ...     text = text.replace("\t", " " * 3)
     ...     print(text)
 
-.. raw:: html
-
-    </div>
-
-
 .. _howto_access:
 
 Access a variable, dimension, attribute or group
 ------------------------------------------------
 Index by component names to get the object which represents a particular element.
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata import NcData, NcAttribute, NcDimension, NcVariable
     >>> data = NcData(
@@ -154,7 +144,7 @@ To get an attribute of a dataset, group or variable, use the
 :meth:`ncdata.NcData.get_attrval` or :meth:`ncdata.NcVariable.get_attrval`
 method, which returns either a single (scalar) number, a numeric array, or a string.
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var = NcVariable("x", attributes={"a": [3.0], "levels": [1., 2, 3]})
     >>> var.get_attrval("a")
@@ -182,7 +172,7 @@ which produces the same results as the above.
 
     For example
 
-    .. code-block:: python
+    .. doctest:: python
 
         >>> print(var.attributes["a"].value)
         [3.]
@@ -202,7 +192,7 @@ To set an attribute of a dataset, group or variable, use the
 
 All attributes are writeable, and the type can be freely changed.
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var.set_attrval("x", 3.)
     NcAttribute('x', 3.0)
@@ -220,7 +210,7 @@ assigned value is cast with :func:`numpy.asarray`.
 
 For example
 
-.. code-block:: python
+.. doctest:: python
 
     >>> attr = data.variables["vx"].attributes["q"]
     >>> attr.value = 4.2
@@ -237,7 +227,7 @@ To create an attribute on a dataset, group or variable, just set its value with 
 This works just like :ref:`howto_write_attr` : i.e. it makes no difference whether the
 attribute already exists or not.
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var.set_attrval("x", 3.)
     NcAttribute('x', 3.0)
@@ -259,7 +249,7 @@ variable with a name, dimensions, and optional data and attributes.
 
 A minimal example:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var = NcVariable("data", ("x_axis",))
     >>> print(var)
@@ -270,7 +260,7 @@ A minimal example:
 
 A more rounded example, including a data array:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var = NcVariable("vyx", ("y", "x"),
     ...   data=[[1, 2, 3], [0, 1, 1]],
@@ -319,11 +309,7 @@ Read data from a NetCDF file
 ----------------------------
 Use the :func:`ncdata.netcdf4.from_nc4` function to load a dataset from a netCDF file.
 
-.. raw:: html
-
-    <div class="hiddencode">
-
-.. code-block::
+.. testsetup::
 
     >>> _ds = NcData(
     ...     dimensions=[NcDimension("time", 10)],
@@ -334,11 +320,8 @@ Use the :func:`ncdata.netcdf4.from_nc4` function to load a dataset from a netCDF
     >>> filepath = "_t1.nc"
     >>> to_nc4(_ds, filepath)
 
-.. raw:: html
 
-    </div>
-
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import from_nc4
     >>> ds = from_nc4(filepath)
@@ -356,7 +339,7 @@ Control chunking in a netCDF read
 ---------------------------------
 Use the ``dim_chunks`` argument in the :func:`ncdata.netcdf4.from_nc4` function
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import from_nc4
     >>> ds = from_nc4(filepath, dim_chunks={"time": 3})
@@ -368,7 +351,7 @@ Save data to a new file
 -----------------------
 Use the :func:`ncdata.netcdf4.to_nc4` function to write data to a file:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import to_nc4
     >>> to_nc4(data, filepath)
@@ -390,7 +373,7 @@ Read from or write to Iris cubes
 --------------------------------
 Use :func:`ncdata.iris.to_iris` and :func:`ncdata.iris.from_iris`.
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.iris import from_iris, to_iris
 
@@ -432,7 +415,7 @@ Read from or write to Xarray datasets
 -------------------------------------
 Use :func:`ncdata.xarray.to_xarray` and :func:`ncdata.xarray.from_xarray`.
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.xarray import from_xarray, to_xarray
     >>> dataset = xarray.open_dataset(filepath)
@@ -457,7 +440,7 @@ Convert data directly from Iris to Xarray, or vice versa
 Use :func:`ncdata.iris_xarray.cubes_to_xarray` and
 :func:`ncdata.iris_xarray.cubes_from_xarray`.
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.iris_xarray import cubes_from_xarray, cubes_to_xarray
     >>> cubes = iris.load(filepath)
@@ -472,7 +455,7 @@ or :func:`ncdata.iris.from_iris` then :func:`ncdata.xarray.to_xarray`.
 Extra keyword controls for the relevant iris and xarray load and save routines can be
 passed using specific dictionary keywords, e.g.
 
-.. code-block:: python
+.. doctest:: python
 
     >>> cubes = cubes_from_xarray(
     ...   dataset,
@@ -490,11 +473,7 @@ file.
 
 Just be careful that any shared dimensions match.
 
-.. raw:: html
-
-    <div class="hiddencode">
-
-.. code-block:: python
+.. testsetup:: python
 
     >>> d1 = NcData(
     ...     dimensions=[NcDimension("x", 3)],
@@ -511,11 +490,7 @@ Just be careful that any shared dimensions match.
     >>> to_nc4(d1, "input1.nc")
     >>> to_nc4(d2, "input2.nc")
 
-.. raw:: html
-
-    </div>
-
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import from_nc4, to_nc4
     >>> data1 = from_nc4('input1.nc')
@@ -570,7 +545,7 @@ Use the :meth:`NcData() <~ncdata.NcData.__init__>` constructor to create a new d
 
 Contents and components can be attached on creation ...
 
-.. code-block:: python
+.. doctest:: python
 
     >>> data = NcData(
     ...     dimensions=[NcDimension("y", 2), NcDimension("x", 3)],
@@ -611,7 +586,7 @@ Contents and components can be attached on creation ...
 
 ... or added iteratively ...
 
-.. code-block:: python
+.. doctest:: python
 
     >>> data2 = NcData()
     >>> ny, nx = 2, 3
@@ -647,20 +622,12 @@ and re-save as required.
 
 For example :
 
-.. raw:: html
-
-    <div class="hiddencode">
-
-.. code-block::
+.. testsetup:: python
 
     >>> # Save the above complex data-example
     >>> to_nc4(data, "test_data.nc")
 
-.. raw:: html
-
-    </div>
-
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import from_nc4, to_nc4
     >>> ds = from_nc4('test_data.nc')
@@ -691,11 +658,7 @@ save it with :func:`ncdata.netcdf4.to_nc4`.
 
 For a simple case with no groups, it could look something like this:
 
-.. raw:: html
-
-    <div class="hiddencode">
-
-.. code-block::
+.. testsetup:: python
 
     >>> ds = from_nc4("_temp_testdata.nc")
     >>> ds.variables.add(NcVariable("z", data=[2.]))
@@ -704,11 +667,7 @@ For a simple case with no groups, it could look something like this:
     >>> to_nc4(ds, input_filepath)
     >>> output_filepath = pathlib.Path("tmp.nc")
 
-.. raw:: html
-
-    </div>
-
-.. code-block:: python
+.. doctest:: python
 
     >>> ds_in = from_nc4(input_filepath)
     >>> ds_out = NcData()
@@ -731,11 +690,7 @@ For a simple case with no groups, it could look something like this:
 Sometimes it's simpler to load the input, delete content **not** wanted, then re-save.
 It's perfectly safe to do that, since the original file will be unaffected.
 
-.. raw:: html
-
-    <div class=-"hiddencode">
-
-.. code-block:: python
+.. testsetup:: python
 
     >>> testds = NcData(
     ...     dimensions=[NcDimension("x", 2), NcDimension("pressure", 3)],
@@ -748,11 +703,7 @@ It's perfectly safe to do that, since the original file will be unaffected.
     ... )
     >>> to_nc4(testds, input_filepath)
 
-.. raw:: html
-
-    </div>
-
-.. code-block:: python
+.. doctest:: python
 
     >>> data = from_nc4(input_filepath)
     >>> for varname in ('extra1', 'extra2', 'unwanted'):
@@ -770,7 +721,7 @@ to avoid loading problems.
 
 For example, to replace an invalid coordinate name in iris input :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import from_nc4
     >>> from ncdata.iris import to_iris
@@ -785,7 +736,7 @@ For example, to replace an invalid coordinate name in iris input :
 
 or, to replace a mis-used special attribute in xarray input  :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import from_nc4
     >>> from ncdata.xarray import to_xarray
@@ -805,11 +756,7 @@ would be difficult to overcome if first written to an actual file.
 
 For example, to force an additional unlimited dimension in iris output :
 
-.. raw:: html
-
-    <div class="hiddencode">
-
-.. code-block:: python
+.. testsetup:: python
 
     >>> from iris.cube import Cube
     >>> from iris.coords import DimCoord
@@ -826,11 +773,7 @@ For example, to force an additional unlimited dimension in iris output :
     >>> to_nc4(ds, "__xr_tmp.nc")
     >>> xr_dataset = xarray.open_dataset("__xr_tmp.nc", chunks=-1)
 
-.. raw:: html
-
-    </div>
-
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.iris import from_iris
     >>> from ncdata.netcdf4 import to_nc4
@@ -840,7 +783,7 @@ For example, to force an additional unlimited dimension in iris output :
 
 or, to convert xarray data variable output to masked integers :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from numpy import ma
     >>> from ncdata.xarray import from_xarray
@@ -863,11 +806,7 @@ Load a file containing variable-width string variables
 You must supply a ``dim_chunks`` keyword to the :meth:`ncdata.netcdf4.from_nc4` method,
 specifying how to chunk all dimension(s) which the "string" type variable uses.
 
-.. raw:: html
-
-    <div class="hiddencode">
-
-.. code-block:: python
+.. testsetup:: python
 
     >>> # manufacture a dataset with a "string" variable in it.
     >>> cdl = """
@@ -886,11 +825,7 @@ specifying how to chunk all dimension(s) which the "string" type variable uses.
     >>> filepath = "_vlstring_data.nc"
     >>> ncgen_from_cdl(cdl_str=cdl, cdl_path=None, nc_path=filepath)
 
-.. raw:: html
-
-    </div>
-
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import from_nc4
     >>> # This file has a netcdf "string" type variable, with dimensions ('date',).
@@ -907,7 +842,7 @@ more tractable, to work with it effectively.
 
 For example, something like this :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var = dataset.variables['date_comments']
     >>> string_objects = var.data.compute()

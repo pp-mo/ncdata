@@ -64,21 +64,13 @@ Getting data to+from files
 The :mod:`ncdata.netcdf4` module provides simple means of reading and writing
 NetCDF files via the `netcdf4-python package <http://unidata.github.io/netcdf4-python/>`_.
 
-.. raw:: html
-
-    <div class="hiddencode">
-
-.. code-block:: python
+.. testsetup::
 
     >>> from subprocess import check_output
     >>> def ncdump(path):
     ...     text = check_output(f'ncdump -h {path}', shell=True).decode()
     ...     text = text.replace("\t", " " * 3)
     ...     print(text)
-
-.. raw:: html
-
-    </div>
 
 
 Simple example:
