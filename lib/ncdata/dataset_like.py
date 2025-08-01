@@ -35,7 +35,7 @@ import dask.array as da
 import netCDF4
 import numpy as np
 
-from . import NcAttribute, NcData, NcDimension, NcVariable
+from . import NcData, NcDimension, NcVariable
 
 
 class _Nc4DatalikeWithNcattrs:
@@ -49,7 +49,7 @@ class _Nc4DatalikeWithNcattrs:
         return list(self._ncdata.attributes.keys())
 
     def getncattr(self, attr: str):
-        attrs = self._ncdata.attributes
+        attrs = self._ncdata.attrvals
         if attr in attrs:
             result = attrs[attr]
         else:
@@ -64,7 +64,7 @@ class _Nc4DatalikeWithNcattrs:
             value = value.decode("utf-8")
         # N.B. using the NcAttribute class for storage also ensures/requires that all
         #  attributes are cast as numpy arrays (so have shape, dtype etc).
-        self._ncdata.attributes[attr] = value
+        self._ncdata.attrvals[attr] = value
 
     # Extend local object attribute access to the ncattrs of the stored data item
     #  (Unpleasant, but I think the Iris load code requires it).
@@ -167,7 +167,7 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
             group=self._ncdata,
         )
         if fill_value is not None:
-            ncvar.attributes["_FillValue"] = fill_value
+            ncvar.attrvals["_FillValue"] = fill_value
         # Note: no valid data is initially assigned, since that is how the netCDF4 API
         # does it.
         self._ncdata.variables[varname] = ncvar
@@ -192,7 +192,11 @@ class Nc4DatasetLike(_Nc4DatalikeWithNcattrs):
         return "<Nc4DatasetLike>"
 
     def __lt__(self, other):
-        # Support a trivial "comparison", just so that Iris can load a list of them.
+        """Support comparison operations.
+
+        Not a real operation: we provide "comparison", just so that Iris can load a list
+        of them.
+        """
         return False
 
 
@@ -285,7 +289,7 @@ class Nc4VariableLike(_Nc4DatalikeWithNcattrs):
         * this must be checked dynamically, as the attributes could change.
         * for byte data, there is no netCDF default fill, so the result can be None.
         """
-        fv = self._ncdata.attributes.get("_FillValue", None)
+        fv = self._ncdata.attrvals.get("_FillValue", None)
         if fv is None:
             if self.dtype.itemsize != 1:
                 # NOTE: single-byte types have NO default fill-value

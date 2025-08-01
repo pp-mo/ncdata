@@ -55,7 +55,7 @@ def example_nc4_save_reload_unlimited_roundtrip():
         # Just an an attribute for the sake of it.
         attributes={"varattr1": 1},
     )
-    ncdata.attributes["globalattr1"] = "one"
+    ncdata.attrvals["globalattr1"] = "one"
     print("Source ncdata object:")
     print(ncdata)
 
@@ -95,11 +95,11 @@ def example_nc4_save_reload_unlimited_roundtrip():
         assert list(ds_back.variables.keys()) == ["var_x"]
         varx = ds_back.variables["var_x"]
 
-        assert list(varx.attributes.keys()) == ["varattr1"]
-        assert varx.attributes["varattr1"] == 1
+        assert list(varx.attrvals.keys()) == ["varattr1"]
+        assert varx.attrvals["varattr1"] == 1
 
-        assert list(ds_back.attributes.keys()) == ["globalattr1"]
-        assert ds_back.attributes["globalattr1"] == "one"
+        assert list(ds_back.attrvals.keys()) == ["globalattr1"]
+        assert ds_back.attrvals["globalattr1"] == "one"
 
     finally:
         rmtree(tempdir_path)

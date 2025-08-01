@@ -22,9 +22,7 @@ def _ncdata_duplicate_object(d1: NcData, d2: NcData):
                 dup = dim1
                 break
     if not dup:
-        for attr1, attr2 in zip(
-            d1.attributes.values(), d2.attributes.values()
-        ):
+        for attr1, attr2 in zip(d1.attrvals.values(), d2.attrvals.values()):
             if attr1 is attr2:
                 dup = attr1
                 break
@@ -98,15 +96,15 @@ class Test:
         rva = result.variables["a"]
 
         assert (
-            result._attributes["extra"].value
-            is not sample._attributes["extra"].value
+            result.attributes["extra"].value
+            is not sample.attributes["extra"].value
         ) and np.all(
-            result._attributes["extra"].value
-            == sample._attributes["extra"].value
+            result.attributes["extra"].value
+            == sample.attributes["extra"].value
         )
 
         assert (
-            rva._attributes["xx2"].value is not sva._attributes["xx2"].value
+            rva.attributes["xx2"].value is not sva.attributes["xx2"].value
         ) and np.all(
-            rva._attributes["xx2"].value == sva._attributes["xx2"].value
+            rva.attributes["xx2"].value == sva.attributes["xx2"].value
         )

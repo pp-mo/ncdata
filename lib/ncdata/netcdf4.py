@@ -12,7 +12,7 @@ import dask.array as da
 import netCDF4 as nc
 import numpy as np
 
-from . import NcAttribute, NcData, NcDimension, NcVariable
+from . import NcData, NcDimension, NcVariable
 
 __all__ = ["from_nc4", "to_nc4"]
 
@@ -43,8 +43,8 @@ def _to_nc4_group(
 
     for varname, var in ncdata.variables.items():
         fillattr = "_FillValue"
-        if fillattr in var.attributes:
-            fill_value = var.attributes[fillattr]
+        if fillattr in var.attrvals:
+            fill_value = var.attrvals[fillattr]
         else:
             fill_value = None
 
@@ -72,7 +72,7 @@ def _to_nc4_group(
 
         # Assign attributes.
         # N.B. must be done before writing data, to enable scale+offset controls !
-        for attrname, attrval in var.attributes.items():
+        for attrname, attrval in var.attrvals.items():
             if attrname != "_FillValue":
                 nc4var.setncattr(attrname, attrval)
 
@@ -82,7 +82,7 @@ def _to_nc4_group(
         else:
             nc4var[:] = data
 
-    for attrname, attrval in ncdata.attributes.items():
+    for attrname, attrval in ncdata.attrvals.items():
         nc4object.setncattr(attrname, attrval)
 
     for groupname, group in ncdata.groups.items():
@@ -265,10 +265,10 @@ def _from_nc4_group(nc4ds: Union[nc.Dataset, nc.Group], dim_chunks) -> NcData:
         )
 
         for attrname in nc4var.ncattrs():
-            var.attributes[attrname] = nc4var.getncattr(attrname)
+            var.attrvals[attrname] = nc4var.getncattr(attrname)
 
     for attrname in nc4ds.ncattrs():
-        ncdata.attributes[attrname] = nc4ds.getncattr(attrname)
+        ncdata.attrvals[attrname] = nc4ds.getncattr(attrname)
 
     # And finally, groups -- by the magic of recursion ...
     for group_name, group in nc4ds.groups.items():

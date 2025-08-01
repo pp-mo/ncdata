@@ -420,7 +420,7 @@ class Test_compare_nc_files__api:
             ds.close()
         else:
             # Source1/2 are NcData : just modify source2
-            source2.attributes["extra_global_attr"] = 1
+            source2.attrvals["extra_global_attr"] = 1
 
         result = dataset_differences(source1, source2)
         assert result == [

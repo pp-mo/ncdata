@@ -6,7 +6,7 @@ import re
 import numpy as np
 import pytest
 
-from ncdata import NcAttribute, NcData, NcDimension, NcVariable
+from ncdata import NcData, NcDimension, NcVariable
 from ncdata.utils import save_errors
 from tests.unit.core.test_NcAttribute import attrvalue, datatype, structuretype
 
@@ -67,7 +67,7 @@ class TestSaveErrors_Names:
         """Return the property name corresponding to the component type."""
         if component == "attribute":
             # Access the NameMap of NcAttributes (not the .attributes values map)
-            propname = "_attributes"
+            propname = "attributes"
         else:
             propname = component + "s"
         return propname
@@ -149,7 +149,7 @@ class TestSaveErrors_Attributes:
     def test_bad_dataset_attribute(self, context):
         # NOTE: using this to test all the Dataset/Group naming constructions
         ncdata = _basic_testdata()
-        ncdata.attributes["q"] = None
+        ncdata.attrvals["q"] = None
         if "group" in context:
             ncdata = NcData(name="top", groups=[ncdata])
             if context == "group_of_group":

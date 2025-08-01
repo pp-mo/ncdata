@@ -240,7 +240,7 @@ def _attribute_differences(
     Return a list of error messages.
     """
     attrnames, attrnames2 = [
-        list(obj.attributes.keys()) if _isncdata(obj) else list(obj.ncattrs())
+        list(obj.attrvals.keys()) if _isncdata(obj) else list(obj.ncattrs())
         for obj in (obj1, obj2)
     ]
     if attrs_order and force_first_attrnames:
@@ -271,7 +271,7 @@ def _attribute_differences(
 
         attr, attr2 = [
             (
-                obj.attributes[attrname]
+                obj.attrvals[attrname]
                 if _isncdata(obj)
                 else obj.getncattr(attrname)
             )
