@@ -84,10 +84,10 @@ jobs:
         if: matrix.session == 'doctests-docs'
         run: |
           cd docs
-          pytest --doctest-glob="*.rst"
+          pytest --doctest-glob="*.rst" --doctest-continue-on-failure
 
       - name: "Run doctests: API"
         if: matrix.session == 'doctests-api'
         run: |
           cd lib
-          pytest --doctest-modules
+          pytest --doctest-modules --doctest-continue-on-failure
