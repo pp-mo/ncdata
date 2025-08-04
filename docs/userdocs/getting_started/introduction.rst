@@ -80,8 +80,7 @@ Simple example:
     >>> from ncdata.netcdf4 import to_nc4, from_nc4
     >>> filepath = "./tmp.nc"
     >>> to_nc4(data, filepath)
-
-    >>> print(check_output("ncdump -h tmp.nc", shell=True).decode())  # doctest: +NORMALIZE_WHITESPACE
+    >>> ncdump("tmp.nc")  # utility which calls 'ncdump' command (not shown)
     netcdf tmp {
     dimensions:
        x = 3 ;

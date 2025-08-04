@@ -16,6 +16,11 @@ i.e. wrong turns and gotchas, with brief descriptions of why.
     >>> from pprint import pprint
     >>> import numpy as np
     >>> from subprocess import check_output
+    >>> def ncdump(path):
+    ...     text = check_output(f'ncdump -h {path}', shell=True).decode()
+    ...     text = text.replace("\t", " " * 3)
+    ...     print(text)
+
 
 .. _howto_access:
 
@@ -222,8 +227,8 @@ For example
 
 Create an attribute
 -------------------
-To create an attribute on a dataset, group or variable, just set its values in the
-:prop:`ncdata.NcData.attrvals` dictionary.
+To create an attribute on a dataset, group or variable, just set its value in the
+:data:`ncdata.NcData.attrvals` dictionary.
 This works just like :ref:`howto_write_attr` : i.e. it makes no difference whether the
 attribute already exists or not.
 
@@ -252,9 +257,9 @@ A minimal example:
 
 .. doctest:: python
 
-    >>> var = NcVariable("data", ("x_axis",))
+    >>> var = NcVariable("data")
     >>> print(var)
-    <NcVariable(<no-dtype>): data(x_axis)>
+    <NcVariable(<no-dtype>): data()>
     >>> print(var.data)
     None
     >>>
@@ -356,8 +361,8 @@ Use the :func:`ncdata.netcdf4.to_nc4` function to write data to a file:
 
     >>> from ncdata.netcdf4 import to_nc4
     >>> to_nc4(data, filepath)
-    >>> print(check_output(f"ncdump -h {filepath}", shell=True).decode())  # doctest: +NORMALIZE_WHITESPACE
-    netcdf ...{
+    >>> ncdump(filepath)  # utility which calls 'ncdump' command (not shown)
+    netcdf ... {
     dimensions:
        x = 3 ;
     variables:

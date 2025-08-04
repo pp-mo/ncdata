@@ -9,7 +9,7 @@ Data Classes
 ------------
 The data model components are elements of the
 `NetCDF Classic Data Model`_ , plus **groups** (from the
-`"enhanced" netCDF data model`_ ).
+`Enhanced netCDF data model`_ ).
 
 That is, a Dataset(File) consists of just Dimensions, Variables, Attributes and
 Groups.
@@ -134,7 +134,7 @@ The full set of data validity rules are summarised in the
 
 Components, Containers and Names
 --------------------------------
-    Each dimension, variable, attribute or group normally exists as a component in a
+Each dimension, variable, attribute or group normally exists as a component in a
 parent dataset (or group), where it is stored in a "container" property of the parent,
 i.e. either its ``.dimensions``, ``.variables``, ``.attributes`` or ``.groups``.
 
@@ -151,14 +151,39 @@ The :meth:`~ncdata.NameMap` container class is provided with convenience methods
 aim to make this easier, such as :meth:`~ncdata.NameMap.add` and
 :meth:`~ncdata.NameMap.rename`.
 
+Container methods
+^^^^^^^^^^^^^^^^^
+The :class:`~ncdata.NameMap` class also provides a variety of manipulation methods,
+both normal dictionary operations and some extra ones.
+
+The most notable ones are : ``del``, ``pop``, ``add``, ``addall``, ``rename`` and of
+course  ``__setitem__`` .
+
+See :ref:`common_operations` section.
+
+.. _container-ordering:
+
+Container ordering
+^^^^^^^^^^^^^^^^^^
+The order of elements of a container is technically significant, and does constitute a
+potential difference between datasets (or files).
+
+The :meth:`ncdata.NameMap.rename` method preserves the order of an element,
+while :meth:`ncdata.NameMap.add` adds the new components at the end.
+
+The :func:`ncdata.utils.dataset_differences` utility provides various keywords allowing
+you to ignore ordering in comparisons, when required.
+
+
 NcData and NcVariable ".attributes" and ".attrvals"
 ---------------------------------------------------
 The contents of the ".attributes" property are :class:`~ncdata.NcAttributes` objects,
 not attribute *values*.  This is consistent with the other components, and makes handling
 of attributes in general easier.
 
-However, for most operations on attributes, it is easier to use ``.attrvals`` instead,
-which mirrors the attributes as a simple name: value dictionary.
+However, for most operations on attributes, it is much easier to use the ``.attrvals``
+property instead.  This accesses *the same attributes*, but in the form of a simple
+"name: value" dictionary.
 
 Thus for example, to fetch an attribute you would usually write just :
 
@@ -179,7 +204,7 @@ and **not** :
 
 .. doctest:: python
 
-    >>> # WRONG: this reads an NcAttribute, not it"s value
+    >>> # WRONG: this reads an NcAttribute, not its value
     >>> unit = dataset.variables["x"].attributes["units"]
 
 or even:
@@ -214,31 +239,6 @@ natural, Pythonic way.
     ...     dataset.attrvals["qq"] += " and that"
 
     >>> dataset.attributes.update({"experiment": "A407", "expt_run": 704})
-
-
-.. _container-ordering:
-
-Container ordering
-------------------
-The order of elements of a container is technically significant, and does constitute a
-potential difference between datasets (or files).
-
-The :meth:`ncdata.NameMap.rename` method preserves the order of an element,
-while :meth:`ncdata.NameMap.add` adds the new components at the end.
-
-The :func:`ncdata.utils.dataset_differences` utility provides various keywords allowing
-you to ignore ordering in comparisons, when required.
-
-
-Container methods
------------------
-The :class:`~ncdata.NameMap` class also provides a variety of manipulation methods,
-both normal dictionary operations and some extra ones.
-
-The most notable ones are : ``del``, ``pop``, ``add``, ``addall``, ``rename`` and of
-course  ``__setitem__`` .
-
-See :ref:`common_operations` section.
 
 .. _data-constructors:
 
@@ -305,4 +305,4 @@ Relationship to File Storage
 See :ref:`file-storage`
 
 .. _NetCDF Classic Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#classic_model
-.. _"enhanced" netCDF data model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#enhanced_model
+.. _Enhanced netCDF data model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#enhanced_model

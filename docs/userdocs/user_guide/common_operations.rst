@@ -10,10 +10,10 @@ Most of these are hopefully "obvious" Pythonic methods of the container objects.
 
 .. Note::
 
-    The special ``.attrvals`` property of :class:`NcData` and :class:`NcVariable`s also
+    The special ``.attrvals`` property of :class:`NcData` and :class:`NcVariable` also
     provides key common operations associated with ``.attributes``, notably ``rename`` and
-    the ``del`` operator, but not those needing the NcAttribute objects.
-    Thus, ``add``, ``addall` are not available.
+    the ``del`` operator.  But not those needing NcAttribute objects -- so ``add`` and
+    ``addall` are not available.
 
 
 Extract and Remove
