@@ -259,13 +259,20 @@ class AttrvalsDict(MutableMapping):
         A convenient representation, somewhat consistent with how we print the attributes
         in the printout of an NcData / NcVariable.
         """
-        text = "AttributesDict("
+        text = "AttrvalsDict{"
         if not self._attrs:
-            text += ")"
+            text += "}"
         else:
-            for attr in self._attrs.values():
-                text += f"\n    {attr.name}: {attr._print_value()}"
-            text += "\n)"
+            lines = [
+                f"{attr.name!s}: {attr._print_value()}"
+                for attr in self._attrs.values()
+            ]
+            if len(lines) == 1:
+                text += lines[0] + "}"
+            else:
+                lines = ["\n    " + line for line in lines]
+                text += "".join(lines)
+                text += "\n}"
 
         return text
 
