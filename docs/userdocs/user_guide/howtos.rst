@@ -93,7 +93,7 @@ Rename a variable, attribute or group
 -------------------------------------
 Use the :meth:`~ncdata.NameMap.rename` method to rename a component.
 
-.. code-block::
+.. doctest:: python
 
     >>> data2 = NcData(variables=[NcVariable("xx")])
     >>> data2.variables
@@ -286,7 +286,7 @@ Read or write variable data
 The :attr:`~ncdata.NcVariable.data` property of a :class:`~ncdata.NcVariable` usually
 holds a data array.
 
-.. code-block::
+.. doctest:: python
 
     >>> var.data = np.array([1, 2])
     >>> var.data

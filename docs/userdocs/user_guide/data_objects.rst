@@ -170,21 +170,21 @@ Thus for example, to fetch an attribute you would usually write just :
     ... ])
 
 
-.. doctest::
+.. doctest:: python
 
     >>> units1 = dataset.variables["x"].attrvals["units"]
 
 
 and **not** :
 
-.. code-block::
+.. doctest:: python
 
     >>> # WRONG: this reads an NcAttribute, not it"s value
     >>> unit = dataset.variables["x"].attributes["units"]
 
 or even:
 
-.. code-block::
+.. doctest:: python
 
     >>> # WRONG: this gets NcAttribute.value as a character array, not a string
     >>> unit = dataset.variables["x"].attributes["units"].value
@@ -192,13 +192,13 @@ or even:
 
 Likewise, to **set** a value, you would normally just
 
-.. code-block::
+.. doctest:: python
 
     >>> dataset.variables["x"].attrvals["units"] = "K"
 
 and **not**
 
-.. code-block::
+.. doctest:: python
 
     >>> # NOT RECOMMENDED: direct assignment to NcAttribute.value.
     >>> dataset.variables["x"].attributes["units"].value = "K"
@@ -208,7 +208,7 @@ Note also, that as the ``.attrvals`` is a dictionary, you can use standard dicti
 methods such as ``update`` and ``get`` to perform other operations in a relatively
 natural, Pythonic way.
 
-.. doctest::
+.. doctest:: python
 
     >>> if dataset.attrvals.get("qq", "") == "this":
     ...     dataset.attrvals["qq"] += " and that"
@@ -250,7 +250,7 @@ properties, the keyword/args defining component parts use the utility method
 :meth:`ncdata.NameMap.from_items` so that you can specify a group of components in a variety of ways :
 either a pre-created container or a similar dictionary-like object :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata import NcData, NcVariable
     >>> ds1 = NcData(groups={
@@ -268,7 +268,7 @@ either a pre-created container or a similar dictionary-like object :
 
 or **more usefully**, just a *list* of suitable data objects, like this...
 
-.. code-block:: python
+.. doctest:: python
 
     >>> ds2 = NcData(
     ...    variables=[
@@ -286,7 +286,7 @@ or **more usefully**, just a *list* of suitable data objects, like this...
 Or, in the **special case of attributes**, a regular dictionary of ``name: value`` form
 will be automatically converted to a NameMap of ``name: NcAttribute(name: value)`` :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var = NcVariable(
     ...    'v3',

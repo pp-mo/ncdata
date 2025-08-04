@@ -29,7 +29,7 @@ For Example:
     >>> dataset = NcData(variables=[NcVariable('x'), NcVariable('y')])
     >>> data = dataset
 
-.. code-block::
+.. doctest:: python
 
     >>> var_x = dataset.variables.pop("x")
     >>> del data.variables["y"]
@@ -51,7 +51,7 @@ Example :
 
     >>> dataset = NcData(variables=[NcVariable("x")])
 
-.. code-block::
+.. doctest:: python
 
     >>> dataset.variables["x"].attrvals["units"] = "m s-1"
 
@@ -63,7 +63,7 @@ ever to set ``component.name`` directly, as this obviously can become inconsiste
 
 Example :
 
-.. code-block::
+.. doctest:: python
 
     >>> dataset.variables.rename("x", "y")
 
@@ -80,7 +80,7 @@ All core objects support a ``.copy()`` method.  See for instance
 These however do *not* copy variable data arrays (either real or lazy), but produce new
 (copied) variables referencing the same arrays.  So, for example:
 
-.. code-block::
+.. doctest:: python
 
     >>> # Construct a simple test dataset
     >>> import numpy as np
@@ -143,7 +143,7 @@ dataset which must "make sense".   see : :ref:`correctness-checks` .
 Hence, there is no great need to install things in the 'right' order (e.g. dimensions
 before variables which need them).  You can create objects in one go, like this :
 
-.. code-block::
+.. doctest:: python
 
     data = NcData(
         dimensions=[
@@ -160,7 +160,7 @@ before variables which need them).  You can create objects in one go, like this 
 
 or iteratively, like this :
 
-.. code-block::
+.. doctest:: python
 
     data = NcData()
     dims = [("y", 2), ("x", 3)]

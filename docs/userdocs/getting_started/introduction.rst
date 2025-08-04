@@ -33,7 +33,7 @@ a dataset or group.  It contains :attr:`~ncdata.NcData.dimensions`,
 :attr:`~ncdata.NcData.variables`, :attr:`~ncdata.NcData.groups`,
 and :attr:`~ncdata.NcData.attributes`:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata import NcData, NcDimension, NcVariable
     >>> data = NcData("myname")
@@ -75,7 +75,7 @@ NetCDF files via the `netcdf4-python package <http://unidata.github.io/netcdf4-p
 
 Simple example:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import to_nc4, from_nc4
     >>> filepath = "./tmp.nc"
@@ -107,7 +107,7 @@ Variables
 Variables live in a :attr:`ncdata.NcData.variables` attribute,
 which behaves like a dictionary:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> data.variables
     {'vx': <ncdata._core.NcVariable object at ...>}
@@ -135,7 +135,7 @@ Attributes are held in the ``.attributes`` property of a :class:`~ncdata.NcData`
 or :class:`~ncdata.NcVariable`.  However, they are most accessed via the ``.attrvals``
 property, which provides a simple name:value mapping :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var = data.variables["vx"]
     >>> var.attrvals['a'] = 1
@@ -174,7 +174,7 @@ Deletion and Renaming
 ^^^^^^^^^^^^^^^^^^^^^
 Use python 'del' operation to remove:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> del var.attrvals['a']
     >>> print(var)
@@ -184,7 +184,7 @@ Use python 'del' operation to remove:
 
 There is also a 'rename' method of variables/attributes/groups:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var.attrvals.rename("b", "qq")
     >>> print(var)
@@ -231,18 +231,18 @@ at :ref:`interface_support`.
 
 Example code snippets :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> # (make sure that Iris and Ncdata won't conflict over netcdf access)
     >>> from ncdata.threadlock_sharing import enable_lockshare
     >>> enable_lockshare(iris=True, xarray=True)
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import from_nc4
     >>> data = from_nc4("tmp.nc")
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.iris import to_iris, from_iris
     >>> from iris import FUTURE
@@ -266,7 +266,7 @@ Example code snippets :
     >>> print(vv)
     v_mag / (m.s-1)                     (-- : 3)
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.xarray import to_xarray
     >>> xrds = to_xarray(from_iris([vx, vy, vv]))
@@ -281,7 +281,7 @@ Example code snippets :
     Attributes:
         Conventions:  CF-1.7
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.iris_xarray import cubes_from_xarray
     >>> readback = cubes_from_xarray(xrds)
@@ -303,7 +303,7 @@ Thread safety
     prevent possible errors when computing or saving lazy data.
     For example:
 
-    .. code-block:: python
+    .. doctest:: python
 
         >>> from ncdata.threadlock_sharing import enable_lockshare
         >>> enable_lockshare(iris=True, xarray=True)

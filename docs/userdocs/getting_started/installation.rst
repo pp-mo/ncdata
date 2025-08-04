@@ -17,7 +17,7 @@ Like this:
 
 .. code-block:: bash
 
-    pip install ncdata
+    $ pip install ncdata
 
 
 Check install
