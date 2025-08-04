@@ -8,15 +8,31 @@ i.e. the operations of extract/remove/insert/rename/copy on the ``.dimensions``,
 
 Most of these are hopefully "obvious" Pythonic methods of the container objects.
 
+.. Note::
+
+    The special ``.attrvals`` property of :class:`NcData` and :class:`NcVariable`s also
+    provides key common operations associated with ``.attributes``, notably ``rename`` and
+    the ``del`` operator, but not those needing the NcAttribute objects.
+    Thus, ``add``, ``addall` are not available.
+
+
 Extract and Remove
 ------------------
 These are implemented as :meth:`~ncdata.NameMap.__delitem__` and :meth:`~ncdata.NameMap.pop`
 methods, which work in the usual way.
 
-Examples :
+For Example:
 
-* ``var_x = dataset.variables.pop("x")``
-* ``del data.variables["x"]``
+.. testsetup::
+
+    >>> from ncdata import NcData, NcVariable
+    >>> dataset = NcData(variables=[NcVariable('x'), NcVariable('y')])
+    >>> data = dataset
+
+.. code-block::
+
+    >>> var_x = dataset.variables.pop("x")
+    >>> del data.variables["y"]
 
 Insert / Add
 ------------
@@ -25,10 +41,19 @@ A new content (component) can be added under its own name with the
 
 Example : ``dataset.variables.add(NcVariable("x", dimensions=["x"], data=my_data))``
 
-An :meth:`~ncdata.NcAttribute` can also be added or set (if already present) with the special
-:meth:`~ncdata.NameMap.set_attrval` method.
+:meth:`~ncdata.NcAttribute`s can be treated in the same way, as a :class:`ncdata.NameMap`
+component of the parent object.  But it is more usual to add or set attributes
+using ``.attrvals`` rather than ``.attributes``.
 
-Example : ``dataset.variables["x"].set_attrval("units", "m s-1")``
+Example :
+
+.. testsetup::
+
+    >>> dataset = NcData(variables=[NcVariable("x")])
+
+.. code-block::
+
+    >>> dataset.variables["x"].attrvals["units"] = "m s-1"
 
 Rename
 ------
@@ -36,7 +61,11 @@ A component can be renamed with the :meth:`~ncdata.NameMap.rename` method.  This
 both the name in the container **and** the component's own name -- it is not recommended
 ever to set ``component.name`` directly, as this obviously can become inconsistent.
 
-Example : ``dataset.variables.rename("x", "y")``
+Example :
+
+.. code-block::
+
+    >>> dataset.variables.rename("x", "y")
 
 .. warning::
     Renaming a dimension will not rename references to it (i.e. in variables), which

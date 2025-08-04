@@ -85,20 +85,17 @@ or a 1-D numpy array -- this is enforced as a computed property (read and write)
 
 Attribute Values
 """"""""""""""""
-In actual netCDF data, the value of an attribute is effectively limited to a one-dimensional
-array of certain valid netCDF types, and one-element arrays are exactly equivalent to scalar values.
+In actual netCDF data, the value of an attribute is effectively limited to a
+one-dimensional array of certain valid netCDF types, and one-element arrays are exactly
+equivalent to scalar values.
 
-The ``.value`` of an :class:`ncdata.NcAttribute` must always be a numpy scalar or 1-dimensional array.
+So, the ``.value`` of an :class:`ncdata.NcAttribute` must always be a numpy scalar or
+1-dimensional array.  This is checked when creating an attribute, or assigning a new value.
 
-When assigning a ``.value``, or creating a new :class:`ncdata.NcAttribute`, the value
-is cast with :func:`numpy.asanyarray`, and if this fails, or yields a multidimensional array
-then an error is raised.
-
-When *reading* attributes, for consistent results it is best to use the
-:meth:`ncdata.NcVariable.get_attrval` method or (equivalently) :meth:`ncdata.NcAttribute.as_python_value` :
-These return either ``None`` (if missing); a numpy scalar; or array; or a Python string.
-These are intended to be equivalent to what you would get from storing in an actual file and reading back,
-including re-interpreting a length-one vector as a scalar value.
+However, when accessing attribute values via the ``.attrvals`` property, this is all
+dealt with for you, as it converts values to and from Python equivalents.
+Notably, string and character values are returned as Python strings, and any length-one
+vectors appear as scalar values.
 
 .. attention::
     The correct handling and (future) discrimination of attribute values which are character arrays
@@ -137,7 +134,7 @@ The full set of data validity rules are summarised in the
 
 Components, Containers and Names
 --------------------------------
-Each dimension, variable, attribute or group normally exists as a component in a
+    Each dimension, variable, attribute or group normally exists as a component in a
 parent dataset (or group), where it is stored in a "container" property of the parent,
 i.e. either its ``.dimensions``, ``.variables``, ``.attributes`` or ``.groups``.
 
@@ -154,36 +151,69 @@ The :meth:`~ncdata.NameMap` container class is provided with convenience methods
 aim to make this easier, such as :meth:`~ncdata.NameMap.add` and
 :meth:`~ncdata.NameMap.rename`.
 
-NcData and NcVariable ".attributes" components
-----------------------------------------------
-Note that the contents of a ".attributes" are :class:`~ncdata.NcAttributes` objects,
-not attribute values.
+NcData and NcVariable ".attributes" and ".attrvals"
+---------------------------------------------------
+The contents of the ".attributes" property are :class:`~ncdata.NcAttributes` objects,
+not attribute *values*.  This is consistent with the other components, and makes handling
+of attributes in general easier.
 
-Thus to fetch an attribute you might write, for example one of these :
+However, for most operations on attributes, it is easier to use ``.attrvals`` instead,
+which mirrors the attributes as a simple name: value dictionary.
+
+Thus for example, to fetch an attribute you would usually write just :
 
 .. testsetup::
 
     >>> from ncdata import NcData, NcVariable, NcAttribute
-    >>> dataset = NcData(variables=[NcVariable("var1", attributes={"units": "m"})])
+    >>> dataset = NcData(variables=[
+    ...     NcVariable("x", attributes={"units": "m"}),
+    ... ])
 
 
 .. doctest::
 
-    >>> units1 = dataset.variables['var1'].get_attrval('units')
-    >>> units1 = dataset.variables['var1'].attributes['units'].as_python_value()
+    >>> units1 = dataset.variables["x"].attrvals["units"]
 
 
-but **not** ``unit = dataset.variables['x'].attributes['attr1']``
-
-Or, likewise, to **set** values, one of
+and **not** :
 
 .. code-block::
 
-    >>> dataset.variables['var1'].set_attrval('units', "K")
-    NcAttribute(...)
-    >>> dataset.variables['var1'].attributes['units'] = NcAttribute("units", "K")
+    >>> # WRONG: this reads an NcAttribute, not it"s value
+    >>> unit = dataset.variables["x"].attributes["units"]
 
-but **not** ``dataset.variables['x'].attributes['units'].value = "K"``
+or even:
+
+.. code-block::
+
+    >>> # WRONG: this gets NcAttribute.value as a character array, not a string
+    >>> unit = dataset.variables["x"].attributes["units"].value
+
+
+Likewise, to **set** a value, you would normally just
+
+.. code-block::
+
+    >>> dataset.variables["x"].attrvals["units"] = "K"
+
+and **not**
+
+.. code-block::
+
+    >>> # NOT RECOMMENDED: direct assignment to NcAttribute.value.
+    >>> dataset.variables["x"].attributes["units"].value = "K"
+
+
+Note also, that as the ``.attrvals`` is a dictionary, you can use standard dictionary
+methods such as ``update`` and ``get`` to perform other operations in a relatively
+natural, Pythonic way.
+
+.. doctest::
+
+    >>> if dataset.attrvals.get("qq", "") == "this":
+    ...     dataset.attrvals["qq"] += " and that"
+
+    >>> dataset.attributes.update({"experiment": "A407", "expt_run": 704})
 
 
 .. _container-ordering:

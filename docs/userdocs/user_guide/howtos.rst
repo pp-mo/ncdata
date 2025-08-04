@@ -136,22 +136,23 @@ Simply using ``ncdata.dimensions.rename()`` can cause problems, because you must
 
 Read an attribute value
 -----------------------
-To get an attribute of a dataset, group or variable, use the
-:meth:`ncdata.NcData.get_attrval` or :meth:`ncdata.NcVariable.get_attrval`
-method, which returns either a single (scalar) number, a numeric array, or a string.
+To get an attribute of a dataset, group or variable, fetch it from the
+:meth:`ncdata.NcData.attrvals` or :meth:`ncdata.NcVariable.attrvals`.
+
+This returns either a single (scalar) number, a numeric array, or a string.
 
 .. doctest:: python
 
     >>> var = NcVariable("x", attributes={"a": [3.0], "levels": [1., 2, 3]})
-    >>> var.get_attrval("a")
+    >>> var.attrvals["a"]
     array(3.)
 
     >>> dataset = NcData(variables=[var], attributes={"a": "seven"})
-    >>> print(dataset.get_attrval("a"))
+    >>> print(dataset.attrvals["a"])
     seven
-    >>> print(dataset.get_attrval("context"))
+    >>> print(dataset.attrvals.get("context"))
     None
-    >>> dataset.variables["x"].get_attrval("levels")
+    >>> dataset.variables["x"].attrvals["levels"]
     array([1., 2., 3.])
 
 **Given an isolated** :class:`ncdata.NcAttribute` **instance** :
@@ -161,6 +162,7 @@ which produces the same results as the above.
 
     >>> print(var.attributes["a"].as_python_value())
     3.0
+
 
 .. Warning::
 
@@ -184,20 +186,22 @@ which produces the same results as the above.
 Change an attribute value
 -------------------------
 To set an attribute of a dataset, group or variable, use the
-:meth:`ncdata.NcData.set_attrval` or :meth:`ncdata.NcVariable.set_attrval` method.
+:meth:`ncdata.NcData.attrvals`.
 
 All attributes are writeable, and the type can be freely changed.
 
 .. doctest:: python
 
-    >>> var.set_attrval("x", 3.)
-    NcAttribute('x', 3.0)
-    >>> print(var.get_attrval("x"))
+    >>> var.attrvals["x"] = 3.
+    >>> print(var.attrvals["x"])
     3.0
 
-    >>> var.set_attrval("x", "string-value")
+    >>> print(var.attributes["x"])
+    NcAttribute('x', 3.0)
+    >>> var.attrvals["x"] = "string-value"
+    >>> print(var.attributes["x"])
     NcAttribute('x', 'string-value')
-    >>> var.get_attrval("x")
+    >>> var.attrvals["x"]
     'string-value'
 
 **Or** if you already have an attribute object in hand, you can simply set
@@ -218,17 +222,18 @@ For example
 
 Create an attribute
 -------------------
-To create an attribute on a dataset, group or variable, just set its value with the
-:meth:`ncdata.NcData.set_attrval` or :meth:`ncdata.NcVariable.set_attrval` method.
+To create an attribute on a dataset, group or variable, just set its values in the
+:prop:`ncdata.NcData.attrvals` dictionary.
 This works just like :ref:`howto_write_attr` : i.e. it makes no difference whether the
 attribute already exists or not.
 
 .. doctest:: python
 
-    >>> var.set_attrval("x", 3.)
-    NcAttribute('x', 3.0)
-    >>> print(var.attributes["x"])
-    NcAttribute('x', 3.0)
+    >>> print(var.attrvals.get("xx"))
+    None
+    >>> var.attrvals["xx"] = 3.
+    >>> print(var.attrvals["xx"])
+    3.0
 
 .. Note::
 
@@ -260,7 +265,7 @@ A more rounded example, including a data array:
 
     >>> var = NcVariable("vyx", ("y", "x"),
     ...   data=[[1, 2, 3], [0, 1, 1]],
-    ...   attributes=[NcAttribute('a', 1), NcAttribute('b', 'setting=off')]
+    ...   attributes={'a': 1, 'b': 'setting=off'}
     ... )
     >>> print(var)
     <NcVariable(int64): vyx(y, x)
@@ -595,14 +600,11 @@ Contents and components can be attached on creation ...
     >>> vx.data = np.arange(nx)
     >>> vy.data = np.arange(ny)
     >>> vyx.data = np.zeros((ny, nx))
-    >>> vyx.set_attrval("long_name", "rate")
-    NcAttribute(...
-    >>> vyx.set_attrval("units", "m s-1")
-    NcAttribute(...
+    >>> vyx.attrvals["long_name"] = "rate"
+    >>> vyx.attrvals["units"] = "m s-1"
     >>> for k, v in [("history", "imaginary"), ("test_a1", 1), ("test_a2", [2, 3])]:
-    ...     data2.set_attrval(k, v)
+    ...     data2.attrvals[k] = v
     ...
-    NcAttribute(...)...
     >>> # in fact, there should be NO difference between these two.
     >>> from ncdata.utils import dataset_differences
     >>> print(dataset_differences(data, data2) == [])
@@ -627,9 +629,8 @@ For example :
 
     >>> from ncdata.netcdf4 import from_nc4, to_nc4
     >>> ds = from_nc4('test_data.nc')
-    >>> history = ds.get_attrval("history") if "history" in ds.attributes else ""
-    >>> ds.set_attrval("history", history + ": modified to SPEC-FIX.A")
-    NcAttribute(...)
+    >>> history = ds.attrvals.get("history", "")
+    >>> ds.attrvals["history"] = history + ": modified to SPEC-FIX.A"
     >>> removes = ("test_a1", "review")
     >>> for name in removes:
     ...     if name in ds.attributes:
@@ -637,10 +638,10 @@ For example :
     ...
     >>> for var in ds.variables.values():
     ...     if "coords" in var.attributes:
-    ...         var.attributes.rename("coords", "coordinates")  # common non-CF problem
-    ...     units = var.get_attrval("units")
+    ...         var.attrvals.rename("coords", "coordinates")  # common non-CF problem
+    ...     units = var.attrvals.get("units")
     ...     if units and units == "ppm":
-    ...         var.set_attrval("units", "1.e-6")  # another common non-CF problem
+    ...         var.attrvals["units"] = "1.e-6"  # another common non-CF problem
     ...
     >>> to_nc4(ds, "output_fixed.nc")
 
@@ -723,10 +724,10 @@ For example, to replace an invalid coordinate name in iris input :
     >>> from ncdata.iris import to_iris
     >>> ncdata = from_nc4(input_filepath)
     >>> for var in ncdata.variables.values():
-    ...     coords = var.attributes.get('coordinates', "")
+    ...     coords = var.attrvals.get('coordinates', "")
     ...     if "old_varname" in coords:
     ...         coords.replace("old_varname", "new_varname")
-    ...         var.set_attrval("coordinates", coords)
+    ...         var.attrvals["coordinates"] = coords
     ... 
     >>> cubes = to_iris(ncdata)
 
@@ -790,8 +791,7 @@ or, to convert xarray data variable output to masked integers :
     >>> data = var.data.astype(np.int16)
     >>> data[mask] = -9999
     >>> var.data = data
-    >>> var.set_attrval("_FillValue", -9999)
-    NcAttribute(...)
+    >>> var.attrvals["_FillValue"] = -9999
     >>> to_nc4(ncdata, "output.nc")
 
 

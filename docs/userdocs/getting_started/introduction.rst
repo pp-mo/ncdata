@@ -131,16 +131,15 @@ which behaves like a dictionary:
 
 Attributes
 ^^^^^^^^^^
-Attributes live in the ``attributes`` property of a :class:`~ncdata.NcData`
-or :class:`~ncdata.NcVariable`:
+Attributes are held in the ``.attributes`` property of a :class:`~ncdata.NcData`
+or :class:`~ncdata.NcVariable`.  However, they are most accessed via the ``.attrvals``
+property, which provides a simple name:value mapping :
 
 .. code-block:: python
 
     >>> var = data.variables["vx"]
-    >>> var.set_attrval('a', 1)
-    NcAttribute('a', 1)
-    >>> var.set_attrval('b', 'this')
-    NcAttribute('b', 'this')
+    >>> var.attrvals['a'] = 1
+    >>> var.attrvals['b'] = 'this'
 
     >>> print(var)
     <NcVariable(float64): vx(x)
@@ -148,8 +147,11 @@ or :class:`~ncdata.NcVariable`:
         vx:b = 'this'
     >
 
-    >>> print(var.attributes)
-    {'a': NcAttribute('a', 1), 'b': NcAttribute('b', 'this')}
+    >>> print(var.attrvals)
+    AttrvalsDict{
+        a: 1
+        b: 'this'
+    }
 
     >>> print(data)
     <NcData: myname
@@ -163,15 +165,9 @@ or :class:`~ncdata.NcVariable`:
             >
     >
 
-For technical reasons, each attribute is represented as an independent python
-:class:`ncdata.NcAttribute` object, i.e. they are *not* simply stored as a
-values in a name/value map.
-
-Attribute values are actually :mod:`numpy.ndarray`, and hence have a ``dtype``.
-To make this easier, you can use regular python numbers and strings with
-:meth:`ncdata.NcAttribute.as_python_value` and the
-:meth:`~ncdata.NcVariable.set_attrval`
-and :meth:`~ncdata.NcVariable.get_attrval` of NcData/NcVariable.
+Attribute values are actually stored as :mod:`numpy.ndarray` arrays, and hence have a
+definite ``dtype``.  However, ``.attrvals`` allows you to treat them mostly as ordinary
+python values  (numbers and strings).
 
 
 Deletion and Renaming
@@ -180,7 +176,7 @@ Use python 'del' operation to remove:
 
 .. code-block:: python
 
-    >>> del var.attributes['a']
+    >>> del var.attrvals['a']
     >>> print(var)
     <NcVariable(float64): vx(x)
         vx:b = 'this'
@@ -190,21 +186,10 @@ There is also a 'rename' method of variables/attributes/groups:
 
 .. code-block:: python
 
-    >>> var.attributes.rename("b", "qq")
+    >>> var.attrvals.rename("b", "qq")
     >>> print(var)
     <NcVariable(float64): vx(x)
         vx:qq = 'this'
-    >
-
-    >>> print(data)
-    <NcData: myname
-        dimensions:
-            x = 3
-    <BLANKLINE>
-        variables:
-            <NcVariable(float64): vx(x)
-                vx:qq = 'this'
-            >
     >
 
 .. warning::
