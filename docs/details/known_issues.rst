@@ -8,14 +8,14 @@ Known Problems
 To be fixed
 
 * in conversion from iris cubes
-  with `from_iris <https://ncdata.readthedocs.io/en/latest/api/ncdata.iris.html#ncdata.iris.from_iris>`_
+  with `from_iris <https://ncdata.readthedocs.io/en/latest/details/api/ncdata.iris.html#ncdata.iris.from_iris>`_
 
    * use of an `unlimited_dims` key currently causes an exception
 
    * `issue#43 <https://github.com/pp-mo/ncdata/issues/43>`_
 
 * in conversion to xarray
-  with `to_xarray <https://ncdata.readthedocs.io/en/latest/api/ncdata.xarray.html#ncdata.xarray.to_xarray>`_
+  with `to_xarray <https://ncdata.readthedocs.io/en/latest/details/api/ncdata.xarray.html#ncdata.xarray.to_xarray>`_
 
    * dataset encodings are not reproduced
 
