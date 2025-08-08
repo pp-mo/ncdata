@@ -268,19 +268,19 @@ def test_roundtrip_xix(
     # Sanitise results in various ways to avoid common encoding disagreements
     # (for now, at least)
     for ds in (ncds_xr, ncds_xr_iris):
-        ds.attrvals.pop("Conventions", None)
+        ds.avals.pop("Conventions", None)
         for var in ds.variables.values():
             if var.name == "data":
                 pass
-            if "grid_mapping_name" in var.attrvals:
+            if "grid_mapping_name" in var.avals:
                 # Fix datatypes of grid-mapping variables.
                 # Iris creates all these as floats, but int is more common in inputs.
                 FIXED_GRIDMAPPING_DTYPE = np.dtype("i4")
                 var.dtype = FIXED_GRIDMAPPING_DTYPE
                 var.data = var.data.astype(FIXED_GRIDMAPPING_DTYPE)
                 # Remove any coordinates of grid-mapping variables : Xarray adds these.
-                var.attrvals.pop("coordinates", None)
-            fv = var.attrvals.pop("_FillValue", None)
+                var.avals.pop("coordinates", None)
+            fv = var.avals.pop("_FillValue", None)
             if fv is None:
                 dt = var.data.dtype
                 nn = f"{dt.kind}{dt.itemsize}"
@@ -294,10 +294,10 @@ def test_roundtrip_xix(
             mask |= data == fv
             data = da.ma.masked_array(data, mask=mask)
             var.data = data
-            if "calendar" in var.attrvals:
-                if var.attrvals["calendar"] == "gregorian":
+            if "calendar" in var.avals:
+                if var.avals["calendar"] == "gregorian":
                     # the calendar name 'gregorian' is now deprecated, so Iris replaces it.
-                    var.attrvals["calendar"] = "standard"
+                    var.avals["calendar"] = "standard"
 
     result = dataset_differences(
         ncds_xr, ncds_xr_iris

@@ -292,7 +292,7 @@ class _AttributeAccessMixin:
     """
 
     @property
-    def attrvals(self):
+    def avals(self):
         """
         A dictionary of an NcData or NcVariable's attribute values.
 
@@ -326,7 +326,7 @@ class _AttributeAccessMixin:
             This legacy method is now deprecated, and will be removed in a future release.
 
         """
-        return self.attrvals.get(name, None)
+        return self.avals.get(name, None)
 
     def set_attrval(self, name: str, value) -> "NcAttribute":
         """
@@ -336,8 +336,8 @@ class _AttributeAccessMixin:
             This legacy method is now deprecated, and will be removed in a future release.
 
         """
-        self.attrvals[name] = value
-        attr = self.attrvals[name]
+        self.avals[name] = value
+        attr = self.avals[name]
         return attr
 
 

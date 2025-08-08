@@ -21,7 +21,7 @@ class Test_NcVariable__init__:
         assert sample.dimensions == ()
         assert sample.data is None
         assert sample.dtype is None
-        assert sample.attrvals == {}
+        assert sample.avals == {}
 
     def test_never_nameless(self):
         # Can't create a variable without a name.
@@ -52,7 +52,7 @@ class Test_NcVariable__init__:
         assert sample1.dimensions == tuple(dims)
         assert sample1.data is data
         assert sample1.dtype == np.dtype(dtype)
-        assert sample1.attrvals == attrs
+        assert sample1.avals == attrs
         assert sample1.group is group
         # Also check construction with arguments alone (no keywords).
         sample2 = NcVariable(name, dims, data, dtype, attrs, group)

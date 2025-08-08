@@ -22,7 +22,7 @@ def _ncdata_duplicate_object(d1: NcData, d2: NcData):
                 dup = dim1
                 break
     if not dup:
-        for attr1, attr2 in zip(d1.attrvals.values(), d2.attrvals.values()):
+        for attr1, attr2 in zip(d1.avals.values(), d2.avals.values()):
             if attr1 is attr2:
                 dup = attr1
                 break

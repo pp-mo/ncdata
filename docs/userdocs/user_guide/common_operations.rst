@@ -10,7 +10,7 @@ Most of these are hopefully "obvious" Pythonic methods of the container objects.
 
 .. Note::
 
-    The special ``.attrvals`` property of :class:`NcData` and :class:`NcVariable` also
+    The special ``.avals`` property of :class:`NcData` and :class:`NcVariable` also
     provides key common operations associated with ``.attributes``, notably ``rename`` and
     the ``del`` operator.  But not those needing NcAttribute objects -- so ``add`` and
     ``addall` are not available.
@@ -43,7 +43,7 @@ Example : ``dataset.variables.add(NcVariable("x", dimensions=["x"], data=my_data
 
 :meth:`~ncdata.NcAttribute`s can be treated in the same way, as a :class:`ncdata.NameMap`
 component of the parent object.  But it is more usual to add or set attributes
-using ``.attrvals`` rather than ``.attributes``.
+using ``.avals`` rather than ``.attributes``.
 
 Example :
 
@@ -53,7 +53,7 @@ Example :
 
 .. doctest:: python
 
-    >>> dataset.variables["x"].attrvals["units"] = "m s-1"
+    >>> dataset.variables["x"].avals["units"] = "m s-1"
 
 Rename
 ------

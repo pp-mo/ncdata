@@ -92,7 +92,7 @@ equivalent to scalar values.
 So, the ``.value`` of an :class:`ncdata.NcAttribute` must always be a numpy scalar or
 1-dimensional array.  This is checked when creating an attribute, or assigning a new value.
 
-However, when accessing attribute values via the ``.attrvals`` property, this is all
+However, when accessing attribute values via the ``.avals`` property, this is all
 dealt with for you, as it converts values to and from Python equivalents.
 Notably, string and character values are returned as Python strings, and any length-one
 vectors appear as scalar values.
@@ -175,13 +175,13 @@ The :func:`ncdata.utils.dataset_differences` utility provides various keywords a
 you to ignore ordering in comparisons, when required.
 
 
-NcData and NcVariable ".attributes" and ".attrvals"
+NcData and NcVariable ".attributes" and ".avals"
 ---------------------------------------------------
 The contents of the ".attributes" property are :class:`~ncdata.NcAttributes` objects,
 not attribute *values*.  This is consistent with the other components, and makes handling
 of attributes in general easier.
 
-However, for most operations on attributes, it is much easier to use the ``.attrvals``
+However, for most operations on attributes, it is much easier to use the ``.avals``
 property instead.  This accesses *the same attributes*, but in the form of a simple
 "name: value" dictionary.
 
@@ -197,7 +197,7 @@ Thus for example, to fetch an attribute you would usually write just :
 
 .. doctest:: python
 
-    >>> units1 = dataset.variables["x"].attrvals["units"]
+    >>> units1 = dataset.variables["x"].avals["units"]
 
 
 and **not** :
@@ -207,19 +207,25 @@ and **not** :
     >>> # WRONG: this reads an NcAttribute, not its value
     >>> unit = dataset.variables["x"].attributes["units"]
 
-or even:
+or:
 
 .. doctest:: python
 
     >>> # WRONG: this gets NcAttribute.value as a character array, not a string
     >>> unit = dataset.variables["x"].attributes["units"].value
 
+or even (which is at least correct):
+
+.. doctest:: python
+
+    >>> unit = dataset.variables["x"].attributes["units"].as_python_value()
+
 
 Likewise, to **set** a value, you would normally just
 
 .. doctest:: python
 
-    >>> dataset.variables["x"].attrvals["units"] = "K"
+    >>> dataset.variables["x"].avals["units"] = "K"
 
 and **not**
 
@@ -229,14 +235,14 @@ and **not**
     >>> dataset.variables["x"].attributes["units"].value = "K"
 
 
-Note also, that as the ``.attrvals`` is a dictionary, you can use standard dictionary
+Note also, that as the ``.avals`` is a dictionary, you can use standard dictionary
 methods such as ``update`` and ``get`` to perform other operations in a relatively
 natural, Pythonic way.
 
 .. doctest:: python
 
-    >>> if dataset.attrvals.get("qq", "") == "this":
-    ...     dataset.attrvals["qq"] += " and that"
+    >>> if dataset.avals.get("qq", "") == "this":
+    ...     dataset.avals["qq"] += " and that"
 
     >>> dataset.attributes.update({"experiment": "A407", "expt_run": 704})
 

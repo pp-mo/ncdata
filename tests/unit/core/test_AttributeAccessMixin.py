@@ -20,7 +20,7 @@ def sample_object(request):
 class Test_AttributeAccesses:
     def test_gettattr(self, sample_object):
         content = np.array([1, 2])
-        sample_object.attrvals["x"] = content
+        sample_object.avals["x"] = content
         assert np.all(sample_object.get_attrval("x") == content)
 
     def test_getattr_absent(self, sample_object):
@@ -30,22 +30,22 @@ class Test_AttributeAccesses:
     def test_setattr(self, sample_object):
         content = np.array([1, 2])
         sample_object.set_attrval("x", content)
-        assert np.all(sample_object.attrvals["x"] == content)
+        assert np.all(sample_object.avals["x"] == content)
 
     def test_setattr__overwrite(self, sample_object):
         content = np.array([1, 2])
         sample_object.set_attrval("x", content)
-        assert np.all(sample_object.attrvals["x"] == content)
+        assert np.all(sample_object.avals["x"] == content)
         sample_object.set_attrval("x", "replaced")
-        assert list(sample_object.attrvals.keys()) == ["x"]
-        assert np.all(sample_object.attrvals["x"] == "replaced")
+        assert list(sample_object.avals.keys()) == ["x"]
+        assert np.all(sample_object.avals["x"] == "replaced")
 
     def test_setattr_getattr_none(self, sample_object):
         # Check behaviour when an attribute is given a Python value of 'None'.
         # This is treated as array(None), so not like a missing attribute.
         sample_object.set_attrval("x", None)
-        assert "x" in sample_object.attrvals
-        assert sample_object.attrvals["x"] == np.array(None)
+        assert "x" in sample_object.avals
+        assert sample_object.avals["x"] == np.array(None)
         assert sample_object.get_attrval("x") == np.array(None)
 
     # Note: it makes sense to see what a Python value of "None" does, since it has a

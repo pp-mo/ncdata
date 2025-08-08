@@ -12,7 +12,7 @@ class Test_NcData__init__:
         assert sample.dimensions == {}
         assert sample.variables == {}
         assert sample.groups == {}
-        assert sample.attrvals == {}
+        assert sample.avals == {}
 
     def test_allargs(self):
         name = "data_name"
@@ -35,7 +35,7 @@ class Test_NcData__init__:
         assert sample1.variables.item_type == NcVariable
         assert list(sample1.groups.values()) == grps
         assert sample1.groups.item_type == NcData
-        assert sample1.attrvals == attrs
+        assert sample1.avals == attrs
 
         # Also check construction with arguments alone (no keywords).
         sample2 = NcData(name, dims, vars, attrs, grps)

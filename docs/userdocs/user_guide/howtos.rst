@@ -142,22 +142,22 @@ Simply using ``ncdata.dimensions.rename()`` can cause problems, because you must
 Read an attribute value
 -----------------------
 To get an attribute of a dataset, group or variable, fetch it from the
-:meth:`ncdata.NcData.attrvals` or :meth:`ncdata.NcVariable.attrvals`.
+:meth:`ncdata.NcData.avals` or :meth:`ncdata.NcVariable.avals`.
 
 This returns either a single (scalar) number, a numeric array, or a string.
 
 .. doctest:: python
 
     >>> var = NcVariable("x", attributes={"a": [3.0], "levels": [1., 2, 3]})
-    >>> var.attrvals["a"]
+    >>> var.avals["a"]
     array(3.)
 
     >>> dataset = NcData(variables=[var], attributes={"a": "seven"})
-    >>> print(dataset.attrvals["a"])
+    >>> print(dataset.avals["a"])
     seven
-    >>> print(dataset.attrvals.get("context"))
+    >>> print(dataset.avals.get("context"))
     None
-    >>> dataset.variables["x"].attrvals["levels"]
+    >>> dataset.variables["x"].avals["levels"]
     array([1., 2., 3.])
 
 **Given an isolated** :class:`ncdata.NcAttribute` **instance** :
@@ -191,22 +191,22 @@ which produces the same results as the above.
 Change an attribute value
 -------------------------
 To set an attribute of a dataset, group or variable, use the
-:meth:`ncdata.NcData.attrvals`.
+:meth:`ncdata.NcData.avals`.
 
 All attributes are writeable, and the type can be freely changed.
 
 .. doctest:: python
 
-    >>> var.attrvals["x"] = 3.
-    >>> print(var.attrvals["x"])
+    >>> var.avals["x"] = 3.
+    >>> print(var.avals["x"])
     3.0
 
     >>> print(var.attributes["x"])
     NcAttribute('x', 3.0)
-    >>> var.attrvals["x"] = "string-value"
+    >>> var.avals["x"] = "string-value"
     >>> print(var.attributes["x"])
     NcAttribute('x', 'string-value')
-    >>> var.attrvals["x"]
+    >>> var.avals["x"]
     'string-value'
 
 **Or** if you already have an attribute object in hand, you can simply set
@@ -228,16 +228,16 @@ For example
 Create an attribute
 -------------------
 To create an attribute on a dataset, group or variable, just set its value in the
-:data:`ncdata.NcData.attrvals` dictionary.
+:data:`ncdata.NcData.avals` dictionary.
 This works just like :ref:`howto_write_attr` : i.e. it makes no difference whether the
 attribute already exists or not.
 
 .. doctest:: python
 
-    >>> print(var.attrvals.get("xx"))
+    >>> print(var.avals.get("xx"))
     None
-    >>> var.attrvals["xx"] = 3.
-    >>> print(var.attrvals["xx"])
+    >>> var.avals["xx"] = 3.
+    >>> print(var.avals["xx"])
     3.0
 
 .. Note::
@@ -605,10 +605,10 @@ Contents and components can be attached on creation ...
     >>> vx.data = np.arange(nx)
     >>> vy.data = np.arange(ny)
     >>> vyx.data = np.zeros((ny, nx))
-    >>> vyx.attrvals["long_name"] = "rate"
-    >>> vyx.attrvals["units"] = "m s-1"
+    >>> vyx.avals["long_name"] = "rate"
+    >>> vyx.avals["units"] = "m s-1"
     >>> for k, v in [("history", "imaginary"), ("test_a1", 1), ("test_a2", [2, 3])]:
-    ...     data2.attrvals[k] = v
+    ...     data2.avals[k] = v
     ...
     >>> # in fact, there should be NO difference between these two.
     >>> from ncdata.utils import dataset_differences
@@ -634,8 +634,8 @@ For example :
 
     >>> from ncdata.netcdf4 import from_nc4, to_nc4
     >>> ds = from_nc4('test_data.nc')
-    >>> history = ds.attrvals.get("history", "")
-    >>> ds.attrvals["history"] = history + ": modified to SPEC-FIX.A"
+    >>> history = ds.avals.get("history", "")
+    >>> ds.avals["history"] = history + ": modified to SPEC-FIX.A"
     >>> removes = ("test_a1", "review")
     >>> for name in removes:
     ...     if name in ds.attributes:
@@ -643,10 +643,10 @@ For example :
     ...
     >>> for var in ds.variables.values():
     ...     if "coords" in var.attributes:
-    ...         var.attrvals.rename("coords", "coordinates")  # common non-CF problem
-    ...     units = var.attrvals.get("units")
+    ...         var.avals.rename("coords", "coordinates")  # common non-CF problem
+    ...     units = var.avals.get("units")
     ...     if units and units == "ppm":
-    ...         var.attrvals["units"] = "1.e-6"  # another common non-CF problem
+    ...         var.avals["units"] = "1.e-6"  # another common non-CF problem
     ...
     >>> to_nc4(ds, "output_fixed.nc")
 
@@ -729,10 +729,10 @@ For example, to replace an invalid coordinate name in iris input :
     >>> from ncdata.iris import to_iris
     >>> ncdata = from_nc4(input_filepath)
     >>> for var in ncdata.variables.values():
-    ...     coords = var.attrvals.get('coordinates', "")
+    ...     coords = var.avals.get('coordinates', "")
     ...     if "old_varname" in coords:
     ...         coords.replace("old_varname", "new_varname")
-    ...         var.attrvals["coordinates"] = coords
+    ...         var.avals["coordinates"] = coords
     ... 
     >>> cubes = to_iris(ncdata)
 
@@ -796,7 +796,7 @@ or, to convert xarray data variable output to masked integers :
     >>> data = var.data.astype(np.int16)
     >>> data[mask] = -9999
     >>> var.data = data
-    >>> var.attrvals["_FillValue"] = -9999
+    >>> var.avals["_FillValue"] = -9999
     >>> to_nc4(ncdata, "output.nc")
 
 

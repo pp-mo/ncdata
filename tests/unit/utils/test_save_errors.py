@@ -149,7 +149,7 @@ class TestSaveErrors_Attributes:
     def test_bad_dataset_attribute(self, context):
         # NOTE: using this to test all the Dataset/Group naming constructions
         ncdata = _basic_testdata()
-        ncdata.attrvals["q"] = None
+        ncdata.avals["q"] = None
         if "group" in context:
             ncdata = NcData(name="top", groups=[ncdata])
             if context == "group_of_group":

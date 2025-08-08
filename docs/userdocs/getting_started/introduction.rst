@@ -131,14 +131,14 @@ which behaves like a dictionary:
 Attributes
 ^^^^^^^^^^
 Attributes are held in the ``.attributes`` property of a :class:`~ncdata.NcData`
-or :class:`~ncdata.NcVariable`.  However, they are most accessed via the ``.attrvals``
+or :class:`~ncdata.NcVariable`.  However, they are most accessed via the ``.avals``
 property, which provides a simple name:value mapping :
 
 .. doctest:: python
 
     >>> var = data.variables["vx"]
-    >>> var.attrvals['a'] = 1
-    >>> var.attrvals['b'] = 'this'
+    >>> var.avals['a'] = 1
+    >>> var.avals['b'] = 'this'
 
     >>> print(var)
     <NcVariable(float64): vx(x)
@@ -146,7 +146,7 @@ property, which provides a simple name:value mapping :
         vx:b = 'this'
     >
 
-    >>> print(var.attrvals)
+    >>> print(var.avals)
     AttrvalsDict{
         a: 1
         b: 'this'
@@ -165,7 +165,7 @@ property, which provides a simple name:value mapping :
     >
 
 Attribute values are actually stored as :mod:`numpy.ndarray` arrays, and hence have a
-definite ``dtype``.  However, ``.attrvals`` allows you to treat them mostly as ordinary
+definite ``dtype``.  However, ``.avals`` allows you to treat them mostly as ordinary
 python values  (numbers and strings).
 
 
@@ -175,7 +175,7 @@ Use python 'del' operation to remove:
 
 .. doctest:: python
 
-    >>> del var.attrvals['a']
+    >>> del var.avals['a']
     >>> print(var)
     <NcVariable(float64): vx(x)
         vx:b = 'this'
@@ -185,7 +185,7 @@ There is also a 'rename' method of variables/attributes/groups:
 
 .. doctest:: python
 
-    >>> var.attrvals.rename("b", "qq")
+    >>> var.avals.rename("b", "qq")
     >>> print(var)
     <NcVariable(float64): vx(x)
         vx:qq = 'this'
