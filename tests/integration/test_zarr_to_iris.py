@@ -9,6 +9,16 @@ import ncdata.iris_xarray
 import zarr
 
 
+time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+xr_kwargs = {
+        "consolidated": True,
+        "decode_times": time_coder,
+        "engine": "zarr",
+        "chunks": {},
+        "backend_kwargs": {},
+}
+
+
 def test_load_zarr2_local():
     """Test loading a Zarr2 store from local FS."""
     zarr_path = (
@@ -17,15 +27,7 @@ def test_load_zarr2_local():
         / "example_field_0.zarr2"
     )
 
-    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    zarr_xr = xr.open_dataset(
-        zarr_path,
-        consolidated=True,
-        decode_times=time_coder,
-        engine="zarr",
-        chunks={},
-        backend_kwargs={},
-    )
+    zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
     zarr_xr.unify_chunks()
 
     conversion_func = ncdata.iris_xarray.cubes_from_xarray
@@ -42,6 +44,30 @@ def test_load_zarr2_local():
     assert "latitude" in coord_names
 
 
+def test_load_zarr3_local():
+    """Test loading a Zarr3 store from local FS."""
+    zarr_path = (
+        Path(importlib_files("tests"))
+        / "zarr-sample-data"
+        / "example_field_0.zarr3"
+    )
+
+    zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
+    zarr_xr.unify_chunks()
+
+    conversion_func = ncdata.iris_xarray.cubes_from_xarray
+    cubes = conversion_func(zarr_xr)
+
+    assert len(cubes) == 1
+    cube = cubes[0]
+    assert cube.var_name == "q"
+    assert cube.standard_name == "specific_humidity"
+    assert cube.long_name is None
+    coords = cube.coords()
+    coord_names = [coord.standard_name for coord in coords]
+    assert "longitude" in coord_names
+    assert "latitude" in coord_names
+
 def test_load_remote_zarr():
     """Test loading a remote Zarr store.
 
@@ -54,15 +80,7 @@ def test_load_remote_zarr():
         "esmvaltool-zarr/pr_Amon_CNRM-ESM2-1_02Kpd-11_r1i1p2f2_gr_200601-220112.zarr3"
     )
 
-    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    zarr_xr = xr.open_dataset(
-        zarr_path,
-        consolidated=True,
-        decode_times=time_coder,
-        engine="zarr",
-        chunks={},
-        backend_kwargs={},
-    )
+    zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
     zarr_xr.unify_chunks()
 
     conversion_func = ncdata.iris_xarray.cubes_from_xarray
