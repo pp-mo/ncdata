@@ -111,7 +111,7 @@ class _XarrayNcDataStore(NetCDF4DataStore):
                 # Zarr2 metadata
                 if "axis" not in var.attrs:
                     std_axes = ["latitude", "longitude", "time"]
-                    if var.attrs["standard_name"] not in std_axes:
+                    if not list(set(var.attrs.values()) & set(std_axes)):
                         _raise_warning(var)
                 # Zarr3 metadata
                 else:
