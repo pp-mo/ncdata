@@ -107,15 +107,16 @@ class _XarrayNcDataStore(NetCDF4DataStore):
 
         # Install variables, creating dimensions as we go.
         for varname, var in new_variables.items():
-            if "axis" not in var.attrs:
-                std_axes = ["latitude", "longitude", "time"]
-                if isinstance(var.data, np.ndarray) and \
-                    var.attrs["standard_name"] not in std_axes:
-                    _raise_warning(var)
-            else:
-                if isinstance(var.data, np.ndarray) and \
-                    var.attrs["axis"] not in ["X", "Y", "Z", "T"]:
-                    _raise_warning(var)
+            if isinstance(var.data, np.ndarray):
+                # Zarr2 metadata
+                if "axis" not in var.attrs:
+                    std_axes = ["latitude", "longitude", "time"]
+                    if var.attrs["standard_name"] not in std_axes:
+                        _raise_warning(var)
+                # Zarr3 metadata
+                else:
+                    if var.attrs["axis"] not in ["X", "Y", "Z", "T"]:
+                        _raise_warning(var)
             if varname in self.ncdata.variables:
                 raise ValueError(f'duplicate variable : "{varname}"')
 
