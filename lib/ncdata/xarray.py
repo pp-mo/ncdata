@@ -9,6 +9,7 @@ Converts :class:`ncdata.NcData`\s to and from :class:`xarray.Dataset` objects.
 # Hopefully a minimal amount.
 # The structure of an NcData object makes it fairly painless.
 #
+import warnings
 
 from pathlib import Path
 from typing import AnyStr, Union
@@ -96,6 +97,14 @@ class _XarrayNcDataStore(NetCDF4DataStore):
 
         # Install variables, creating dimensions as we go.
         for varname, var in new_variables.items():
+            if isinstance(var.data, np.ndarray) and \
+                var.attrs["axis"] not in ["X", "Y", "Z", "T"]:
+                warn_msg = (
+                    f"Variable {var} has fully realized "
+                    "data, if you need lazy data, then add "
+                    "chunks={} as argument to Xarray open_dataset."
+                )
+                warnings.warn(warn_msg, UserWarning, stacklevel=2)
             if varname in self.ncdata.variables:
                 raise ValueError(f'duplicate variable : "{varname}"')
 
