@@ -234,6 +234,12 @@ class AttrvalsDict(MutableMapping):
         return self._attrs[key].as_python_value()
 
     def __setitem__(self, key, value):  # noqa: D105
+        # Special case : assigning an NcAttribute object is equivalent to assigning
+        #  its value (which forces rename).
+        # This is supposed to avoid potential confusion (!)
+        if isinstance(value, NcAttribute):
+            value = value.value
+
         if key in self._attrs:
             # Update the existing NcAttribute.
             self._attrs[key].value = value
@@ -253,6 +259,9 @@ class AttrvalsDict(MutableMapping):
     def __delitem__(self, key):  # noqa: D105
         self._attrs.__delitem__(key)
 
+    #
+    # Other useful methods
+    #
     def __str__(self):
         """Provide a string representation.
 
