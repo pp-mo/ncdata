@@ -22,6 +22,16 @@ from xarray.backends import NetCDF4DataStore
 from . import NcAttribute, NcData, NcDimension, NcVariable
 
 
+def _raise_warning(var):
+    """Raise a warnings.warning if variable data not lazy."""
+    warn_msg = (
+        f"Variable {var} has fully realized "
+        "data, if you need lazy data, then add "
+        "chunks={} as argument to Xarray open_dataset."
+    )
+    warnings.warn(warn_msg, UserWarning, stacklevel=2)
+
+
 class _XarrayNcDataStore(NetCDF4DataStore):
     """
     An adapter class presenting ncdata as an xarray datastore.
@@ -97,14 +107,15 @@ class _XarrayNcDataStore(NetCDF4DataStore):
 
         # Install variables, creating dimensions as we go.
         for varname, var in new_variables.items():
-            if isinstance(var.data, np.ndarray) and \
-                var.attrs["axis"] not in ["X", "Y", "Z", "T"]:
-                warn_msg = (
-                    f"Variable {var} has fully realized "
-                    "data, if you need lazy data, then add "
-                    "chunks={} as argument to Xarray open_dataset."
-                )
-                warnings.warn(warn_msg, UserWarning, stacklevel=2)
+            if "axis" not in var.attrs:
+                std_axes = ["latitude", "longitude", "time"]
+                if isinstance(var.data, np.ndarray) and \
+                    var.attrs["standard_name"] not in std_axes:
+                    _raise_warning(var)
+            else:
+                if isinstance(var.data, np.ndarray) and \
+                    var.attrs["axis"] not in ["X", "Y", "Z", "T"]:
+                    _raise_warning(var)
             if varname in self.ncdata.variables:
                 raise ValueError(f'duplicate variable : "{varname}"')
 
