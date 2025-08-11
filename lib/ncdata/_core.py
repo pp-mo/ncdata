@@ -291,6 +291,22 @@ class AttrvalsDict(MutableMapping):
     def rename(self, name: str, new_name: str):  # noqa: D102
         self._attrs.rename(name, new_name)
 
+    def copy(self, deepcopy=True):
+        """
+        Make a copy.
+
+        Returns
+        -------
+            AttrvalsDict
+
+        The copy is 'shallow', in that it contains a NameMap with the *same* NcAttributes
+        as the original. These are themselves mutable, so the copy will change if the
+        original content attributes are modified, and vice versa.
+
+        N.B. if a truly independent 'deep' copy is required, you can use `copy.deepcopy`.
+        """
+        return self.__class__(self._attrs.copy())
+
 
 class _AttributeAccessMixin:
     """

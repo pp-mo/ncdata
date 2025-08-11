@@ -1,4 +1,6 @@
 """Tests for class :class:`ncdata._core.AttrvalsDict`."""
+from copy import deepcopy
+
 import numpy as np
 import pytest
 
@@ -132,13 +134,9 @@ class Test_rename(MixinEquivTest):
 
     def test_rename_nochange(self):
         v = self.var
-
-        def snapshot_attrs(var):
-            return {k: v.copy() for k, v in var.attributes.items()}
-
-        before = snapshot_attrs(v)
+        before = deepcopy(v.attributes)
         v.avals.rename("a", "a")
-        after = snapshot_attrs(v)
+        after = deepcopy(v.attributes)
         assert list(v.attributes.keys()) == ["a", "b"]
         assert after == before
 
@@ -180,6 +178,14 @@ class Test_otherops(MixinEquivTest):
         v.avals.clear()
         assert v.attributes == {}
 
-    def test_no_copy(self):
-        vals = self.var.avals
-        assert not hasattr(vals, "copy")
+    def test_copy(self):
+        v = self.var
+        av = v.avals
+        av_copy = av.copy()
+        # check that: the attributes map is independent..
+        before = deepcopy(av)
+        av.rename("a", "z")
+        assert av_copy == before  # NB uses dict.__eq__
+        # ..but the contents are not
+        av["z"] = "new-value"
+        assert av_copy["a"] == "new-value"
