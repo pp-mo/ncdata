@@ -81,7 +81,7 @@ Simple example:
     >>> filepath = "./tmp.nc"
     >>> to_nc4(data, filepath)
 
-    >>> print(check_output("ncdump -h tmp.nc", shell=True).decode())  # doctest: +NORMALIZE_WHITESPACE
+    >>> ncdump("tmp.nc")  # utility calling 'ncdump -h' (not shown)
     netcdf tmp {
     dimensions:
        x = 3 ;
