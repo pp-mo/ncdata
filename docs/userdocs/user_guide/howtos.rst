@@ -362,6 +362,7 @@ Use the :func:`ncdata.netcdf4.to_nc4` function to write data to a file:
     >>> from ncdata.netcdf4 import to_nc4
     >>> to_nc4(data, filepath)
     >>> ncdump(filepath)  # utility which calls 'ncdump' command (not shown)
+    netcdf ...{
     dimensions:
        x = 3 ;
     variables:
