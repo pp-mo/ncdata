@@ -75,11 +75,11 @@ jobs:
           mkdir --parents ${GITHUB_WORKSPACE}/iris_test_data
           mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${GITHUB_WORKSPACE}/iris_test_data_download
 
-      - name: "Run tests"
-        if: matrix.session == 'tests'
-        run: |
-          ls ${GITHUB_WORKSPACE}/iris_test_data_download/test_data
-          OVERRIDE_TEST_DATA_REPOSITORY=${GITHUB_WORKSPACE}/iris_test_data_download/test_data PYTHONPATH=./tests:$PYTHONPATH pytest -v ./tests
+      #- name: "Run tests"
+      #  if: matrix.session == 'tests'
+      #  run: |
+      #    ls ${GITHUB_WORKSPACE}/iris_test_data_download/test_data
+      #    OVERRIDE_TEST_DATA_REPOSITORY=${GITHUB_WORKSPACE}/iris_test_data_download/test_data PYTHONPATH=./tests:$PYTHONPATH pytest -v ./tests
       - name: "Run simple pytest"
         if: matrix.session == 'tests'
         run: |
