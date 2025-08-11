@@ -1,7 +1,25 @@
 """Utility to rename dimensions."""
 from ncdata import NcData
 
-def rename_dimension(ncdata: ncdata, name_from: str, name_to: str):
+
+def _rename_dims_in_vars(ncdata: NcData, name_from: str, name_to: str) -> None:
+    """Rename a dimension in all contained variables which reference it."""
+    for var in ncdata.variables.values():
+        if name_from in var.dimensions:
+            var.dimensions = tuple(
+                [
+                    name_to if name == name_from else name
+                    for name in var.dimensions
+                ]
+            )
+
+    # Also rename in all sub-groups, expect where the dimension is redefined ("scope hole").
+    for grp in ncdata.groups.values():
+        if name_from not in grp.dimensions:
+            _rename_dims_in_vars(grp, name_from, name_to)
+
+
+def rename_dimension(ncdata: NcData, name_from: str, name_to: str) -> None:
     """
     Rename a dimension of an :class:`NcData`.
 
@@ -26,7 +44,9 @@ def rename_dimension(ncdata: ncdata, name_from: str, name_to: str):
     """
     if name_to in ncdata.dimensions:
         msg = (
-            f"Cannot rename dimension {name_from!s} to {name_to!s} to, "
-            f"because a {name_to!s} dimension aready exists."
+            f"Cannot rename dimension {name_from!r} to {name_to!r} to, "
+            f"because a {name_to!r} dimension already exists."
         )
         raise ValueError(msg)
+    ncdata.dimensions.rename(name_from, name_to)
+    _rename_dims_in_vars(ncdata, name_from, name_to)

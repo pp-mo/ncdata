@@ -1,4 +1,4 @@
-"""Tests for class :class:`ncdata.utils.ncdata_copy`.
+"""Tests for :func:`ncdata.utils.ncdata_copy`.
 
 This is generic utility function version of the copy operation.
 """
