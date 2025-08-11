@@ -167,7 +167,7 @@ For example:
             <NcVariable(<no-dtype>): vy(y)>
             <NcVariable(<no-dtype>): vzyx(z, y, x)>
     >
-    
+
     >>> rename_dimension(ncdata, "y", "qqq")
     >>> print(ncdata)
     <NcData: <'no-name'>
