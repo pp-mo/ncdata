@@ -92,8 +92,8 @@ equivalent to scalar values.
 So, the ``.value`` of an :class:`ncdata.NcAttribute` must always be a numpy scalar or
 1-dimensional array.  This is checked when creating an attribute, or assigning a new value.
 
-However, when accessing attribute values via the ``.avals`` property, this is all
-dealt with for you, as it converts values to and from Python equivalents.
+However, it's nearly always simpler to read and write attribute values with the ``.avals``
+property:  This converts attribute values to and from Python equivalents.
 Notably, string and character values are returned as Python strings, and any length-one
 vectors appear as scalar values.
 
