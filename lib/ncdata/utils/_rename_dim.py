@@ -23,7 +23,8 @@ def rename_dimension(ncdata: NcData, name_from: str, name_to: str) -> None:
     """
     Rename a dimension of an :class:`~ncdata.NcData`.
 
-    This includes replacing the name on all contained variables which reference it, including those in sub-groups.
+    This function calls ``ncdata.dimensions.rename``, but then it *also* renames the
+    dimension in all the variables which reference it, including those in sub-groups.
 
     Parameters
     ----------
@@ -38,10 +39,12 @@ def rename_dimension(ncdata: NcData, name_from: str, name_to: str) -> None:
 
     Notes
     -----
-    * operation is in-place. To produce a new :class:`~ncdata.NcData` with
-      renamed dimension, use :meth:`~ncdata.NcData.copy` first.
-    * unlike a simple :class:`~ncdata.NameMap.rename`, this checks whether a dimension
-      of the new name already exists, and if so will raise an error.
+    * The operation is in-place. To produce a *new* :class:`~ncdata.NcData` with the
+      renamed dimension, create a copy first with :meth:`~ncdata.NcData.copy`.
+
+    * Unlike a simple :meth:`~ncdata.NameMap.rename`, this checks whether a dimension
+      of the new name already exists, and if so raises an error.
+
     """
     if name_to in ncdata.dimensions:
         msg = (
