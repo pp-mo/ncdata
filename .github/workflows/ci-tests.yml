@@ -43,6 +43,7 @@ jobs:
         with:
           miniforge-version: latest
           activate-environment: testenv
+          environment-file: environment.yml
           python-version: ${{ matrix.version }}
           channels: conda-forge
           show-channel-urls: true
