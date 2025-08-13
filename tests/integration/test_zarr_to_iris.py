@@ -2,6 +2,7 @@
 from importlib.resources import files as importlib_files
 from pathlib import Path
 
+import fsspec
 import iris
 import pytest
 import xarray as xr
@@ -72,17 +73,18 @@ def test_load_zarr3_local():
     _run_checks(cube)
 
 
-#TODO: imports at the top
-import requests
-from requests.exceptions import RequestException
-
 def _is_url_ok(url):
+    fs = fsspec.filesystem("http")
+    valid_zarr = True
     try:
-        req = requests.get(url)
-        result = req.status_code == 200
-    except RequestException:
-        result = False
-    return result
+        fs.open(str(url) + "/zarr.json", "rb")  # Zarr3
+    except Exception:  # noqa: BLE001
+        try:
+            fs.open(str(url) + "/.zmetadata", "rb")  # Zarr2
+        except Exception:  # noqa: BLE001
+            valid_zarr = False
+
+    return valid_zarr
 
 S3_TEST_PATH = (
     "https://uor-aces-o.s3-ext.jc.rl.ac.uk/"
