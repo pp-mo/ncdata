@@ -7,7 +7,6 @@ import pytest
 import xarray as xr
 import ncdata
 import ncdata.iris_xarray
-import zarr
 
 
 def _return_kwargs():
