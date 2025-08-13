@@ -7,7 +7,7 @@ import dask.array as da
 import numpy as np
 import pytest
 
-from ncdata import NcAttribute, NcVariable
+from ncdata import NcVariable
 from ncdata.utils import variable_differences
 
 
@@ -21,7 +21,7 @@ class Test_NcVariable__init__:
         assert sample.dimensions == ()
         assert sample.data is None
         assert sample.dtype is None
-        assert sample.attributes == {}
+        assert sample.avals == {}
 
     def test_never_nameless(self):
         # Can't create a variable without a name.
@@ -36,7 +36,7 @@ class Test_NcVariable__init__:
         dims = [f"dimname_{i}" for i in range(3)]
         # note: variable dims and shape **don't have to agree**.
         data = np.array((3.0, 2, 1))
-        attrs = [NcAttribute(f"attr_{i}", i) for i in range(6)]
+        attrs = {f"attr_{i}": i for i in range(6)}
         dtype = "f8"  # match the provided data for correct matching
         group = ""
         sample1 = NcVariable(
@@ -52,8 +52,7 @@ class Test_NcVariable__init__:
         assert sample1.dimensions == tuple(dims)
         assert sample1.data is data
         assert sample1.dtype == np.dtype(dtype)
-        assert list(sample1.attributes.values()) == attrs
-        assert sample1.attributes.item_type == NcAttribute
+        assert sample1.avals == attrs
         assert sample1.group is group
         # Also check construction with arguments alone (no keywords).
         sample2 = NcVariable(name, dims, data, dtype, attrs, group)
@@ -217,7 +216,13 @@ class TestNcVariable__str__repr:
             attributes={"a1": 1},
         )
         result = repr(var)
-        expected = f"<ncdata._core.NcVariable object at 0x{id(var):012x}>"
+        import sys
+
+        if sys.platform == "win32":
+            objrep = f"0x{id(var):016X}"
+        else:
+            objrep = f"0x{id(var):012x}"
+        expected = f"<ncdata._core.NcVariable object at {objrep}>"
         assert result == expected
 
 

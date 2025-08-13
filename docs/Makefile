@@ -21,6 +21,12 @@ allapi:
 towncrier:
 	towncrier build --keep
 
+
+# Tweaked "make html", which restores the changelog state after docs build.
+html-keeplog: html
+	git checkout HEAD change_log.rst changelog_fragments/
+
+
 # Catch-all target: route all unknown targets to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
 %: Makefile allapi towncrier

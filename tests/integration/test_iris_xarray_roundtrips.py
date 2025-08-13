@@ -14,7 +14,6 @@ import numpy as np
 import pytest
 import xarray
 
-from ncdata import NcAttribute
 from ncdata.iris import from_iris
 from ncdata.iris_xarray import cubes_to_xarray
 from ncdata.netcdf4 import from_nc4
@@ -269,19 +268,19 @@ def test_roundtrip_xix(
     # Sanitise results in various ways to avoid common encoding disagreements
     # (for now, at least)
     for ds in (ncds_xr, ncds_xr_iris):
-        ds.attributes.pop("Conventions", None)
+        ds.avals.pop("Conventions", None)
         for var in ds.variables.values():
             if var.name == "data":
                 pass
-            if "grid_mapping_name" in var.attributes:
+            if "grid_mapping_name" in var.avals:
                 # Fix datatypes of grid-mapping variables.
                 # Iris creates all these as floats, but int is more common in inputs.
                 FIXED_GRIDMAPPING_DTYPE = np.dtype("i4")
                 var.dtype = FIXED_GRIDMAPPING_DTYPE
                 var.data = var.data.astype(FIXED_GRIDMAPPING_DTYPE)
                 # Remove any coordinates of grid-mapping variables : Xarray adds these.
-                var.attributes.pop("coordinates", None)
-            fv = var.attributes.pop("_FillValue", None)
+                var.avals.pop("coordinates", None)
+            fv = var.avals.pop("_FillValue", None)
             if fv is None:
                 dt = var.data.dtype
                 nn = f"{dt.kind}{dt.itemsize}"
@@ -295,12 +294,10 @@ def test_roundtrip_xix(
             mask |= data == fv
             data = da.ma.masked_array(data, mask=mask)
             var.data = data
-            if "calendar" in var.attributes:
-                if var.attributes["calendar"].as_python_value() == "gregorian":
+            if "calendar" in var.avals:
+                if var.avals["calendar"] == "gregorian":
                     # the calendar name 'gregorian' is now deprecated, so Iris replaces it.
-                    var.attributes["calendar"] = NcAttribute(
-                        "calendar", "standard"
-                    )
+                    var.avals["calendar"] = "standard"
 
     result = dataset_differences(
         ncds_xr, ncds_xr_iris

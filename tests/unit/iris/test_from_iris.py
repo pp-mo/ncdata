@@ -125,7 +125,7 @@ def test_kwargs_fill_value():
 
     # Check that the resulting variable has the expected attribute + (raw) data values
     ncdata_var = ncdata.variables["air_temperature"]
-    assert ncdata_var.attributes["_FillValue"].as_python_value() == -999.0
+    assert ncdata_var.avals["_FillValue"] == -999.0
     assert np.all(ncdata_var.data == [0.0, -999, 2])
 
 

@@ -6,7 +6,7 @@ import re
 import numpy as np
 import pytest
 
-from ncdata import NcAttribute, NcData, NcDimension, NcVariable
+from ncdata import NcData, NcDimension, NcVariable
 from ncdata.utils import save_errors
 from tests.unit.core.test_NcAttribute import attrvalue, datatype, structuretype
 
@@ -62,6 +62,16 @@ class TestSaveErrors_Names:
     def component(self, request):
         return request.param
 
+    @staticmethod
+    def component_propname(component: str):
+        """Return the property name corresponding to the component type."""
+        if component == "attribute":
+            # Access the NameMap of NcAttributes (not the .attributes values map)
+            propname = "attributes"
+        else:
+            propname = component + "s"
+        return propname
+
     @pytest.mark.parametrize(
         "badnametype", ["None", "empty", "number", "object"]
     )
@@ -73,7 +83,7 @@ class TestSaveErrors_Names:
             "object": ("x", 2),
         }[badnametype]
         ncdata = _basic_testdata()
-        elements = getattr(ncdata, component + "s")
+        elements = getattr(ncdata, self.component_propname(component))
         element = list(elements.values())[0]
         name = element.name
         elements.pop(name)
@@ -101,7 +111,7 @@ class TestSaveErrors_Names:
 
     def test_key_name_mismatch(self, component):
         ncdata = _basic_testdata()
-        elements = getattr(ncdata, component + "s")
+        elements = getattr(ncdata, self.component_propname(component))
         key, element = list(elements.items())[0]
         element.name = "qqq"
 
@@ -139,7 +149,7 @@ class TestSaveErrors_Attributes:
     def test_bad_dataset_attribute(self, context):
         # NOTE: using this to test all the Dataset/Group naming constructions
         ncdata = _basic_testdata()
-        ncdata.attributes.add(NcAttribute("q", None))
+        ncdata.avals["q"] = None
         if "group" in context:
             ncdata = NcData(name="top", groups=[ncdata])
             if context == "group_of_group":
