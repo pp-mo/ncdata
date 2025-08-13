@@ -48,7 +48,7 @@ jobs:
 
       - name: "Install dependencies"
         run: |
-          conda install --yes numpy pytest pytest-mock iris xarray filelock requests zarr aiohttp
+          conda install --yes numpy pytest pytest-mock iris xarray filelock requests zarr aiohttp fsspec
 
       - name: "Install *latest* Iris"
         run: |
