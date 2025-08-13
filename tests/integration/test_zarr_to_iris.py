@@ -1,4 +1,5 @@
 """Test conversion of remote and local Zarr store to iris Cube."""
+
 from importlib.resources import files as importlib_files
 from pathlib import Path
 
@@ -6,22 +7,18 @@ import fsspec
 import iris
 import pytest
 import xarray as xr
-import ncdata.iris_xarray
-
 from ncdata.iris_xarray import cubes_from_xarray as conversion_func
 
 
 def _return_kwargs():
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    xr_kwargs = {
-            "consolidated": True,
-            "decode_times": time_coder,
-            "engine": "zarr",
-            "chunks": {},
-            "backend_kwargs": {},
+    return {
+        "consolidated": True,
+        "decode_times": time_coder,
+        "engine": "zarr",
+        "chunks": {},
+        "backend_kwargs": {},
     }
-
-    return xr_kwargs
 
 
 def _run_checks(cube):
@@ -88,11 +85,13 @@ def _is_url_ok(url):
 
     return valid_zarr
 
+
 S3_TEST_PATH = (
     "https://uor-aces-o.s3-ext.jc.rl.ac.uk/"
     "esmvaltool-zarr/pr_Amon_CNRM-ESM2-1_02Kpd-11_r1i1p2f2_gr_200601-220112.zarr3"
 )
 _S3_accessible = _is_url_ok(S3_TEST_PATH)
+
 
 @pytest.mark.skipif(not _S3_accessible, reason="S3 url not accessible")
 def test_load_remote_zarr():
