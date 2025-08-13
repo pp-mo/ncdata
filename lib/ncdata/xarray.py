@@ -9,6 +9,7 @@ Converts :class:`ncdata.NcData`\s to and from :class:`xarray.Dataset` objects.
 # Hopefully a minimal amount.
 # The structure of an NcData object makes it fairly painless.
 #
+
 from pathlib import Path
 from typing import AnyStr, Union
 
