@@ -1,9 +1,0 @@
----
-name: ncdata
-channels:
-  - conda-forge
-  - nodefaults
-
-dependencies:
-  - dask
-  - netCDF4 
