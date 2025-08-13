@@ -39,6 +39,7 @@ def test_load_zarr2_local():
     """Test loading a Zarr2 store from local FS."""
     zarr_path = (
         Path(importlib_files("tests"))
+        / "testdata"
         / "zarr-sample-data"
         / "example_field_0.zarr2"
     )
@@ -58,6 +59,7 @@ def test_load_zarr3_local():
     """Test loading a Zarr3 store from local FS."""
     zarr_path = (
         Path(importlib_files("tests"))
+        / "testdata"
         / "zarr-sample-data"
         / "example_field_0.zarr3"
     )
