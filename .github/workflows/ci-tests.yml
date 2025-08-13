@@ -43,7 +43,6 @@ jobs:
         with:
           miniforge-version: latest
           activate-environment: testenv
-          environment-file: environment.yml
           python-version: ${{ matrix.version }}
           channels: conda-forge
           show-channel-urls: true
@@ -75,16 +74,11 @@ jobs:
           mkdir --parents ${GITHUB_WORKSPACE}/iris_test_data
           mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${GITHUB_WORKSPACE}/iris_test_data_download
 
-      #- name: "Run tests"
-      #  if: matrix.session == 'tests'
-      #  run: |
-      #    ls ${GITHUB_WORKSPACE}/iris_test_data_download/test_data
-      #    OVERRIDE_TEST_DATA_REPOSITORY=${GITHUB_WORKSPACE}/iris_test_data_download/test_data PYTHONPATH=./tests:$PYTHONPATH pytest -v ./tests
-      - name: "Run simple pytest"
+      - name: "Run tests"
         if: matrix.session == 'tests'
         run: |
-          pytest
-          pytest tests/integration/test_xarray_load_and_save_equivalence.py::test_save_direct_vs_viancdata[testdata____lambert_conformal__test_lcc]
+          ls ${GITHUB_WORKSPACE}/iris_test_data_download/test_data
+          OVERRIDE_TEST_DATA_REPOSITORY=${GITHUB_WORKSPACE}/iris_test_data_download/test_data PYTHONPATH=./tests:$PYTHONPATH pytest -v ./tests
 
       - name: "Run doctests: Docs"
         if: matrix.session == 'doctests-docs'
