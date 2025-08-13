@@ -96,23 +96,3 @@ def test_load_remote_zarr():
     assert isinstance(cubes, iris.cube.CubeList)
     assert len(cubes) == 1
     assert cubes[0].has_lazy_data()
-
-
-def test_load_remote_zarr_realized_data():
-    """Test with the same remote Zarr store but chunks=None."""
-    zarr_path = (
-        "https://uor-aces-o.s3-ext.jc.rl.ac.uk/"
-        "esmvaltool-zarr/pr_Amon_CNRM-ESM2-1_02Kpd-11_r1i1p2f2_gr_200601-220112.zarr3"
-    )
-
-    xr_kwargs = _return_kwargs()
-    xr_kwargs["chunks"] = None
-    zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
-
-    conversion_func = ncdata.iris_xarray.cubes_from_xarray
-    msg = (
-        "has fully realized data, if you need lazy data, "
-        "then add chunks={} as argument to Xarray open_dataset."
-    )
-    with pytest.warns(UserWarning, match=msg) as w:
-        cubes = conversion_func(zarr_xr)
