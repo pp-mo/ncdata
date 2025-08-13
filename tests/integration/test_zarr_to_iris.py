@@ -73,6 +73,25 @@ def test_load_zarr3_local():
     _run_checks(cube)
 
 
+#TODO: imports at the top
+import requests
+from requests.exceptions import RequestException
+
+def _is_url_ok(url):
+    try:
+        req = requests.get(url)
+        result = req.status_code == 200
+    except RequestException:
+        result = False
+    return result
+
+S3_TEST_PATH = (
+    "https://uor-aces-o.s3-ext.jc.rl.ac.uk/"
+    "esmvaltool-zarr/pr_Amon_CNRM-ESM2-1_02Kpd-11_r1i1p2f2_gr_200601-220112.zarr3"
+)
+_S3_accessible = _is_url_ok(S3_TEST_PATH)
+
+@pytest.mark.skipif(not _S3_accessible, reason="S3 url not accessible")
 def test_load_remote_zarr():
     """Test loading a remote Zarr store.
 
