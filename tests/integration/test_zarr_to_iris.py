@@ -99,10 +99,7 @@ def test_load_remote_zarr():
     Conversion is done fully lazily, by passing chunks={}
     to Xarray loader. Test takes ~3-4s and needs ~400MB res mem.
     """
-    zarr_path = (
-        "https://uor-aces-o.s3-ext.jc.rl.ac.uk/"
-        "esmvaltool-zarr/pr_Amon_CNRM-ESM2-1_02Kpd-11_r1i1p2f2_gr_200601-220112.zarr3"
-    )
+    zarr_path = S3_TEST_PATH
 
     xr_kwargs = _return_kwargs()
     zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
