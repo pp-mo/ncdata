@@ -5,8 +5,9 @@ from pathlib import Path
 import iris
 import pytest
 import xarray as xr
-import ncdata
 import ncdata.iris_xarray
+
+from ncdata.iris_xarray import cubes_from_xarray as conversion_func
 
 
 def _return_kwargs():
@@ -45,7 +46,6 @@ def test_load_zarr2_local():
     zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
     zarr_xr.unify_chunks()
 
-    conversion_func = ncdata.iris_xarray.cubes_from_xarray
     cubes = conversion_func(zarr_xr)
 
     assert len(cubes) == 1
@@ -65,7 +65,6 @@ def test_load_zarr3_local():
     zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
     zarr_xr.unify_chunks()
 
-    conversion_func = ncdata.iris_xarray.cubes_from_xarray
     cubes = conversion_func(zarr_xr)
 
     assert len(cubes) == 1
@@ -108,7 +107,6 @@ def test_load_remote_zarr():
     zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
     zarr_xr.unify_chunks()
 
-    conversion_func = ncdata.iris_xarray.cubes_from_xarray
     cubes = conversion_func(zarr_xr)
 
     assert isinstance(cubes, iris.cube.CubeList)
