@@ -9,8 +9,6 @@ Converts :class:`ncdata.NcData`\s to and from :class:`xarray.Dataset` objects.
 # Hopefully a minimal amount.
 # The structure of an NcData object makes it fairly painless.
 #
-import warnings
-
 from pathlib import Path
 from typing import AnyStr, Union
 
@@ -20,16 +18,6 @@ import xarray as xr
 from xarray.backends import NetCDF4DataStore
 
 from . import NcAttribute, NcData, NcDimension, NcVariable
-
-
-def _raise_warning(var):
-    """Raise a warnings.warning if variable data not lazy."""
-    warn_msg = (
-        f"Variable {var.name}{var.dims} has fully realized "
-        "data, if you need lazy data, then add "
-        "chunks={} as argument to Xarray open_dataset."
-    )
-    warnings.warn(warn_msg, UserWarning, stacklevel=2)
 
 
 class _XarrayNcDataStore(NetCDF4DataStore):
@@ -107,16 +95,6 @@ class _XarrayNcDataStore(NetCDF4DataStore):
 
         # Install variables, creating dimensions as we go.
         for varname, var in new_variables.items():
-            if isinstance(var.data, np.ndarray):
-                # Zarr2 metadata
-                if "axis" not in var.attrs:
-                    std_axes = ["latitude", "longitude", "time"]
-                    if not list(set(var.attrs.values()) & set(std_axes)):
-                        _raise_warning(var)
-                # Zarr3 metadata
-                else:
-                    if var.attrs["axis"] not in ["X", "Y", "Z", "T"]:
-                        _raise_warning(var)
             if varname in self.ncdata.variables:
                 raise ValueError(f'duplicate variable : "{varname}"')
 
