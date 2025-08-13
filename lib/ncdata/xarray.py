@@ -25,7 +25,7 @@ from . import NcAttribute, NcData, NcDimension, NcVariable
 def _raise_warning(var):
     """Raise a warnings.warning if variable data not lazy."""
     warn_msg = (
-        f"Variable {var} has fully realized "
+        f"Variable {var.name}{var.dims} has fully realized "
         "data, if you need lazy data, then add "
         "chunks={} as argument to Xarray open_dataset."
     )
