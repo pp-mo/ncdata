@@ -11,7 +11,7 @@ on:
   push:
     branches:
       - "main"
-      - add_warning_and_tests 
+      - add_warning_and_tests  # remove before merge
     tags:
       - "v*"
   pull_request:
