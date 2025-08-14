@@ -3,7 +3,6 @@ from typing import Dict, List, Union
 
 import netCDF4 as nc
 import numpy as np
-
 from ncdata import NcData, NcVariable
 
 

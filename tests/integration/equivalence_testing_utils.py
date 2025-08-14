@@ -5,10 +5,9 @@ Used by routines in tests/integration which attempt to show that conversions bet
 ncdata and other types of data preserve information.
 """
 import dask.array as da
+import iris.mesh
 import numpy as np
 import pytest
-
-import iris.mesh
 
 
 def cubes_equal__corrected(c1, c2):
