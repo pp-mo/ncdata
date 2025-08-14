@@ -33,7 +33,7 @@ a dataset or group.  It contains :attr:`~ncdata.NcData.dimensions`,
 :attr:`~ncdata.NcData.variables`, :attr:`~ncdata.NcData.groups`,
 and :attr:`~ncdata.NcData.attributes`:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata import NcData, NcDimension, NcVariable
     >>> data = NcData("myname")
@@ -75,13 +75,12 @@ NetCDF files via the `netcdf4-python package <http://unidata.github.io/netcdf4-p
 
 Simple example:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import to_nc4, from_nc4
     >>> filepath = "./tmp.nc"
     >>> to_nc4(data, filepath)
-
-    >>> ncdump("tmp.nc")  # utility calling 'ncdump -h' (not shown)
+    >>> ncdump("tmp.nc")  # utility which calls 'ncdump' command (not shown)
     netcdf tmp {
     dimensions:
        x = 3 ;
@@ -107,7 +106,7 @@ Variables
 Variables live in a :attr:`ncdata.NcData.variables` attribute,
 which behaves like a dictionary:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> data.variables
     {'vx': <ncdata._core.NcVariable object at ...>}
@@ -131,16 +130,15 @@ which behaves like a dictionary:
 
 Attributes
 ^^^^^^^^^^
-Attributes live in the ``attributes`` property of a :class:`~ncdata.NcData`
-or :class:`~ncdata.NcVariable`:
+Attributes are held in the ``.attributes`` property of a :class:`~ncdata.NcData`
+or :class:`~ncdata.NcVariable`.  However, they are more easily accessed via the ``.avals``
+property, which provides a simple name:value mapping :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var = data.variables["vx"]
-    >>> var.set_attrval('a', 1)
-    NcAttribute('a', 1)
-    >>> var.set_attrval('b', 'this')
-    NcAttribute('b', 'this')
+    >>> var.avals['a'] = 1
+    >>> var.avals['b'] = 'this'
 
     >>> print(var)
     <NcVariable(float64): vx(x)
@@ -148,63 +146,38 @@ or :class:`~ncdata.NcVariable`:
         vx:b = 'this'
     >
 
-    >>> print(var.attributes)
-    {'a': NcAttribute('a', 1), 'b': NcAttribute('b', 'this')}
-
-    >>> print(data)
-    <NcData: myname
-        dimensions:
-            x = 3
-    <BLANKLINE>
-        variables:
-            <NcVariable(float64): vx(x)
-                vx:a = 1
-                vx:b = 'this'
-            >
+    >>> var.avals['b'] = 7777
+    >>> print(var)
+    <NcVariable(float64): vx(x)
+        vx:a = 1
+        vx:b = 7777
     >
 
-For technical reasons, each attribute is represented as an independent python
-:class:`ncdata.NcAttribute` object, i.e. they are *not* simply stored as a
-values in a name/value map.
-
-Attribute values are actually :mod:`numpy.ndarray`, and hence have a ``dtype``.
-To make this easier, you can use regular python numbers and strings with
-:meth:`ncdata.NcAttribute.as_python_value` and the
-:meth:`~ncdata.NcVariable.set_attrval`
-and :meth:`~ncdata.NcVariable.get_attrval` of NcData/NcVariable.
+Attribute values are actually stored as :mod:`numpy.ndarray` arrays, and hence have a
+definite ``dtype``.  However, ``.avals`` allows you to treat them mostly as ordinary
+python values (numbers and strings).
 
 
 Deletion and Renaming
 ^^^^^^^^^^^^^^^^^^^^^
-Use python 'del' operation to remove:
+Use python 'del' operation to remove items:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> del var.attributes['a']
     >>> print(var)
     <NcVariable(float64): vx(x)
-        vx:b = 'this'
+        vx:b = 7777
     >
 
 There is also a 'rename' method of variables/attributes/groups:
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var.attributes.rename("b", "qq")
     >>> print(var)
     <NcVariable(float64): vx(x)
-        vx:qq = 'this'
-    >
-
-    >>> print(data)
-    <NcData: myname
-        dimensions:
-            x = 3
-    <BLANKLINE>
-        variables:
-            <NcVariable(float64): vx(x)
-                vx:qq = 'this'
-            >
+        vx:qq = 7777
     >
 
 .. warning::
@@ -246,18 +219,18 @@ at :ref:`interface_support`.
 
 Example code snippets :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> # (make sure that Iris and Ncdata won't conflict over netcdf access)
     >>> from ncdata.threadlock_sharing import enable_lockshare
     >>> enable_lockshare(iris=True, xarray=True)
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.netcdf4 import from_nc4
     >>> data = from_nc4("tmp.nc")
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.iris import to_iris, from_iris
     >>> from iris import FUTURE
@@ -281,7 +254,7 @@ Example code snippets :
     >>> print(vv)
     v_mag / (m.s-1)                     (-- : 3)
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.xarray import to_xarray
     >>> xrds = to_xarray(from_iris([vx, vy, vv]))
@@ -296,7 +269,7 @@ Example code snippets :
     Attributes:
         Conventions:  CF-1.7
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata.iris_xarray import cubes_from_xarray
     >>> readback = cubes_from_xarray(xrds)
@@ -318,7 +291,7 @@ Thread safety
     prevent possible errors when computing or saving lazy data.
     For example:
 
-    .. code-block:: python
+    .. doctest:: python
 
         >>> from ncdata.threadlock_sharing import enable_lockshare
         >>> enable_lockshare(iris=True, xarray=True)

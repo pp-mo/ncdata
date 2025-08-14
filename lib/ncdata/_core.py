@@ -11,7 +11,17 @@ Current limitations :
 of dimensions referenced by variables.
 
 """
-from typing import Dict, Iterable, Mapping, Optional, Tuple, Union
+from functools import wraps
+from typing import (
+    Any,
+    Dict,
+    Iterable,
+    Mapping,
+    MutableMapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import numpy
 import numpy as np
@@ -203,6 +213,101 @@ class NameMap(dict):
 as_namemap = NameMap.from_items
 
 
+class AttrvalsDict(MutableMapping):
+    """
+    A container for the attribute values of an NcData or NcVariable object.
+
+    Its values are actually stored in the ._attributes of the parent object, which is a
+    :class:`NameMap` of :class:`NcAttribute` objects.
+    This means that all attribute values are cast to/from valid NcAttribute values,
+    i.e. numpy arrays of selected dtypes and <=1 dimensions.
+
+    This allows "data.attributes" to provide the easy-access form {name: value},
+    while "data._attributes" is the NameMap {name: NcAttribute}.
+
+    """
+
+    def __init__(self, attrs: NameMap):
+        self._attrs = attrs
+
+    def __getitem__(self, key):  # noqa: D105
+        return self._attrs[key].as_python_value()
+
+    def __setitem__(self, key, value):  # noqa: D105
+        # Special case : assigning an NcAttribute object is equivalent to assigning
+        #  its value (which forces rename).
+        # This is supposed to avoid potential confusion (!)
+        if isinstance(value, NcAttribute):
+            value = value.value
+
+        if key in self._attrs:
+            # Update the existing NcAttribute.
+            self._attrs[key].value = value
+        else:
+            # Create an NcAttribute.
+            self._attrs[key] = NcAttribute(key, value)
+
+    #
+    # Provide the minimal set of methods required for a MutableMapping
+    #
+    def __len__(self):  # noqa: D105
+        return len(self._attrs)
+
+    def __iter__(self):  # noqa: D105
+        return iter(self._attrs)
+
+    def __delitem__(self, key):  # noqa: D105
+        self._attrs.__delitem__(key)
+
+    #
+    # Other useful methods
+    #
+    def __str__(self):
+        """Provide a string representation.
+
+        A convenient representation, somewhat consistent with how we print the attributes
+        in the printout of an NcData / NcVariable.
+        """
+        text = "AttrvalsDict{"
+        if not self._attrs:
+            text += "}"
+        else:
+            lines = [
+                f"{attr.name!s}: {attr._print_value()}"
+                for attr in self._attrs.values()
+            ]
+            if len(lines) == 1:
+                text += lines[0] + "}"
+            else:
+                lines = ["\n    " + line for line in lines]
+                text += "".join(lines)
+                text += "\n}"
+
+        return text
+
+    # Also really nice-to-have : the "rename" operation, as implemented by NameMap
+    @wraps(NameMap.rename)
+    # N.B. this is *not* missing a docstring, actually..
+    def rename(self, name: str, new_name: str):  # noqa: D102
+        self._attrs.rename(name, new_name)
+
+    def copy(self, deepcopy=True):
+        """
+        Make a copy.
+
+        Returns
+        -------
+            AttrvalsDict
+
+        The copy is 'shallow', in that it contains a NameMap with the *same* NcAttributes
+        as the original. These are themselves mutable, so the copy will change if the
+        original content attributes are modified, and vice versa.
+
+        N.B. if a truly independent 'deep' copy is required, you can use `copy.deepcopy`.
+        """
+        return self.__class__(self._attrs.copy())
+
+
 class _AttributeAccessMixin:
     """
     A mixin with attribute access conveniences for NcData and NcVariable.
@@ -211,21 +316,53 @@ class _AttributeAccessMixin:
     See :meth:`NcAttribute.get_python_value()` for how different types are handled.
     """
 
-    def get_attrval(self, name: str):
+    @property
+    def avals(self):
+        """
+        A dictionary of an NcData or NcVariable's attribute values.
+
+        This is used for the ``data.attributes`` property, which is a simple
+        {keyname: value} map.  Numeric values are presented as numpy scalars, i.e.
+        integers or strings.  The advantage of this is that they retain an exact dtype,
+        e.g. np.int16 or np.float32.  These are almost entirely interchangeable with
+        Python ints and floats.
+        Multiple values are represented as 1-D numpy arrays.  These are iterable, so
+        largely interchangeable with lists.
+        String attributes are simply given as Python strings.
+        See :ref:`attribute-dtypes`.
+
+        The attributes of an NcData or NcVariable are actually always **stored** in a
+        private ``data._attributes`` property, which is a :class:`NameMap` of
+        :class:`NcAttribute` objects, whose values are numpy arrays.
+        So, this is **not** that map, but is a view onto it, with the contents converted
+        to simple values for convenience -- see :meth:`NcAttribute.as_python_value`.
+        """
+        if not hasattr(self, "_attrmap"):
+            self._attrmap = AttrvalsDict(self.attributes)
+        return self._attrmap
+
+    def get_attrval(self, name: str) -> Any:
         """
         Get the Python value of a named attribute in self.attributes.
 
         If no such attribute exists, returns None.
+
+        .. warning::
+            This legacy method is now deprecated, and will be removed in a future release.
+
         """
-        attr = self.attributes.get(name)
-        if attr is not None:
-            attr = attr.as_python_value()
-        return attr
+        return self.avals.get(name, None)
 
     def set_attrval(self, name: str, value) -> "NcAttribute":
-        """Set the Python value of a named attribute in self.attributes."""
-        attr = NcAttribute(name, value)
-        self.attributes[name] = attr
+        """
+        Set the Python value of a named attribute in self.attributes.
+
+        .. warning::
+            This legacy method is now deprecated, and will be removed in a future release.
+
+        """
+        self.avals[name] = value
+        attr = self.avals[name]
         return attr
 
 

@@ -9,7 +9,7 @@ Data Classes
 ------------
 The data model components are elements of the
 `NetCDF Classic Data Model`_ , plus **groups** (from the
-`"enhanced" netCDF data model`_ ).
+`Enhanced netCDF data model`_ ).
 
 That is, a Dataset(File) consists of just Dimensions, Variables, Attributes and
 Groups.
@@ -85,20 +85,17 @@ or a 1-D numpy array -- this is enforced as a computed property (read and write)
 
 Attribute Values
 """"""""""""""""
-In actual netCDF data, the value of an attribute is effectively limited to a one-dimensional
-array of certain valid netCDF types, and one-element arrays are exactly equivalent to scalar values.
+In actual netCDF data, the value of an attribute is effectively limited to a
+one-dimensional array of certain valid netCDF types, and one-element arrays are exactly
+equivalent to scalar values.
 
-The ``.value`` of an :class:`ncdata.NcAttribute` must always be a numpy scalar or 1-dimensional array.
+So, the ``.value`` of an :class:`ncdata.NcAttribute` must always be a numpy scalar or
+1-dimensional array.  This is checked when creating an attribute, or assigning a new value.
 
-When assigning a ``.value``, or creating a new :class:`ncdata.NcAttribute`, the value
-is cast with :func:`numpy.asanyarray`, and if this fails, or yields a multidimensional array
-then an error is raised.
-
-When *reading* attributes, for consistent results it is best to use the
-:meth:`ncdata.NcVariable.get_attrval` method or (equivalently) :meth:`ncdata.NcAttribute.as_python_value` :
-These return either ``None`` (if missing); a numpy scalar; or array; or a Python string.
-These are intended to be equivalent to what you would get from storing in an actual file and reading back,
-including re-interpreting a length-one vector as a scalar value.
+However, it's nearly always simpler to read and write attribute values with the ``.avals``
+property:  This converts attribute values to and from Python equivalents.
+Notably, string and character values are returned as Python strings, and any length-one
+vectors appear as scalar values.
 
 .. attention::
     The correct handling and (future) discrimination of attribute values which are character arrays
@@ -154,42 +151,20 @@ The :meth:`~ncdata.NameMap` container class is provided with convenience methods
 aim to make this easier, such as :meth:`~ncdata.NameMap.add` and
 :meth:`~ncdata.NameMap.rename`.
 
-NcData and NcVariable ".attributes" components
-----------------------------------------------
-Note that the contents of a ".attributes" are :class:`~ncdata.NcAttributes` objects,
-not attribute values.
+Container methods
+^^^^^^^^^^^^^^^^^
+The :class:`~ncdata.NameMap` class also provides a variety of manipulation methods,
+both normal dictionary operations and some extra ones.
 
-Thus to fetch an attribute you might write, for example one of these :
+The most notable ones are : ``del``, ``pop``, ``add``, ``addall``, ``rename`` and of
+course  ``__setitem__`` .
 
-.. testsetup::
-
-    >>> from ncdata import NcData, NcVariable, NcAttribute
-    >>> dataset = NcData(variables=[NcVariable("var1", attributes={"units": "m"})])
-
-
-.. doctest::
-
-    >>> units1 = dataset.variables['var1'].get_attrval('units')
-    >>> units1 = dataset.variables['var1'].attributes['units'].as_python_value()
-
-
-but **not** ``unit = dataset.variables['x'].attributes['attr1']``
-
-Or, likewise, to **set** values, one of
-
-.. code-block::
-
-    >>> dataset.variables['var1'].set_attrval('units', "K")
-    NcAttribute(...)
-    >>> dataset.variables['var1'].attributes['units'] = NcAttribute("units", "K")
-
-but **not** ``dataset.variables['x'].attributes['units'].value = "K"``
-
+See :ref:`common_operations` section.
 
 .. _container-ordering:
 
 Container ordering
-------------------
+^^^^^^^^^^^^^^^^^^
 The order of elements of a container is technically significant, and does constitute a
 potential difference between datasets (or files).
 
@@ -200,15 +175,76 @@ The :func:`ncdata.utils.dataset_differences` utility provides various keywords a
 you to ignore ordering in comparisons, when required.
 
 
-Container methods
------------------
-The :class:`~ncdata.NameMap` class also provides a variety of manipulation methods,
-both normal dictionary operations and some extra ones.
+NcData and NcVariable ".attributes" and ".avals"
+---------------------------------------------------
+The contents of the ".attributes" property are :class:`~ncdata.NcAttributes` objects,
+not attribute *values*.  This is consistent with the other components, and makes handling
+of attributes in general easier.
 
-The most notable ones are : ``del``, ``pop``, ``add``, ``addall``, ``rename`` and of
-course  ``__setitem__`` .
+However, for most operations on attributes, it is much easier to use the ``.avals``
+property instead.  This accesses *the same attributes*, but in the form of a simple
+"name: value" dictionary.
 
-See :ref:`common_operations` section.
+Thus for example, to fetch an attribute you would usually write just :
+
+.. testsetup::
+
+    >>> from ncdata import NcData, NcVariable, NcAttribute
+    >>> dataset = NcData(variables=[
+    ...     NcVariable("x", attributes={"units": "m"}),
+    ... ])
+
+
+.. doctest:: python
+
+    >>> units1 = dataset.variables["x"].avals["units"]
+
+
+and **not** :
+
+.. doctest:: python
+
+    >>> # WRONG: this reads an NcAttribute, not its value
+    >>> unit = dataset.variables["x"].attributes["units"]
+
+or:
+
+.. doctest:: python
+
+    >>> # WRONG: this gets NcAttribute.value as a character array, not a string
+    >>> unit = dataset.variables["x"].attributes["units"].value
+
+or even (which is at least correct):
+
+.. doctest:: python
+
+    >>> unit = dataset.variables["x"].attributes["units"].as_python_value()
+
+
+Likewise, to **set** a value, you would normally just
+
+.. doctest:: python
+
+    >>> dataset.variables["x"].avals["units"] = "K"
+
+and **not**
+
+.. doctest:: python
+
+    >>> # NOT RECOMMENDED: direct assignment to NcAttribute.value.
+    >>> dataset.variables["x"].attributes["units"].value = "K"
+
+
+Note also, that as the ``.avals`` is a dictionary, you can use standard dictionary
+methods such as ``update`` and ``get`` to perform other operations in a relatively
+natural, Pythonic way.
+
+.. doctest:: python
+
+    >>> if dataset.avals.get("qq", "") == "this":
+    ...     dataset.avals["qq"] += " and that"
+
+    >>> dataset.attributes.update({"experiment": "A407", "expt_run": 704})
 
 .. _data-constructors:
 
@@ -220,7 +256,7 @@ properties, the keyword/args defining component parts use the utility method
 :meth:`ncdata.NameMap.from_items` so that you can specify a group of components in a variety of ways :
 either a pre-created container or a similar dictionary-like object :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> from ncdata import NcData, NcVariable
     >>> ds1 = NcData(groups={
@@ -238,7 +274,7 @@ either a pre-created container or a similar dictionary-like object :
 
 or **more usefully**, just a *list* of suitable data objects, like this...
 
-.. code-block:: python
+.. doctest:: python
 
     >>> ds2 = NcData(
     ...    variables=[
@@ -256,7 +292,7 @@ or **more usefully**, just a *list* of suitable data objects, like this...
 Or, in the **special case of attributes**, a regular dictionary of ``name: value`` form
 will be automatically converted to a NameMap of ``name: NcAttribute(name: value)`` :
 
-.. code-block:: python
+.. doctest:: python
 
     >>> var = NcVariable(
     ...    'v3',
@@ -275,4 +311,4 @@ Relationship to File Storage
 See :ref:`file-storage`
 
 .. _NetCDF Classic Data Model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#classic_model
-.. _"enhanced" netCDF data model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#enhanced_model
+.. _Enhanced netCDF data model: https://docs.unidata.ucar.edu/netcdf-c/current/netcdf_data_model.html#enhanced_model

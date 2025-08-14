@@ -56,20 +56,12 @@ class _XarrayNcDataStore(NetCDF4DataStore):
         """
         variables = {}
         for k, v in self.ncdata.variables.items():
-            attrs = {
-                name: attr.as_python_value()
-                for name, attr in v.attributes.items()
-            }
             xr_var = xr.Variable(
-                v.dimensions, v.data, attrs, getattr(v, "encoding", {})
+                v.dimensions, v.data, v.avals, getattr(v, "encoding", {})
             )
             variables[k] = xr_var
 
-        attributes = {
-            name: attr.as_python_value()
-            for name, attr in self.ncdata.attributes.items()
-        }
-        return variables, attributes
+        return variables, self.ncdata.avals
 
     def store(
         self,
@@ -92,7 +84,7 @@ class _XarrayNcDataStore(NetCDF4DataStore):
 
         # Install (global) attributes into self.
         for attrname, v in attributes.items():
-            self.ncdata.attributes[attrname] = NcAttribute(attrname, v)
+            self.ncdata.avals[attrname] = v
 
         # Install variables, creating dimensions as we go.
         for varname, var in new_variables.items():

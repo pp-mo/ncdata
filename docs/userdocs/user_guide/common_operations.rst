@@ -8,15 +8,31 @@ i.e. the operations of extract/remove/insert/rename/copy on the ``.dimensions``,
 
 Most of these are hopefully "obvious" Pythonic methods of the container objects.
 
+.. Note::
+
+    The special ``.avals`` property of :class:`NcData` and :class:`NcVariable` also
+    provides key common operations associated with ``.attributes``, notably ``rename`` and
+    the ``del`` operator.  But not those needing NcAttribute objects -- so ``add`` and
+    ``addall` are not available.
+
+
 Extract and Remove
 ------------------
 These are implemented as :meth:`~ncdata.NameMap.__delitem__` and :meth:`~ncdata.NameMap.pop`
 methods, which work in the usual way.
 
-Examples :
+For Example:
 
-* ``var_x = dataset.variables.pop("x")``
-* ``del data.variables["x"]``
+.. testsetup::
+
+    >>> from ncdata import NcData, NcVariable
+    >>> dataset = NcData(variables=[NcVariable('x'), NcVariable('y')])
+    >>> data = dataset
+
+.. doctest:: python
+
+    >>> var_x = dataset.variables.pop("x")
+    >>> del data.variables["y"]
 
 Insert / Add
 ------------
@@ -25,10 +41,19 @@ A new content (component) can be added under its own name with the
 
 Example : ``dataset.variables.add(NcVariable("x", dimensions=["x"], data=my_data))``
 
-An :meth:`~ncdata.NcAttribute` can also be added or set (if already present) with the special
-:meth:`~ncdata.NameMap.set_attrval` method.
+:meth:`~ncdata.NcAttribute`s can be treated in the same way, as a :class:`ncdata.NameMap`
+component of the parent object.  But it is more usual to add or set attributes
+using ``.avals`` rather than ``.attributes``.
 
-Example : ``dataset.variables["x"].set_attrval("units", "m s-1")``
+Example :
+
+.. testsetup::
+
+    >>> dataset = NcData(variables=[NcVariable("x")])
+
+.. doctest:: python
+
+    >>> dataset.variables["x"].avals["units"] = "m s-1"
 
 Rename
 ------
@@ -36,7 +61,11 @@ A component can be renamed with the :meth:`~ncdata.NameMap.rename` method.  This
 both the name in the container **and** the component's own name -- it is not recommended
 ever to set ``component.name`` directly, as this obviously can become inconsistent.
 
-Example : ``dataset.variables.rename("x", "y")``
+Example :
+
+.. doctest:: python
+
+    >>> dataset.variables.rename("x", "y")
 
 .. warning::
     Renaming a dimension will not rename references to it (i.e. in variables), which
@@ -51,7 +80,7 @@ All core objects support a ``.copy()`` method.  See for instance
 These however do *not* copy variable data arrays (either real or lazy), but produce new
 (copied) variables referencing the same arrays.  So, for example:
 
-.. code-block::
+.. doctest:: python
 
     >>> # Construct a simple test dataset
     >>> import numpy as np
@@ -114,7 +143,7 @@ dataset which must "make sense".   see : :ref:`correctness-checks` .
 Hence, there is no great need to install things in the 'right' order (e.g. dimensions
 before variables which need them).  You can create objects in one go, like this :
 
-.. code-block::
+.. doctest:: python
 
     data = NcData(
         dimensions=[
@@ -131,7 +160,7 @@ before variables which need them).  You can create objects in one go, like this 
 
 or iteratively, like this :
 
-.. code-block::
+.. doctest:: python
 
     data = NcData()
     dims = [("y", 2), ("x", 3)]
