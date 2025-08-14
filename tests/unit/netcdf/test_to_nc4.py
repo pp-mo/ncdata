@@ -8,16 +8,17 @@ the use of groups, passing of data arrays and attributes.
 This module tests specific API properties of the top-level access function not covered
 by the generic 'roundtrip' testcases.  This includes error cases.
 """
+
 from pathlib import Path
 from typing import List
 
 import netCDF4 as nc
 import numpy as np
 import pytest
-
 from ncdata import NcData
 from ncdata.netcdf4 import from_nc4, to_nc4
 from ncdata.utils import dataset_differences
+
 from tests.data_testcase_schemas import make_testcase_dataset
 
 

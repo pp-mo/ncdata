@@ -6,18 +6,19 @@ Split in two files ...
   * ( ALSO: "mainfunctions" (q.v.) cover the core functionality
     -- which elements are compared and what errors this constructs. )
 """
+
 import shutil
 import warnings
 
 import netCDF4 as nc
 import numpy as np
 import pytest
-
 from ncdata.utils._compare_nc_datasets import (
     _attribute_differences,
     _namelist_differences,
     dataset_differences,
 )
+
 from tests.test_samplecode_cdlgen_comparablecdl import ncgen_from_cdl
 
 _simple_cdl = """

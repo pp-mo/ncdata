@@ -15,7 +15,7 @@ These classes contain :class:`~ncdata.NcData`, :class:`~ncdata.NcDimension`,  an
 :class:`~ncdata.NcVariable` objects,  but emulate the access APIs of
 :class:`netCDF4.Dataset` :class:`netCDF4.Dimension` and :class:`netCDF4.Variable`.
 
-This is provided primarily to support a re-use of the :mod:`iris.fileformats.netcdf`
+This is provided primarily to support the reuse of the :mod:`iris.fileformats.netcdf`
 file format load + save, to convert cubes to + from ncdata objects (and hence,
 especially, to convert Iris :class:`~iris.cube.Cube`\s to + from an Xarray
 :class:`~xarray.Dataset`
@@ -29,6 +29,7 @@ expecting a :class:`netCDF4.Dataset` object.  However the API simulation is far 
 complete, so this module may need to be extended, in future, to support other such uses.
 
 """
+
 from typing import Any, Dict, List
 
 import dask.array as da

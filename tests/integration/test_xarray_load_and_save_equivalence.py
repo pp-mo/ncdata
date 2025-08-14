@@ -5,13 +5,14 @@ Testcases start as netcdf files.
 (1) check equivalence of cubes : xarray.load(file) VS xarray.load(ncdata(file))
 (2) check equivalence of files : xarray -> file VS xarray->ncdata->file
 """
+
 import pytest
 import xarray
-
 from ncdata.netcdf4 import from_nc4, to_nc4
 from ncdata.threadlock_sharing import lockshare_context
 from ncdata.utils import dataset_differences
 from ncdata.xarray import from_xarray, to_xarray
+
 from tests.data_testcase_schemas import (
     BAD_LOADSAVE_TESTCASES,
     session_testdir,

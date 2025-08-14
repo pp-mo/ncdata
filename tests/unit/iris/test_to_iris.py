@@ -8,13 +8,14 @@ the use of groups, passing of data arrays and attributes.
 This module only tests some specific API and behaviours of the top-level function, not
 covered by the generic 'roundtrip' testcases.
 """
+
 import dask.array as da
 import numpy as np
 from iris._constraints import NameConstraint
 from iris.cube import CubeList
-
 from ncdata import NcData, NcDimension, NcVariable
 from ncdata.iris import to_iris
+
 from tests import MonitoredArray
 
 

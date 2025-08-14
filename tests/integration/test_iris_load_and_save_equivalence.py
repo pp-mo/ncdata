@@ -5,13 +5,14 @@ Testcases start as netcdf files.
 (1) check equivalence of cubes : iris.load(file) VS iris.load(ncdata(file))
 (2) check equivalence of files : iris -> file VS iris->ncdata->file
 """
+
 from subprocess import check_output
 
 import iris
 import pytest
-
 from ncdata.netcdf4 import from_nc4, to_nc4
 from ncdata.utils import dataset_differences
+
 from tests.data_testcase_schemas import session_testdir, standard_testcase
 from tests.integration.equivalence_testing_utils import (
     adjust_chunks,

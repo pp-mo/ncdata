@@ -11,6 +11,7 @@ Current limitations :
 of dimensions referenced by variables.
 
 """
+
 from functools import wraps
 from typing import (
     Any,
@@ -377,7 +378,7 @@ def _addlines_indent(text, indent=""):
 
 
 # common indent spacing
-_indent = " " * 4
+_STANDARD_INDENT = " " * 4
 
 
 class NcData(_AttributeAccessMixin):
@@ -420,7 +421,7 @@ class NcData(_AttributeAccessMixin):
         class, so it isn't technically an abstract method).
         This "NcData._print_content()" is called recursively for groups.
         """
-        global _indent
+        global _STANDARD_INDENT  # noqa: F824
         # Define a header line (always a separate line).
         noname = "<'no-name'>"
         lines = [f"<NcData: {self.name or noname}"]
@@ -431,20 +432,20 @@ class NcData(_AttributeAccessMixin):
             if len(els):
                 if eltype == "attributes":
                     # Attributes a bit different: #1 add 'globol' to section title.
-                    lines += [f"{_indent}global attributes:"]
+                    lines += [f"{_STANDARD_INDENT}global attributes:"]
                     # NOTE: #2 show like variable attributes, but *no parent name*.
                     attrs_lines = [
                         f":{attr._print_content()}"
                         for attr in self.attributes.values()
                     ]
                     lines += _addlines_indent(
-                        "\n".join(attrs_lines), _indent * 2
+                        "\n".join(attrs_lines), _STANDARD_INDENT * 2
                     )
                 else:
-                    lines += [f"{_indent}{eltype}:"]
+                    lines += [f"{_STANDARD_INDENT}{eltype}:"]
                     for el in els.values():
                         lines += _addlines_indent(
-                            el._print_content(), _indent * 2
+                            el._print_content(), _STANDARD_INDENT * 2
                         )
                 lines.append("")
 
@@ -589,7 +590,7 @@ class NcVariable(_AttributeAccessMixin):
     #     return self.data.shape
 
     def _print_content(self):
-        global _indent
+        global _STANDARD_INDENT  # noqa: F824
         dimstr = ", ".join(self.dimensions)
         typestr = str(self.dtype) if self.dtype else "<no-dtype>"
         hdr = f"<NcVariable({typestr}): {self.name}({dimstr})"
@@ -602,7 +603,7 @@ class NcVariable(_AttributeAccessMixin):
                 f"{self.name}:{attr._print_content()}"
                 for attr in self.attributes.values()
             ]
-            lines += _addlines_indent("\n".join(attrs_lines), _indent)
+            lines += _addlines_indent("\n".join(attrs_lines), _STANDARD_INDENT)
             lines += [">"]
         return "\n".join(lines)
 

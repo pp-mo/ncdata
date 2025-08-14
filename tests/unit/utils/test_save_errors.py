@@ -1,13 +1,14 @@
 """
 Tests for :mod:`ncdata.utils.save_errors`
 """
+
 import re
 
 import numpy as np
 import pytest
-
 from ncdata import NcData, NcDimension, NcVariable
 from ncdata.utils import save_errors
+
 from tests.unit.core.test_NcAttribute import attrvalue, datatype, structuretype
 
 _ = datatype, structuretype

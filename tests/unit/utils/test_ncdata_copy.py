@@ -2,9 +2,9 @@
 
 This is generic utility function version of the copy operation.
 """
+
 import numpy as np
 import pytest
-
 from ncdata import NameMap, NcAttribute, NcData, NcDimension, NcVariable
 from ncdata.utils import dataset_differences, ncdata_copy
 

@@ -8,6 +8,7 @@ the use of groups, passing of data arrays and attributes.
 This module only tests some specific API and behaviours of the top-level function, not
 covered by the generic 'roundtrip' testcases.
 """
+
 from unittest.mock import patch
 
 import dask.array as da
@@ -15,8 +16,8 @@ import numpy as np
 import pytest
 from iris.coords import DimCoord
 from iris.cube import Cube
-
 from ncdata.iris import from_iris
+
 from tests import MonitoredArray
 
 

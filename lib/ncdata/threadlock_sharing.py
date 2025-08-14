@@ -49,6 +49,7 @@ or::
     thread-safe.  So probably can only be applied at the outer level of an operation.
 
 """
+
 from contextlib import contextmanager
 from unittest import mock
 

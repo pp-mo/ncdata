@@ -4,11 +4,11 @@ Utility routines for conversion equivalence testing.
 Used by routines in tests/integration which attempt to show that conversions between
 ncdata and other types of data preserve information.
 """
+
 import dask.array as da
+import iris.mesh
 import numpy as np
 import pytest
-
-import iris.mesh
 
 
 def cubes_equal__corrected(c1, c2):
@@ -127,7 +127,6 @@ def adjust_chunks():
     """
     import dask.config as dcfg
 
-    global _USE_TINY_CHUNKS, _CHUNKSIZE_SPEC
     if _USE_TINY_CHUNKS:
         with dcfg.set({"array.chunk-size": _CHUNKSIZE_SPEC}):
             yield

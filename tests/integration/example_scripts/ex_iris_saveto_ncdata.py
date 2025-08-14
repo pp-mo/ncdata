@@ -3,9 +3,10 @@ A proof-of-concept example workflow for :func:`ncdata.iris.from_iris`.
 
 Check that conversion succeeds and print the resulting dataset.
 """
-import iris
 
+import iris
 from ncdata.iris import from_iris
+
 from tests import testdata_dir
 
 
