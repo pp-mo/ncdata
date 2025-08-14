@@ -6,6 +6,7 @@ Split in two files ...
     * ( ALSO: "additional" tests (q.v.) cover subsidiary routines and the
         main API usage modes. )
 """
+
 import numpy as np
 import pytest
 

@@ -1,4 +1,5 @@
 """User utility routines for ncdata."""
+
 from typing import Dict, List, Union
 
 import netCDF4 as nc

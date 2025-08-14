@@ -6,6 +6,7 @@ Split in two files ...
   * ( ALSO: "mainfunctions" (q.v.) cover the core functionality
     -- which elements are compared and what errors this constructs. )
 """
+
 import shutil
 import warnings
 

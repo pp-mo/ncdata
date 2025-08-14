@@ -1,6 +1,7 @@
 """
 Test ncdata.netcdf by checking load-save roundtrips for standard testcases.
 """
+
 from subprocess import check_output
 
 from ncdata.netcdf4 import from_nc4, to_nc4

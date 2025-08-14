@@ -9,6 +9,7 @@ These testcases also include various pre-existing testfiles, which are NOT built
 specs.  This enables us to perform various translation tests on standard testfiles from
 the Iris and Xarray test suites.
 """
+
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Union
@@ -298,7 +299,7 @@ _masked_scaled_ints_test_spec = {
 }
 
 # Define a sequence of standard testfile specs, with suitable param-names.
-_Standard_Testcases: Dict[str, Union[Path, dict]] = {}
+_STANDARD_TESTCASES: Dict[str, Union[Path, dict]] = {}
 
 
 # A decorator for spec-generating routines.
@@ -311,8 +312,7 @@ def standard_testcases_func(func):
     A decorator for spec-generating routines.  It automatically **calls** the wrapped
     function, and adds the results into the global "_Standard_Testcases" dictionary.
     """
-    global _Standard_Testcases
-    _Standard_Testcases.update(func())
+    _STANDARD_TESTCASES.update(func())
     return func
 
 
@@ -473,7 +473,7 @@ class TestcaseSchema:
     filepath: Path = None
 
 
-@pytest.fixture(params=list(_Standard_Testcases.keys()))
+@pytest.fixture(params=list(_STANDARD_TESTCASES.keys()))
 def standard_testcase(request, session_testdir):
     """
     Provide a set of "standard" dataset testcases.
@@ -489,7 +489,7 @@ def standard_testcase(request, session_testdir):
     For those not based on a spec, 'spec' is None.
     """
     name = request.param
-    spec = _Standard_Testcases[name]
+    spec = _STANDARD_TESTCASES[name]
     if isinstance(spec, dict):
         # Build a temporary testfile from the spec, and pass that out.
         filepath = session_testdir / f"sampledata_{name}.nc"

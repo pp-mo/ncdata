@@ -4,6 +4,7 @@ Tests for class :class:`ncdata._core._AttributeAccessMixin`.
 Note: actually tested via the inheriting classes NcData and NcVariable.
 All tests are run for both of those.
 """
+
 import numpy as np
 import pytest
 

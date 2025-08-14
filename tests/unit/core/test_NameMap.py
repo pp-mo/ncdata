@@ -1,6 +1,7 @@
 """
 Tests for class :class:`ncdata.NameMap`.
 """
+
 from copy import deepcopy
 
 import pytest

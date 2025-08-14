@@ -2,6 +2,7 @@
 
 This is generic utility function version of the copy operation.
 """
+
 import numpy as np
 import pytest
 

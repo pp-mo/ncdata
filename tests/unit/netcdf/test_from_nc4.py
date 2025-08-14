@@ -8,6 +8,7 @@ the use of groups, passing of data arrays and attributes.
 This module only tests some specific API of the top-level access function, not covered
 by the generic 'roundtrip' testcases.
 """
+
 from pathlib import Path
 
 import netCDF4 as nc

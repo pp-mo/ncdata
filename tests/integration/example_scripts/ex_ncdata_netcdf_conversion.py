@@ -3,6 +3,7 @@ A proof-of-concept example workflow for :mod:`ncdata.netcdf4`.
 
 Showing loading and saving ncdata to/from netcdf files.
 """
+
 import tempfile
 from pathlib import Path
 from shutil import rmtree

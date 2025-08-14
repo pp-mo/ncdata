@@ -1,6 +1,7 @@
 """
 Tests for :mod:`ncdata.utils.save_errors`
 """
+
 import re
 
 import numpy as np

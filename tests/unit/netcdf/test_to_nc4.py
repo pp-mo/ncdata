@@ -8,6 +8,7 @@ the use of groups, passing of data arrays and attributes.
 This module tests specific API properties of the top-level access function not covered
 by the generic 'roundtrip' testcases.  This includes error cases.
 """
+
 from pathlib import Path
 from typing import List
 
