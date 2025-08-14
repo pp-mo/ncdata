@@ -1,8 +1,8 @@
 """Temporary integrational proof-of-concept example for dataset printout."""
 import iris
-
 import ncdata.iris as nci
 from ncdata import NcData, NcDimension, NcVariable
+
 from tests import testdata_dir
 
 

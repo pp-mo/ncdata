@@ -14,8 +14,8 @@ import dask.array as da
 import numpy as np
 import pytest
 import xarray as xr
-
 from ncdata.xarray import from_xarray
+
 from tests import MonitoredArray
 from tests.data_testcase_schemas import make_testcase_dataset
 
