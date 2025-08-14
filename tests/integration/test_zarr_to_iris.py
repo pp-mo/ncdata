@@ -43,7 +43,6 @@ def test_load_zarr2_local():
 
     xr_kwargs = _return_kwargs()
     zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
-    zarr_xr.unify_chunks()
 
     cubes = conversion_func(zarr_xr)
 
@@ -63,7 +62,6 @@ def test_load_zarr3_local():
 
     xr_kwargs = _return_kwargs()
     zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
-    zarr_xr.unify_chunks()
 
     cubes = conversion_func(zarr_xr)
 
@@ -105,7 +103,6 @@ def test_load_remote_zarr():
 
     xr_kwargs = _return_kwargs()
     zarr_xr = xr.open_dataset(zarr_path, **xr_kwargs)
-    zarr_xr.unify_chunks()
 
     cubes = conversion_func(zarr_xr)
 
