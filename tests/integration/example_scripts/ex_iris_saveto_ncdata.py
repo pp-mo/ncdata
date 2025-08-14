@@ -5,8 +5,8 @@ Check that conversion succeeds and print the resulting dataset.
 """
 
 import iris
-
 from ncdata.iris import from_iris
+
 from tests import testdata_dir
 
 
