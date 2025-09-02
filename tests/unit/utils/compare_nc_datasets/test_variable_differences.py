@@ -162,6 +162,51 @@ class TestDtypes:
             )
         check(errs, expected)
 
+    @pytest.mark.parametrize("given", ["nodata", "data", "dtype"])
+    def test_nodata_nodtype(self, given):
+        # Check that we can correctly compare a variable with NO specified data or dtype,
+        # with one that may have either.
+        # N.B. this omits comparing 2 variables with dtype only. See following.
+        v1 = NcVariable("x")
+
+        kwargs = {}
+        if given == "data":
+            kwargs["data"] = [1, 2]
+            expected = [
+                'Variable "x" shapes differ : None != (2,)',
+                "Variable \"x\" datatypes differ : None != dtype('int64')",
+            ]
+        elif given == "dtype":
+            kwargs["dtype"] = np.float32
+            expected = [
+                "Variable \"x\" datatypes differ : None != dtype('float32')"
+            ]
+        elif given == "nodata":
+            expected = []
+        else:
+            raise ValueError(f"unrecognised 'given' param : {given!s}")
+
+        v2 = NcVariable("x", **kwargs)
+        errs = variable_differences(v1, v2)
+        check(errs, expected)
+
+    @pytest.mark.parametrize("equality", ["same", "different"])
+    def test_nodata_withdtype(self, equality):
+        # Check that we can correctly compare variables which have dtype but no data.
+        # N.B. the other possibilities are all covered in the "nodata_nodtype" test.
+        dtype = np.int16
+        v1 = NcVariable("x", dtype=dtype)
+        expected = []
+        if equality == "different":
+            dtype = np.float16
+            expected = [
+                "Variable \"x\" datatypes differ : dtype('int16') != dtype('float16')"
+            ]
+
+        v2 = NcVariable("x", dtype=dtype)
+        errs = variable_differences(v1, v2)
+        check(errs, expected)
+
 
 class TestDataCheck__controls:
     # Note: testing variable comparison via the 'main' public API instead of
