@@ -1,6 +1,6 @@
 """Unit tests for :mod:`ncdata.utils._dim_indexing`."""
-import numpy as np
 
+import numpy as np
 from ncdata import NcData, NcDimension, NcVariable
 
 
