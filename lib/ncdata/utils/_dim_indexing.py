@@ -2,7 +2,6 @@ from numbers import Number
 from typing import Any, List, Mapping, Union
 
 import dask.array as da
-
 from ncdata import NcData
 from ncdata.utils import ncdata_copy
 
