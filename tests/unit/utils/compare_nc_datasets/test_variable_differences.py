@@ -171,14 +171,16 @@ class TestDtypes:
 
         kwargs = {}
         if given == "data":
-            kwargs["data"]  = [1, 2]
+            kwargs["data"] = [1, 2]
             expected = [
                 'Variable "x" shapes differ : None != (2,)',
-                'Variable "x" datatypes differ : None != dtype(\'int64\')',
+                "Variable \"x\" datatypes differ : None != dtype('int64')",
             ]
         elif given == "dtype":
             kwargs["dtype"] = np.float32
-            expected = ['Variable "x" datatypes differ : None != dtype(\'float32\')']
+            expected = [
+                "Variable \"x\" datatypes differ : None != dtype('float32')"
+            ]
         elif given == "nodata":
             expected = []
         else:
@@ -198,7 +200,7 @@ class TestDtypes:
         if equality == "different":
             dtype = np.float16
             expected = [
-                'Variable "x" datatypes differ : dtype(\'int16\') != dtype(\'float16\')'
+                "Variable \"x\" datatypes differ : dtype('int16') != dtype('float16')"
             ]
 
         v2 = NcVariable("x", dtype=dtype)
