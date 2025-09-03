@@ -79,10 +79,8 @@ cubes = to_iris(ncdata)
 enable_lockshare(xarray=True)
 dataset = xr.open_dataset("file1.nc")
 xr_ncdata = from_xarray(dataset)
-xr_ncdata.dimensions.rename("dim0", "newdim")
-# N.B. must also replace the name in dimension-lists of variables
-for var in xr_ncdata.variables.values():
-    var.dimensions = ["newdim" if dim == "dim0" else dim for dim in var.dimensions]
+from ncdata.utils import rename_dimension
+rename_dimension(xr_ncdata, "dim0", "newdim")
 to_nc4(ncdata, "file_2a.nc")
 ```
 

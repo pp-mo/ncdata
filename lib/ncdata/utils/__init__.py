@@ -2,11 +2,13 @@
 
 from ._compare_nc_datasets import dataset_differences, variable_differences
 from ._copy import ncdata_copy
+from ._rename_dim import rename_dimension
 from ._save_errors import save_errors
 
 __all__ = [
     "dataset_differences",
     "ncdata_copy",
+    "rename_dimension",
     "save_errors",
     "variable_differences",
 ]

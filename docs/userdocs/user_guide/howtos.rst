@@ -126,16 +126,16 @@ Note that this affects both the element's container key *and* its ``.name``.
 
 .. Warning::
 
-    Renaming a **dimension** can cause problems, so must be done with care.
-    See :ref:`howto_rename_dimension`.
-
-.. Warning::
-
-    **Why Not Just...** ``dim = data.dimensions['x']; dim.name = "q"`` ?
+    **Why Not Just...** ``var = data.variables['x']; var.name = "q"`` ?
 
     This would break the expected ``key == elements[key].name`` rule.
     We don't prevent this, but it is usually a mistake.
     :func:`~ncdata.utils.save_errors` detects this type of problem.
+
+.. Warning::
+
+    Renaming a **dimension** can cause particular problems, so must be done with care.
+    See :ref:`howto_rename_dimension`.
 
 
 .. _howto_rename_dimension:
@@ -145,10 +145,40 @@ Rename a dimension
 Simply using ``ncdata.dimensions.rename()`` can cause problems, because you must then
 **also** replace the name where it occurs in the dimensions of any variables.
 
-.. Note::
+Instead, you should use the :func:`~ncdata.utils.rename_dimension` function, which does
+this correctly.
 
-    **To-Do** : there should be a utility for this, but as yet it does not exist.
-    See `Issue#87 <https://github.com/pp-mo/ncdata/issues/87>`_.
+For example:
+
+.. doctest:: python
+
+    >>> from ncdata.utils import rename_dimension
+    >>> ncdata = NcData(
+    ...     dimensions=[NcDimension("x", 3), NcDimension("y", 4)],
+    ...     variables=[NcVariable("vy", ["y"]), NcVariable("vzyx", ["z", "y", "x"])]
+    ... )
+    >>> print(ncdata)
+    <NcData: <'no-name'>
+        dimensions:
+            x = 3
+            y = 4
+    <BLANKLINE>
+        variables:
+            <NcVariable(<no-dtype>): vy(y)>
+            <NcVariable(<no-dtype>): vzyx(z, y, x)>
+    >
+
+    >>> rename_dimension(ncdata, "y", "qqq")
+    >>> print(ncdata)
+    <NcData: <'no-name'>
+        dimensions:
+            x = 3
+            qqq = 4
+    <BLANKLINE>
+        variables:
+            <NcVariable(<no-dtype>): vy(qqq)>
+            <NcVariable(<no-dtype>): vzyx(z, qqq, x)>
+    >
 
 
 .. _howto_read_attr:

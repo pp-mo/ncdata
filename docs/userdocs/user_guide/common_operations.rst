@@ -70,7 +70,8 @@ Example :
 .. warning::
     Renaming a dimension will not rename references to it (i.e. in variables), which
     obviously may cause problems.
-    We may add a utility to do this safely in future.
+    The utility function :func:`~ncdata.utils.rename_dimension` is provided for this.
+    See : :ref:`howto_rename_dimension`.
 
 Copying
 -------

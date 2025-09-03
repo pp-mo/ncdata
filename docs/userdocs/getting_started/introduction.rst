@@ -185,6 +185,8 @@ There is also a 'rename' method of variables/attributes/groups:
     Renaming a :class:`~ncdata.NcDimension` within a :class:`~ncdata.NcData`
     does *not* adjust the variables which reference it, since a variable's
     :attr:`~ncdata.NcVariable.dimensions` is a simple list of names.
+    But there is a :func:`~ncdata.utils.rename_dimension` utility which does this
+    "right".
     See : :ref:`howto_rename_dimension` , also :func:`ncdata.utils.save_errors`.
 
 
