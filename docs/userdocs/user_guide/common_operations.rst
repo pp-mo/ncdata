@@ -178,7 +178,7 @@ or iteratively, like this :
     >>> data2
     <ncdata._core.NcData object at ...>
 
-Note : here, the variables were created before the dimensions
+Note : here, the variables were created *before* the dimensions.
 The result is the same:
 
 .. doctest:: python

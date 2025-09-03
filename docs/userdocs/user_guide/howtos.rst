@@ -47,6 +47,20 @@ Index by component names to get the object which represents a particular element
 Variable, attributes, dimensions and sub-groups are all stored by name like this,
 in a parent property which is a "component container" dictionary.
 
+.. Note::
+    It is usually easier and more convenient to access attributes via the ``.avals``
+    rather than the ``.attributes``.
+
+    For example:
+
+    .. doctest:: python
+
+        >>> data.avals["experiment"]
+        'A301.7'
+
+    See: :ref:`attributes_and_avals`
+
+
 .. Warning::
 
     The :attr:`~ncdata.NcVariable.dimensions` property of a :class:`~ncdata.NcVariable`
@@ -221,7 +235,8 @@ For example
     >>> attr.value = 4.2
     >>> print(attr.value)
     4.2
-
+    >>> attr.value
+    array(4.2)
 
 .. _howto_create_attr:
 
@@ -561,10 +576,10 @@ Contents and components can be attached on creation ...
     ...         NcVariable(
     ...             "vyx", ("y", "x"),
     ...             data=np.zeros((2, 3)),
-    ...             attributes=[
-    ...                 NcAttribute("long_name", "rate"),
-    ...                 NcAttribute("units", "m s-1")
-    ...             ]
+    ...             attributes={
+    ...                 "long_name": "rate",
+    ...                 "units": "m s-1"
+    ...             }
     ...         )],
     ...     attributes={"history": "imaginary", "test_a1": 1, "test_a2": [2, 3]}
     ... )
@@ -587,10 +602,8 @@ Contents and components can be attached on creation ...
             :test_a1 = 1
             :test_a2 = array([2, 3])
     >
-    >>>
 
-
-... or added iteratively ...
+Or, they can be added iteratively ...
 
 .. doctest:: python
 
@@ -610,7 +623,11 @@ Contents and components can be attached on creation ...
     >>> for k, v in [("history", "imaginary"), ("test_a1", 1), ("test_a2", [2, 3])]:
     ...     data2.avals[k] = v
     ...
-    >>> # in fact, there should be NO difference between these two.
+
+In fact, there should be NO difference between these two.
+
+.. doctest:: python
+
     >>> from ncdata.utils import dataset_differences
     >>> print(dataset_differences(data, data2) == [])
     True
@@ -861,7 +878,7 @@ For example, something like this :
     >>> dataset.dimensions.add(NcDimension('name_strlen', maxlen))
     >>> var.dimensions = var.dimensions + ("name_strlen",)
     >>> var.data = newdata
-    >>> # NOTE: at present it is also required to correct .dtype manually.  See #88
+    >>> # NOTE: at present it is also required to correct .dtype manually.  See issue#114
     >>> var.dtype = newdata.dtype
 
     >>> # When re-saved, this data loads back OK without a chunk control
