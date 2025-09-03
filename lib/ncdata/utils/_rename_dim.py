@@ -13,7 +13,7 @@ def _rename_dims_in_vars(ncdata: NcData, name_from: str, name_to: str) -> None:
                 ]
             )
 
-    # Also rename in all sub-groups, expect where the dimension is redefined ("scope hole").
+    # Also rename in all sub-groups, except where the dimension is redefined ("scope hole").
     for grp in ncdata.groups.values():
         if name_from not in grp.dimensions:
             _rename_dims_in_vars(grp, name_from, name_to)
@@ -46,11 +46,20 @@ def rename_dimension(ncdata: NcData, name_from: str, name_to: str) -> None:
       of the new name already exists, and if so raises an error.
 
     """
-    if name_to in ncdata.dimensions:
-        msg = (
-            f"Cannot rename dimension {name_from!r} to {name_to!r} to, "
-            f"because a {name_to!r} dimension already exists."
-        )
-        raise ValueError(msg)
+
+    def check_name_collides(ncdata, name_to, group_path=""):
+        if name_to in ncdata.dimensions:
+            inner = f' in group "{group_path}"' if group_path else ""
+            msg = (
+                f"Cannot rename dimension {name_from!r} to {name_to!r}, "
+                f"because a {name_to!r} dimension already exists{inner}."
+            )
+            raise ValueError(msg)
+
+        for group in ncdata.groups.values():
+            inner_path = group_path + "/" + group.name
+            check_name_collides(group, name_to, group_path=inner_path)
+
+    check_name_collides(ncdata, name_to)
     ncdata.dimensions.rename(name_from, name_to)
     _rename_dims_in_vars(ncdata, name_from, name_to)
