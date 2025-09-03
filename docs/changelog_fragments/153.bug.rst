@@ -1,0 +1,1 @@
+Fixed a bug in dataset comparison, where variables with missing or unbroadcastable data arrays could cause errors rather than generating difference messages.

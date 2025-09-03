@@ -165,8 +165,9 @@ class TestDtypes:
     @pytest.mark.parametrize("given", ["nodata", "data", "dtype"])
     def test_nodata_nodtype(self, given):
         # Check that we can correctly compare a variable with NO specified data or dtype,
-        # with one that may have either.
-        # N.B. this omits comparing 2 variables with dtype only. See following.
+        #  with one that may have either.
+        # N.B. this omits comparing 2 variables with dtype only. See following test,
+        #  'test_nodata_withdtype` for that.
         v1 = NcVariable("x")
 
         kwargs = {}
@@ -205,6 +206,55 @@ class TestDtypes:
 
         v2 = NcVariable("x", dtype=dtype)
         errs = variable_differences(v1, v2)
+        check(errs, expected)
+
+    @pytest.mark.parametrize(
+        "differs",
+        ["shapes", "shapes_nodata", "dims", "dims_nodata", "dims_both_nodata"],
+    )
+    def test_differences_ignore_datacheck(self, differs):
+        # Check that we can safely compare variables with different shapes or dims,
+        #  even with non-broadcastable content, as this should prevent the data
+        #  equivalence testing.
+        # Effectively, this is also testing "safe_varshape"
+        dims1 = ["x", "y"]
+        dims2 = dims1
+        shape1 = (2, 3)
+        shape2 = shape1
+        nodata = differs.endswith("nodata")
+        if differs.startswith("dims"):
+            dims2 = ["x"]
+            expected = [
+                "Variable \"x\" dimensions differ : ('x', 'y') != ('x',)"
+            ]
+            if nodata:
+                # In this case, either one or both have no data.
+                shape1 = None
+                both_nodata = "both" in differs
+                if both_nodata:
+                    shape2 = None
+                else:
+                    # Only one has data --> triggers a shape warning too.
+                    expected.append(
+                        'Variable "x" shapes differ : None != (2, 3)'
+                    )
+        elif differs.startswith("shapes"):
+            if nodata:
+                # In this case one has data (and therefore a shape), and the other not.
+                shape2 = None
+                expected = ['Variable "x" shapes differ : (2, 3) != None']
+            else:
+                shape2 = (3, 4)
+                expected = ['Variable "x" shapes differ : (2, 3) != (3, 4)']
+        else:
+            raise ValueError(f"unrecognised 'differs' param : {differs!s}")
+
+        data1 = np.ones(shape1) if shape1 is not None else None
+        data2 = np.ones(shape2) if shape2 is not None else None
+        var1 = NcVariable("x", dimensions=dims1, data=data1)
+        var2 = NcVariable("x", dimensions=dims2, data=data2)
+
+        errs = variable_differences(var1, var2)
         check(errs, expected)
 
 
