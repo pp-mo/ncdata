@@ -145,35 +145,46 @@ before variables which need them).  You can create objects in one go, like this 
 
 .. doctest:: python
 
-    data = NcData(
-        dimensions=[
-            NcDimension("y", 2),
-            NcDimension("x", 3),
-        ],
-        variables=[
-            NcVariable("y", dimensions=["y"], data=[10, 11]),
-            NcVariable("x", dimensions=["y"], data=[20, 21, 22]),
-            NcVariable("dd", dimensions=["y", "x"], data=[[0, 1, 2], [3, 4, 5]])
-        ]
-    )
+    >>> data1 = NcData(
+    ...     dimensions=[
+    ...         NcDimension("y", 2),
+    ...         NcDimension("x", 3),
+    ...     ],
+    ...     variables=[
+    ...         NcVariable("y", dimensions=["y"], data=[0, 1]),
+    ...         NcVariable("x", dimensions=["x"], data=[0, 1, 2]),
+    ...         NcVariable("dd", dimensions=["y", "x"], data=[[0, 1, 2], [3, 4, 5]])
+    ...     ]
+    ... )
+    >>> data1
+    <ncdata._core.NcData object at ...>
 
 
 or iteratively, like this :
 
 .. doctest:: python
 
-    data = NcData()
-    dims = [("y", 2), ("x", 3)]
-    data.variables.addall([
-        NcVariable(nn, dimensions=[nn], data=np.arange(ll))
-        for ll, nn in dims
-    ])
-    data.variables.add(
-        NcVariable("dd", dimensions=["y", "x"],
-        data=np.arange(6).reshape(2,3))
-    )
-    data.dimensions.addall([NcDimension(nn, ll) for nn, ll in dims])
+    >>> data2 = NcData()
+    >>> dims = [("y", 2), ("x", 3)]
+    >>> data2.variables.addall([
+    ...     NcVariable(name, dimensions=[name], data=np.arange(length))
+    ...     for name, length in dims
+    ... ])
+    >>> data2.variables.add(
+    ...     NcVariable("dd", dimensions=["y", "x"],
+    ...     data=np.arange(6).reshape(2,3))
+    ... )
+    >>> data2.dimensions.addall([NcDimension(name, length) for name, length in dims])
+    >>> data2
+    <ncdata._core.NcData object at ...>
 
 Note : here, the variables were created before the dimensions
+The result is the same:
+
+.. doctest:: python
+
+    >>> from ncdata.utils import dataset_differences
+    >>> print(dataset_differences(data1, data2))
+    []
 
 
