@@ -2,8 +2,8 @@ from numbers import Number
 from typing import Any, List, Mapping, Union
 
 import dask.array as da
+
 from ncdata import NcData
-from ncdata.utils import ncdata_copy
 
 
 def index_by_dimensions(
@@ -37,10 +37,10 @@ def index_by_dimensions(
 
     See Also
     --------
-    :class:`Slicer` provides the same function with a slicing syntax
+    :class:`Slicer` provides the same functionality with a slicing syntax.
     """
     # Start by copying the input : then modify that in-place
-    ncdata = ncdata_copy(ncdata)
+    ncdata = ncdata.copy()
     for dim_name, key in dim_index_kwargs.items():
         # Dimension names must occur in the ncdata.
         dimension = ncdata.dimensions.get(dim_name)
