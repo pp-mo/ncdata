@@ -13,7 +13,7 @@ Most of these are hopefully "obvious" Pythonic methods of the container objects.
     The special ``.avals`` property of :class:`NcData` and :class:`NcVariable` also
     provides key common operations associated with ``.attributes``, notably ``rename`` and
     the ``del`` operator.  But not those needing NcAttribute objects -- so ``add`` and
-    ``addall` are not available.
+    ``addall`` are not available.
 
 
 Extract and Remove

@@ -42,7 +42,7 @@ For a full docs-build:
 Release actions
 ---------------
 
-#. Update the :ref:`change_log` page in the details section
+#. Update the :ref:`change-log page <change_log>` in the details section
 
     #. ensure all major changes + PRs are referenced in the :ref:`change_notes` section.
 
