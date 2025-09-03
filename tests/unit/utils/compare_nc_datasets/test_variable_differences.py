@@ -1,7 +1,6 @@
 import dask.array as da
 import numpy as np
 import pytest
-
 from ncdata import NcVariable
 from ncdata.utils import variable_differences
 
