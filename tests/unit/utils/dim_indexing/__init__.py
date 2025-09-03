@@ -2,7 +2,6 @@
 
 import numpy as np
 import pytest
-
 from ncdata import NcData, NcDimension, NcVariable
 
 
