@@ -174,6 +174,7 @@ while :meth:`ncdata.NameMap.add` adds the new components at the end.
 The :func:`ncdata.utils.dataset_differences` utility provides various keywords allowing
 you to ignore ordering in comparisons, when required.
 
+.. _attributes_and_avals:
 
 NcData and NcVariable ".attributes" and ".avals"
 ---------------------------------------------------

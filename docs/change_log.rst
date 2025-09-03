@@ -19,7 +19,9 @@ The code is however still experimental, and APIs are not stable
 
 .. _change_notes:
 
-Summary of key features by release number:
+Change Notes
+------------
+Summary of key features by release number.
 
 .. towncrier release notes start
 

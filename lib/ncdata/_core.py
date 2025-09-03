@@ -319,24 +319,20 @@ class _AttributeAccessMixin:
 
     @property
     def avals(self):
-        """
-        A dictionary of an NcData or NcVariable's attribute values.
+        r"""
+        A convenience view of an NcData or NcVariable's attribute values.
 
-        This is used for the ``data.attributes`` property, which is a simple
-        {keyname: value} map.  Numeric values are presented as numpy scalars, i.e.
-        integers or strings.  The advantage of this is that they retain an exact dtype,
-        e.g. np.int16 or np.float32.  These are almost entirely interchangeable with
-        Python ints and floats.
-        Multiple values are represented as 1-D numpy arrays.  These are iterable, so
-        largely interchangeable with lists.
-        String attributes are simply given as Python strings.
-        See :ref:`attribute-dtypes`.
+        The ``.avals`` property acts as a more convenient **view** onto the
+        ``.attributes``, providing a simple "{name: value}" map.
 
-        The attributes of an NcData or NcVariable are actually always **stored** in a
-        private ``data._attributes`` property, which is a :class:`NameMap` of
-        :class:`NcAttribute` objects, whose values are numpy arrays.
-        So, this is **not** that map, but is a view onto it, with the contents converted
-        to simple values for convenience -- see :meth:`NcAttribute.as_python_value`.
+        ( Meanwhile, the attributes are actually **stored** in the
+        ``.attributes`` property, but this is a "{name: NcAttribute}" map ).
+
+        The values of the ``.avals`` map are the values of the ``.attributes``, but
+        converted to convenience forms, as described in
+        :meth:`NcAttribute.as_python_value`.
+
+        See also: :ref:`attributes_and_avals`.
         """
         if not hasattr(self, "_attrmap"):
             self._attrmap = AttrvalsDict(self.attributes)
@@ -666,13 +662,30 @@ class NcAttribute:
 
     def as_python_value(self):
         """
-        Return the content, but converting any character data to Python strings.
+        Return the attribute value, converted for convenient use in Python code.
 
-        An array of 1 value returns as a single scalar value, since this is how
+        An array of one element returns as a single scalar value, since this is how
         attributes behave in actual netcdf data.
 
-        We don't bother converting numeric data, since numpy scalars are generally
-        interchangeable in use with Python ints or floats.
+        * Single numeric values are returned as numpy scalars, i.e. integers or floats.
+          The advantage of this is that they retain an exact dtype,
+          e.g. np.int16 or np.float32, but are still mostly interchangeable with Python
+          ints and floats.
+
+        * A single string value is returned as a Python string object.
+          See :ref:`attribute-dtypes`.
+
+        * Multiple numeric values are returned as a 1-D numpy array (which is mostly
+          interchangeable with a list).
+
+        * Multiple strings are returned as a list of strings.
+
+          .. Note::
+
+                However, an attribute *in an actual NetCDF file* cannot currently
+                contain multiple strings, due to shortcomings in the netCDF
+                implementation: they will be concatenated into a single string.
+
         """
         result = self.value
         # Attributes are either scalar or 1-D
