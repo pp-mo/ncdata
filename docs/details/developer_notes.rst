@@ -11,12 +11,21 @@ A new change-note fragment file should be included in each PR, but is normally c
 with a ``towncrier`` command-line command:
 
 * shortly, with ``towncrier create --content "mynotes..." <ISSUE-num>.<category>.rst``
-* ... or for longer forms, use ``towncrier create --edit``.
-* Here, "<category>" is one of feat/doc/bug/dev/misc.  Which are: user features;
-  bug fixes; documentation changes; general developer-relevant changes;
-  or "miscellaneous".
+
+  ... or, for longer content, use ``towncrier create --edit``.
+
+* Here, "<category>" is one of:
+
+    * "feat": user features
+    * "doc": documentation changes
+    * "bug": bug fixes
+    * "def": general developer-relevant changes
+    * "misc": miscellaneous
+
   (For reference, these categories are configured in ``pyproject.toml``).
+
 * the fragment files are stored in ``docs/changelog_fragments``.
+
 * N.B. for this to work well, every change should be identified with a matching github issue.
   If there are multiple associated PRs, they should all be linked to the issue.
 
@@ -26,15 +35,18 @@ Documentation build
 
 For a full docs-build:
 
-* a simple ``$ make html`` will do for now
+* The most useful way is simply ``$ cd docs`` and ``$ make html-keeplog``.
+   * Note: the plainer ``$ make html`` is the same, but "-keeplog", in addition, preserves the
+     changelog fragments **and** reverts the change_log.rst after the html build:
+     This stops you accidentally including a "built" changelog when making further commits.
 * The ``docs/Makefile`` wipes the API docs and invokes sphinx-apidoc for a full rebuild
 * It also calls towncrier to clear out the changelog fragments + update ``docs/change_log.rst``.
-  This should be reverted before pushing your PR -- i.e. leave changenotes in the fragments.
-* the results is then available at ``docs/_build/html/index.html``.
+* ( *assuming "-keeplog"*: fragments and change_notes.rst are then reverted, undoing the towncrier build ).
+* the result is then available at ``docs/_build/html/index.html``.
 
 .. note::
 
-    * the above is just for *local testing*, if required.
+    * the above is just for *local testing*, when required.
     * For PRs (and releases), we also provide *automatic* builds on GitHub,
       via ReadTheDocs_.
 
