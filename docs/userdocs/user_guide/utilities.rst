@@ -9,12 +9,18 @@ Rename Dimensions
 The :func:`~ncdata.utils.rename_dimension` utility does this, in a way which ensures a
 safe and consistent result.
 
+See: :ref:`operations_rename`
+
+
 .. _utils_equality:
 
 Dataset Equality Testing
 ------------------------
-The function :func:`~ncdata.utils.dataset_differences` produces a list of messages
-detailing all the ways in which two datasets are different.
+The functions :func:`~ncdata.utils.dataset_differences` and
+:func:`~ncdata.utils.variable_differences` produce a list of messages detailing all the
+ways in which two datasets are different.
+
+See: :ref:`equality_checks`
 
 For Example:
 ^^^^^^^^^^^^
@@ -48,7 +54,7 @@ For Example:
     Dataset variable "vx" shapes differ : (5,) != (2,)
 
 .. note::
-   To compare isolated variables, a subsidiary routine
+   To compare isolated variables, the subsidiary routine
    :func:`~ncdata.utils.variable_differences` is also provided.
 
 .. note::
@@ -62,9 +68,12 @@ For Example:
 
 Sub-indexing
 ------------
-A new dataset can be derived by indexing over dimensions, analagous to sub-indexing
-an array.  This operation indexes all the variables appropriately, to produce a new
-independent dataset which is complete and self-consistent.
+The :func:`~ncdata.utils.index_by_dimensions` function and the
+:class:`~ncdata.utils.Slicer` class let you extract a subset of a dataset, by indexing
+on the data dimensions.  This is analagous to sub-indexing an array.
+
+This operation indexes all the variables appropriately, to produce a new, independent
+dataset which is complete and self-consistent.
 
 The basic indexing operation is provided in three forms:
 
@@ -197,6 +206,8 @@ Consistency Checking
 The :func:`~ncdata.utils.save_errors` function provides a general
 correctness-and-consistency check.
 
+See: :ref:`correctness-checks`
+
 For example:
 
 .. testsetup::
@@ -218,13 +229,10 @@ For example:
     Variable 'q' has a dtype which cannot be saved to netcdf : dtype('O').
 
 
-See : :ref:`correctness-checks`
-
-
 Data Copying
 ------------
-The :func:`~ncdata.utils.ncdata_copy` makes structural copies of datasets.
-However, this can be easily be accessed as :meth:`ncdata.NcData.copy`, which is the same
-operation.
+The :func:`~ncdata.utils.ncdata_copy` function makes structural copies of datasets.
+However, this can now be more easily accessed as :meth:`ncdata.NcData.copy`, which is
+the same operation.
 
 See: :ref:`copy_notes`

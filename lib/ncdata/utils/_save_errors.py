@@ -4,6 +4,7 @@ from typing import Dict, List, Union
 
 import netCDF4 as nc
 import numpy as np
+
 from ncdata import NcData, NcVariable
 
 
@@ -180,28 +181,14 @@ def _save_errors_inner(
 
 def save_errors(ncdata: NcData) -> List[str]:
     """
-    Scan a dataset for it's consistency and completeness.
+    Scan a dataset for its consistency and completeness.
 
-    Reports on anything that will make this fail to save.
+    See: :ref:`correctness-checks`
+
+    Describe any aspects of this dataset which would prevent it from saving (cause an
+    error).
     If there are any such problems, then an attempt to save the ncdata to a netcdf file
     will fail.  If there are none, then a save should succeed.
-
-    The checks made are roughly the following
-
-    (1) check names in all components (dimensions, variables, attributes and groups):
-
-    * all names are valid netcdf names
-    * all element names match their key in the component,
-      i.e. "component[key].name == key"
-
-    (2) check that all attribute values have netcdf-compatible dtypes.
-        (E.G. no object or compound (recarray) dtypes).
-
-    (3) check that, for all contained variables :
-
-    * it's dimensions are all present in the enclosing dataset
-    * it has an attached data array, of a netcdf-compatible dtype
-    * the shape of it's data matches the lengths of it's dimensions
 
     Parameters
     ----------
@@ -213,5 +200,25 @@ def save_errors(ncdata: NcData) -> List[str]:
     errors
         A list of strings, error messages describing problems with the dataset.
         If no errors, returns an empty list.
+
+    Notes
+    -----
+    The checks made are roughly the following:
+
+    **(1)** check names in all components (dimensions, variables, attributes and groups):
+
+    * all names are valid netcdf names
+    * all element names match their key in the component,
+      i.e. ``component[key].name == key``
+
+    **(2)** check that all attribute values have netcdf-compatible dtypes.
+
+    * ( E.G. no object or compound (recarray) dtypes )
+
+    **(3)** check that, for all contained variables:
+
+    * its dimensions are all present in the enclosing dataset
+    * it has an attached data array, of a netcdf-compatible dtype
+    * the shape of its data matches the lengths of its dimensions
     """
     return _save_errors_inner(ncdata)

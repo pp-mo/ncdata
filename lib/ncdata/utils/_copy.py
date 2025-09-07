@@ -17,6 +17,8 @@ def ncdata_copy(ncdata: NcData) -> NcData:
     The operation makes fresh copies of all ncdata objects, but does not copy variable
     data arrays.
 
+    See: :ref:`copy_notes`
+
     Parameters
     ----------
     ncdata
@@ -26,6 +28,27 @@ def ncdata_copy(ncdata: NcData) -> NcData:
     -------
     ncdata
         identical but distinct copy of input
+
+    Notes
+    -----
+    This operation is now also available as an object method:
+    :meth:`~ncdata.NcData.copy`.  For example:
+
+    Syntactically, this is generally more convenient, but the operation is identical.
+    For example:
+
+    .. testsetup::
+
+        >>> from ncdata import NcData
+        >>> from ncdata.utils import dataset_differences, ncdata_copy
+        >>> data = NcData()
+
+    .. doctest::
+
+        >>> data1 = ncdata_copy(data)
+        >>> data2 = data.copy()
+        >>> dataset_differences(data1, data2) == []
+        True
 
     """
     return NcData(

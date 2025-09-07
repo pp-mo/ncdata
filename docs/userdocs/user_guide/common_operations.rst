@@ -55,6 +55,8 @@ Example :
 
     >>> dataset.variables["x"].avals["units"] = "m s-1"
 
+.. _operations_rename:
+
 Rename
 ------
 A component can be renamed with the :meth:`~ncdata.NameMap.rename` method.  This changes
