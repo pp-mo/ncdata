@@ -4,6 +4,7 @@ This is the "indirect" approach, with a Slicer object.
 """
 
 import numpy as np
+import pytest
 
 from ncdata.utils import Slicer, dataset_differences
 
@@ -47,3 +48,29 @@ def test_2d_index(xy_slices):  # noqa: F811
     expect_data = make_dims_testdata(expect_x, expect_y)
 
     assert dataset_differences(result, expect_data) == []
+
+
+class TestSlicerDims:
+    @pytest.fixture(autouse=True)
+    def setup(self):
+        self.testdata = make_dims_testdata([1, 2], [3, 4, 5])
+
+    def test_nodims(self):
+        # Check indexing with no names dims.
+        slicer1 = Slicer(self.testdata)
+        assert slicer1.dim_names == ("Z", "Y", "X")
+
+    def test_singledim(self):
+        # Check that a single dim can be passed without wrapping in an iterable.
+        slicer1 = Slicer(self.testdata, "X")
+        slicer2 = Slicer(self.testdata, ["X"])
+        assert slicer1.dim_names == slicer2.dim_names
+
+    def test_toomanydims_fail(self):
+        # Check that too many dims causes an error.
+        msg = (
+            r"Too many index keys \(4\), for the available dimensions: "
+            r"\('Z', 'Y', 'X'\)\."
+        )
+        with pytest.raises(ValueError, match=msg):
+            Slicer(self.testdata)[0, 0, 0, 0]
