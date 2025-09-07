@@ -36,7 +36,7 @@ For a full docs-build:
 
     * the above is just for *local testing*, if required.
     * For PRs (and releases), we also provide *automatic* builds on GitHub,
-      via `ReadTheDocs <https://readthedocs.org/projects/ncdata/>`_
+      via ReadTheDocs_.
 
 
 Release actions
@@ -52,7 +52,7 @@ Release actions
 
 #. Cut a release on GitHub
 
-    * this triggers a new docs version on `ReadTheDocs <https://readthedocs.org/projects/ncdata>`_.
+    * this triggers a new docs version on ReadTheDocs_.
 
 #. Build the distribution
 
@@ -109,3 +109,6 @@ Release actions
 
        * wait a few hours..
        * check that the new version appears in the output of ``$ conda search ncdata``
+
+
+.. _ReadTheDocs: https://readthedocs.org/projects/ncdata
