@@ -103,6 +103,17 @@ class TestRenameDimension:
         with pytest.raises(ValueError, match=msg):
             rename_dimension(ncdata, "x", "z")
 
+    def test_name_ingroup_masked_nofail(self):
+        ncdata = self.ncdata
+        ncdata.groups.add(
+            NcData(
+                name="inner",
+                dimensions=[NcDimension("x", 2), NcDimension("z", 2)],
+            )
+        )
+        # No error in this case, because the "z" is inside a group with its own "x".
+        rename_dimension(ncdata, "x", "z")
+
     @pytest.fixture()
     def group_example(self, setup):
         ncdata = self.ncdata.copy()
