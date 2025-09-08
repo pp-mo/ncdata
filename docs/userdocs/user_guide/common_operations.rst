@@ -55,6 +55,8 @@ Example :
 
     >>> dataset.variables["x"].avals["units"] = "m s-1"
 
+.. _operations_rename:
+
 Rename
 ------
 A component can be renamed with the :meth:`~ncdata.NameMap.rename` method.  This changes
@@ -117,6 +119,7 @@ For real data, this is just ``var.data = var.data.copy()``.
 There is also a utility function :func:`ncdata.utils.ncdata_copy` :  This is
 effectively the same thing as the NcData object :meth:`~ncdata.NcData.copy` method.
 
+.. _equality_checks:
 
 Equality Checking
 -----------------

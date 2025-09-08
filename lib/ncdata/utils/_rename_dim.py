@@ -46,6 +46,8 @@ def rename_dimension(ncdata: NcData, name_from: str, name_to: str) -> None:
     This function calls ``ncdata.dimensions.rename``, but then it *also* renames the
     dimension in all the variables which reference it, including those in sub-groups.
 
+    See: :ref:`operations_rename`
+
     Parameters
     ----------
     ncdata : NcData

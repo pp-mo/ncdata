@@ -37,6 +37,8 @@ def dataset_differences(
     :class:`~ncdata.NcData` objects.
     File paths are opened with the :mod:`netCDF4` module.
 
+    See: :ref:`equality_checks`
+
     Parameters
     ----------
     dataset_or_path_1 : str or Path or netCDF4.Dataset or NcData
@@ -93,6 +95,9 @@ def dataset_differences(
         A list of "error" strings, describing differences between the inputs.
         If empty, no differences were found.
 
+    See Also
+    --------
+    :func:`~ncdata.utils.variable_differences`
     """
     ds1_was_path = not hasattr(dataset_or_path_1, "variables")
     ds2_was_path = not hasattr(dataset_or_path_2, "variables")
@@ -322,6 +327,8 @@ def variable_differences(
     r"""
     Compare variables.
 
+    See: :ref:`equality_checks`
+
     Parameters
     ----------
     v1, v2 : NcVariable
@@ -347,6 +354,9 @@ def variable_differences(
         A list of "error" strings, describing differences between the inputs.
         If empty, no differences were found.
 
+    See Also
+    --------
+    :func:`~ncdata.utils.dataset_differences`
     """
     errs = []
 
