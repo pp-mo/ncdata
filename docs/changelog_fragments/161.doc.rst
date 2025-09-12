@@ -1,0 +1,1 @@
+Added a `userguide page <userdocs/user_guide/utilities.html>`_ summarising all the utility features in :mod:`ncdata.utils`.

@@ -288,7 +288,7 @@ attribute already exists or not.
 .. Note::
 
     Assigning attributes when *creating* a dataset, variable or group is somewhat
-    simpler, discussed :ref:`here <todo>`.
+    simpler, discussed :ref:`here <object_creation>`.
 
 
 .. _howto_create_variable:
@@ -354,6 +354,53 @@ It can be freely overwritten by the user.
 
     The :func:`~ncdata.utils.save_errors` function checks that all variables have
     valid dimensions, and that ``.data`` arrays match the dimensions.
+
+
+.. howto_copy:
+
+Make a copy of data
+-------------------
+Use the :meth:`ncdata.NcData.copy` method to make a copy.
+
+.. testsetup::
+
+    >>> from ncdata.utils import dataset_differences
+
+.. doctest::
+
+    >>> data2 = data.copy()
+    >>> assert dataset_differences(data, data2) == []
+
+Note that this creates all-new independent ncdata objects, but all variable data arrays
+will be linked to the originals (to avoid making copies).
+
+See: :ref:`copy_notes`
+
+.. howto_slice:
+
+Extract a subsection by indexing
+--------------------------------
+The neatest way is usually to use a :class:`~ncdata.utils.Slicer`.
+
+.. testsetup::
+
+    >>> from ncdata import NcData, NcDimension
+    >>> from ncdata.utils import Slicer
+    >>> full_data = NcData(dimensions=[NcDimension("time", 5), NcDimension("level", 6), NcDimension("z", 3)])
+    >>> for nn, dim in full_data.dimensions.items():
+    ...    full_data.variables.add(NcVariable(nn, dimensions=[nn], data=np.arange(dim.size)))
+
+.. doctest::
+
+    >>> slice_TLZ = Slicer(full_data, ["time", "level", "z"])
+    >>> data_region = slice_TLZ[:3, 1::2, 2]
+
+.. doctest::
+
+    >>> print({nn: full_data.variables[nn].data for nn in full_data.dimensions})
+    {'time': array([0, 1, 2, 3, 4]), 'level': array([0, 1, 2, 3, 4, 5]), 'z': array([0, 1, 2])}
+    >>> print({nn: data_region.variables[nn].data for nn in data_region.dimensions})
+    {'time': array([0, 1, 2]), 'level': array([1, 3, 5])}
 
 
 Read data from a NetCDF file

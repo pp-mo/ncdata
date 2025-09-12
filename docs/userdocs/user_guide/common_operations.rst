@@ -73,6 +73,8 @@ Example :
     The utility function :func:`~ncdata.utils.rename_dimension` is provided for this.
     See : :ref:`howto_rename_dimension`.
 
+.. _copy_notes:
+
 Copying
 -------
 All core objects support a ``.copy()`` method.  See for instance
@@ -132,6 +134,7 @@ comprehensive and may be very costly for instance comparing large data arrays, b
 also allow more nuanced and controllable checking, e.g. to skip data array comparisons
 or ignore variable ordering.
 
+.. _object_creation:
 
 Object Creation
 ---------------
