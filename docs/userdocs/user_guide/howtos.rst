@@ -362,14 +362,11 @@ Make a copy of data
 -------------------
 Use the :meth:`ncdata.NcData.copy` method to make a copy.
 
-.. testsetup::
-
-    >>> from ncdata.utils import dataset_differences
-
 .. doctest::
 
     >>> data2 = data.copy()
-    >>> assert dataset_differences(data, data2) == []
+    >>> data == data2
+    True
 
 Note that this creates all-new independent ncdata objects, but all variable data arrays
 will be linked to the originals (to avoid making copies).
@@ -721,8 +718,7 @@ In fact, there should be NO difference between these two.
 
 .. doctest:: python
 
-    >>> from ncdata.utils import dataset_differences
-    >>> print(dataset_differences(data, data2) == [])
+    >>> data == data2
     True
 
 
