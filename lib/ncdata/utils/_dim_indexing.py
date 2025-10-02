@@ -1,26 +1,23 @@
 from numbers import Number
-from typing import Any, Iterable, Mapping
+from typing import Any, Mapping
 
 import dask.array as da
 import numpy as np
+
 from ncdata import NcData
 
 
 def index_by_dimensions(
     ncdata: NcData,
-    *indices: Iterable[Any],
     **dim_index_kwargs: Mapping[str, Any],
 ) -> NcData:
     r"""
-    Index an NcData over dimensions.
+    Index an NcData over named dimensions.
 
     Parameters
     ----------
     ncdata: NcData
         The input data.
-    indices: Iterable[Any]
-        Indices to apply in order to the ``ncdata.dimensions``.
-        E.G. ``index_by_dimensions(data, 4, [2, 3], slice(0, 3))``.
     dim_index_kwargs: Mapping[str, Any]
         Indexing to apply to named dimensions.
         E.G. ``index_by_dimensions(data, x=1)``,
@@ -47,9 +44,6 @@ def index_by_dimensions(
       This mimics how numpy arrays behave, i.e. the difference between a[1] and a[[1]]
       or a[1:2].
 
-    * Where both a positional argument (\*args)  and a keyword argument (\*\*kwargs)
-      apply to the same dimension, the keyword will take precedence.
-
     * Supported types of index key are: a single number; a slice; a list of indices or
       booleans.  A tuple, or one-dimensional array can also be used in place of a list.
 
@@ -64,13 +58,7 @@ def index_by_dimensions(
     """
     # Start by copying the input : then modify that in-place
     ncdata = ncdata.copy()
-    # Convert *args to **kwargs (i.e. apply dim names)
-    kwargs = {
-        dim: index for dim, index in zip(ncdata.dimensions.keys(), indices)
-    }
-    # Combine with **kwargs
-    kwargs.update(dim_index_kwargs)
-    for dim_name, key in kwargs.items():
+    for dim_name, key in dim_index_kwargs.items():
         # Dimension names must occur in the ncdata.
         dimension = ncdata.dimensions.get(dim_name)
         if dimension is None:
@@ -168,9 +156,7 @@ class Slicer:
     :meth:`index_by_dimensions`
     """
 
-    def __init__(
-        self, ncdata: NcData, dimensions: str | list[str] | None = None
-    ):
+    def __init__(self, ncdata: NcData, *dimension_names: tuple[str]):
         """
         Create an indexer for an NcData, applying to specific dimensions.
 
@@ -180,28 +166,16 @@ class Slicer:
         ----------
         ncdata: NcData
             Input data to be sliced.
-        dimensions: str | list[str] | None
-            If not ``None``, specifies one or more dimension names to which successive
-            index keys will be applied.  If ``None``, indexes will be applied in the
-            order of ``ncdata.dimensions``.
-
-        Notes
-        -----
-        All remaining dimensions not mentioned in 'dimensions' are added afterwards.
-        This generalises the behaviour described for ``dimensions=None``.
+        dimension_names: list[str]
+            Dimension names to which successive index keys will be applied.
+            If none are given, defaults to ``ncdata.dimensions``.
         """
         #: data to be indexed.
         self.ncdata = ncdata
-        if dimensions is None:
-            dimensions = []
-        elif isinstance(dimensions, str):
-            dimensions = [dimensions]
-        # Add all dims *not* specifically mentioned afterwards.
-        remaining_dims = [
-            dim for dim in ncdata.dimensions.keys() if dim not in dimensions
-        ]
+        if not dimension_names:
+            dimension_names = ncdata.dimensions  # Default to "all dimensions."
         #: dimensions to index, in order.
-        self.dim_names = tuple(dimensions + remaining_dims)
+        self.dim_names = tuple(dimension_names)
 
     def __getitem__(self, keys) -> NcData:
         """
@@ -218,7 +192,7 @@ class Slicer:
         n_keys = len(keys)
         if len(keys) > len(self.dim_names):
             msg = (
-                f"Too many index keys ({n_keys}), for the available dimensions: "
+                f"Too many index keys ({n_keys}), for the indexing dimensions: "
                 f"{self.dim_names!r}."
             )
             raise ValueError(msg)
