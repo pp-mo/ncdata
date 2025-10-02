@@ -471,6 +471,28 @@ class NcData(_AttributeAccessMixin):
 
         return ncdata_copy(self)
 
+    # Provide a slicing interface, by just linking to ncdata.utils._dim_indexing code.
+    def slicer(self, *dims):
+        """Make a :class:`~ncdata.utils.Slicer` object to index the data."""
+        from ncdata.utils import Slicer
+
+        return Slicer(self, *dims)
+
+    def __getitem__(self, keys):  # noqa: D105
+        return self.slicer()[*keys]
+
+    # Define equality in terms of dataset comparison utility
+    def __eq__(self, other):  # noqa: D105
+        if id(other) == id(self):
+            result = True
+        elif not isinstance(other, NcData):
+            result = False
+        else:
+            from ncdata.utils import dataset_differences
+
+            result = dataset_differences(self, other) == []
+        return result
+
 
 class NcDimension:
     """
@@ -627,6 +649,18 @@ class NcVariable(_AttributeAccessMixin):
             group=self.group,
         )
         return var
+
+    # Define equality in terms of variable comparison utility
+    def __eq__(self, other):  # noqa: D105
+        if id(other) == id(self):
+            result = True
+        elif not isinstance(other, NcVariable):
+            result = False
+        else:
+            from ncdata.utils import variable_differences
+
+            result = variable_differences(self, other) == []
+        return result
 
 
 class NcAttribute:
