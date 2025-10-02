@@ -38,7 +38,7 @@ def dataset_differences(
     :class:`~ncdata.NcData` objects.
     File paths are opened with the :mod:`netCDF4` module.
 
-    See: :ref:`equality_checks`
+    See: :ref:`equality_testing`
 
     Parameters
     ----------
@@ -328,7 +328,7 @@ def variable_differences(
     r"""
     Compare variables.
 
-    See: :ref:`equality_checks`
+    See: :ref:`equality_testing`
 
     Parameters
     ----------

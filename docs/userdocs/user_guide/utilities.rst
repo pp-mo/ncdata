@@ -20,8 +20,6 @@ The functions :func:`~ncdata.utils.dataset_differences` and
 :func:`~ncdata.utils.variable_differences` produce a list of messages detailing all the
 ways in which two datasets are different.
 
-See: :ref:`equality_checks`
-
 For Example:
 ^^^^^^^^^^^^
 .. testsetup::
@@ -58,13 +56,16 @@ For Example:
    :func:`~ncdata.utils.variable_differences` is also provided.
 
 .. note::
-    The ``==`` and ``!-`` operations on  :class:`ncdata.NcData` and
-    :class:`ncdata.NcVariable` are implemented to call these utility functions.
-    However, lacking a keyword interface to enable any tolerance options, the operations
-    compare absolutely everything, and so can be very performance intensive if large data
-    arrays are present.
+    The ``==`` and ``!=`` operations on  :class:`ncdata.NcData` and
+    :class:`ncdata.NcVariable` simply call these utility functions to see if there are
+    any differences.
 
-.. _indexing_overview:
+    .. warning::
+        As they lack a keyword interface, these operations have no tolerance options
+        and check absolutely everything.  This includes full data-array comparisons,
+        which could be very costly in time or space if data arrays are large.
+
+.. _utils_indexing:
 
 Sub-indexing
 ------------

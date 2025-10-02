@@ -125,14 +125,17 @@ Equality Testing
 ----------------
 We implement equality operations ``==`` / ``!=`` for all the core data objects.
 
-However, simple equality testing on :class:`@ncdata.NcData` and :class:`@ncdata.NcVariable`
-objects can be very costly if it requires comparing large data arrays.
+.. warning::
+    The equality testing actually calls the :func:`ncdata.utils.dataset_differences` and
+    :func:`ncdata.utils.variable_differences` utility functions.
 
-If you need to avoid comparing large (and possibly lazy) arrays then you can use the
+    This can be very costly if it needs to compare large data arrays.
+
+If you need to avoid comparing large (and possibly lazy) arrays then you should use the
 :func:`ncdata.utils.dataset_differences` and
-:func:`ncdata.utils.variable_differences` utility functions.
-These functions also provide multiple options to enable more tolerant comparison,
-such as allowing variables to have a different ordering.
+:func:`ncdata.utils.variable_differences` utility functions directly.
+These enable you to use the provided tolerance options, such as ignoring differences in
+data content, or accepting that attributes are present in a different order.
 
 See: :ref:`utils_equality`
 

@@ -32,22 +32,23 @@ def ncdata_copy(ncdata: NcData) -> NcData:
     Notes
     -----
     This operation is now also available as an object method:
-    :meth:`~ncdata.NcData.copy`.  For example:
+    :meth:`~ncdata.NcData.copy`.
 
     Syntactically, this is generally more convenient, but the operation is identical.
+
     For example:
 
     .. testsetup::
 
         >>> from ncdata import NcData
-        >>> from ncdata.utils import dataset_differences, ncdata_copy
+        >>> from ncdata.utils import ncdata_copy
         >>> data = NcData()
 
     .. doctest::
 
         >>> data1 = ncdata_copy(data)
         >>> data2 = data.copy()
-        >>> dataset_differences(data1, data2) == []
+        >>> data1 == data2
         True
 
     """

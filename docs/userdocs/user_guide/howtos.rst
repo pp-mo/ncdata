@@ -413,7 +413,7 @@ You can also slice data directly, which simply acts on the dimensions in order:
     >>> data_region_2 == data_region
     True
 
-See: :ref:`indexing_overview`
+See: :ref:`utils_indexing`
 
 
 Read data from a NetCDF file
