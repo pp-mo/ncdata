@@ -117,6 +117,7 @@ For real data, this is just ``var.data = var.data.copy()``.
 There is also a utility function :func:`ncdata.utils.ncdata_copy` :  This is
 effectively the same thing as the NcData object :meth:`~ncdata.NcData.copy` method.
 
+.. _equality_testing:
 
 Equality Testing
 ----------------
