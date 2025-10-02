@@ -472,11 +472,33 @@ class NcData(_AttributeAccessMixin):
         return ncdata_copy(self)
 
     # Provide a slicing interface, by just linking to ncdata.utils._dim_indexing code.
-    def slicer(self, *dims):
-        """Make a :class:`~ncdata.utils.Slicer` object to index the data."""
+    def slicer(self, *dim_names):
+        """
+        Make a :class:`~ncdata.utils.Slicer` object to index the data.
+
+        This creates a slicer which can then be indexed to sub-index the data.
+        See: :ref:`howto_slice`
+
+        Parameters
+        ----------
+        dim_names: list(str)
+            Names of dimensions to slice.
+
+        Returns
+        -------
+        :class:`~ncdata.utils.Slicer`
+
+        Examples
+        --------
+        .. testsetup::
+            >>> from ncdata._core import NcData, NcDimension
+            >>> ncdata = NcData(dimensions=[NcDimension('x', 4), NcDimension('y', 5)])
+
+        >>> subregion = ncdata.slicer('x', 'y')[3, 2:4]
+        """
         from ncdata.utils import Slicer
 
-        return Slicer(self, *dims)
+        return Slicer(self, *dim_names)
 
     def __getitem__(self, keys):  # noqa: D105
         return self.slicer()[*keys]

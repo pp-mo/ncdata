@@ -49,14 +49,34 @@ For Example:
    To compare isolated variables, a subsidiary routine
    :func:`~ncdata.utils.variable_differences` is also provided.
 
+.. note::
+    The :meth:`ncdata.NcData.__eq__` and :meth:`ncdata.NcVariable.__eq__` comparison
+    methods are based on these utility functions.  This makes the basic ``==`` operation
+    potentially very expensive, if large arrays are involved.
+
+.. _indexing_overview:
+
 Sub-indexing
 ------------
 A new dataset can be derived by indexing over dimensions, analagous to sub-indexing
 an array.  This operation indexes all the variables appropriately, to produce a new
 independent dataset which is complete and self-consistent.
 
+The basic indexing operation is provided in three forms:
+
+#. the :func:`~ncdata.utils.index_by_dimensions` function provides the basic operation
+#. the :class:`~ncdata.utils.Slicer` objects allow indexing with a slicing syntax
+#. the :meth:`ncdata.NcData.slicer` and ``NcData.__getitem__`` methods allow a neater syntax
+   for slicing datasets directly
+
+.. note::
+    The simplest way is usually to use the :class:`~ncdata.NcData` methods.
+    See: :ref:`howto_slice`
+
+Indexing function
+^^^^^^^^^^^^^^^^^
 The function :func:`~ncdata.utils.index_by_dimensions` provides indexing where the
-indices are passed as arguments or keywords for the specific dimensions.
+indices are passed as keywords for each named dimension.
 
 For example:
 
@@ -76,24 +96,47 @@ For example:
 
 .. doctest::
 
-    >>> subdata = index_by_dimensions(data, y=2, x=slice(None, 4))
-    >>> print(subdata)
+    >>> subdata_A = index_by_dimensions(data, x=2)
+    >>> print(subdata_A)
     <NcData: <'no-name'>
         dimensions:
-            x = 4
+            y = 4
     <BLANKLINE>
         variables:
-            <NcVariable(int64): v1(x)>
+            <NcVariable(int64): v1(y)>
     >
-    >>> print(subdata.variables["v1"].data)
-    [20 21 22 23]
+    >>> print(subdata_A.variables["v1"].data)
+    [ 2 12 22 32]
+
+    >>> subdata_B = index_by_dimensions(data, y=slice(0, 2), x=[4, 1, 2])
+    >>> print(subdata_B)
+    <NcData: <'no-name'>
+        dimensions:
+            y = 2
+            x = 3
+    <BLANKLINE>
+        variables:
+            <NcVariable(int64): v1(y, x)>
+    >
+    >>> print(subdata_B.variables["v1"].data)
+    [[ 4  1  2]
+     [14 11 12]]
+
 
 Slicing syntax
 ^^^^^^^^^^^^^^
 The :class:`~ncdata.utils.Slicer` class is provided to enable the same operation to be
 expressed using multi-dimensional slicing syntax.
 
-So for example, the above is more neatly expressed like this ...
+A Slicer is created by specifying an NcData and a list of dimensions, ``Slicer(data, **dim_names)``.
+
+If **no dim-names** are specified, this defaults to all dimensions of the NcData in order,
+i.e. ``Slicer(data, list(data.dimensions))``.
+
+A ``Slicer`` object is re-usable, and supports the numpy-like extended slicing syntax,
+i.e. keys of the form "a:b:c".
+
+So for example, the above examples are more neatly expressed like this ...
 
 .. testsetup::
 
@@ -101,12 +144,47 @@ So for example, the above is more neatly expressed like this ...
 
 .. doctest::
 
-    >>> data_slicer = Slicer(data, ["y", "x"])
-    >>> subdata2 = data_slicer[2, :4]
+    >>> data_slicer = Slicer(data, "x", "y")
+    >>> subdata_A_2 = data_slicer[2]  # equivalent to ibd(data, x=2)
+    >>> subdata_B_2 = data_slicer[[4, 1, 2], :2]  # equivalent to ibd(data, x=[4, 1, 2], y=slice(0, 2))
 
 .. doctest::
 
-    >>> dataset_differences(subdata, subdata2) == []
+    >>> subdata_A == subdata_A_2
+    True
+    >>> subdata_B == subdata_B_2
+    True
+
+
+NcData direct indexing
+^^^^^^^^^^^^^^^^^^^^^^
+The NcData ``NcData.__getitem__``  and :meth:`~ncdata.NcData.slicer` methods
+provide a more concise way of slicing data (which is nevertheless still the same
+operation, functionally).
+
+This is explained by the simple equivalences:
+
+    ``data.slicer(*dims)`` === ``Slicer(data, *dims)``
+
+and
+
+    ``data[*keys]`` === ``data.slicer()[*keys]``
+
+
+So, for example, the above examples can also be written ...
+
+.. doctest::
+
+    >>> subdata_A_3 = data.slicer("x")[2]
+    >>> subdata_A_4 = data[:, 2]
+    >>> subdata_A_3 == subdata_A_4 == subdata_A
+    True
+
+.. doctest::
+
+    >>> subdata_B_3 = data.slicer("x", "y")[[4, 1, 2], :2]
+    >>> subdata_B_4 = data[:2, [4, 1, 2]]
+    >>> subdata_B_3 == subdata_B_4 == subdata_B
     True
 
 

@@ -34,7 +34,7 @@ def index_by_dimensions(
         >>> from ncdata.utils import index_by_dimensions
         >>> data = NcData(dimensions=[NcDimension(nn, 10) for nn in ("time", "levels")])
 
-    >>> data1 = index_by_dimensions(data, slice(0, 10))  # equivalent to [:10]
+    >>> data1 = index_by_dimensions(data, time=slice(0, 10))  # equivalent to [:10]
     >>> data2 = index_by_dimensions(data, levels=[1,2,5])
     >>> data3 = index_by_dimensions(data, time=3, levels=slice(2, 10, 3))
 
@@ -134,13 +134,13 @@ class Slicer:
         >>> from ncdata.utils import index_by_dimensions
         >>> data = NcData(dimensions=[NcDimension(nn, 10) for nn in ("time", "levels", "X")])
 
-    >>> data1 = Slicer(data)[:3, 1:4]
+    >>> subdata = Slicer(data, "time")[:3]
 
-    >>> data2 = Slicer(data, "time")[:3]
+    >>> ds = Slicer(data, 'levels', 'time')
+    >>> subdata_2 = ds[:10, :2]
+    >>> subdata_3 = ds[1, [1,2,4]]
 
-    >>> ds = Slicer(data, ['levels', 'time'])
-    >>> data3 = ds[:10, :2]
-    >>> data4 = ds[1, :, [1,2,4]]
+    >>> subdata_4 = Slicer(data)[:3, 1:4]
 
     Notes
     -----
