@@ -181,7 +181,7 @@ def _save_errors_inner(
 
 def save_errors(ncdata: NcData) -> List[str]:
     """
-    Scan a dataset for its consistency and completeness.
+    Scan a dataset for consistency and completeness.
 
     See: :ref:`correctness-checks`
 

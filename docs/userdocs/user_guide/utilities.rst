@@ -68,9 +68,8 @@ For Example:
 
 Sub-indexing
 ------------
-The :func:`~ncdata.utils.index_by_dimensions` function and the
-:class:`~ncdata.utils.Slicer` class let you extract a subset of a dataset, by indexing
-on the data dimensions.  This is analagous to sub-indexing an array.
+A new dataset can be derived by indexing over dimensions, analagous to sub-indexing
+an array.
 
 This operation indexes all the variables appropriately, to produce a new, independent
 dataset which is complete and self-consistent.
