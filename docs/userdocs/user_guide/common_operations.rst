@@ -118,21 +118,20 @@ There is also a utility function :func:`ncdata.utils.ncdata_copy` :  This is
 effectively the same thing as the NcData object :meth:`~ncdata.NcData.copy` method.
 
 
-Equality Checking
------------------
-We provide a simple, comprehensive  ``==`` check for :mod:`~ncdata.NcDimension` and
-:mod:`~ncdata.NcAttribute` objects, but not at present :mod:`~ncdata.NcVariable` or
-:mod:`~ncdata.NcData`.
+Equality Testing
+----------------
+We implement equality operations ``==`` / ``!=`` for all the core data objects.
 
-So, using ``==`` on :mod:`~ncdata.NcVariable` or :mod:`~ncdata.NcData` objects
-will only do an identity check -- that is, it tests ``id(A) == id(B)``, or ``A is B``.
+However, simple equality testing on :class:`@ncdata.NcData` and :class:`@ncdata.NcVariable`
+objects can be very costly if it requires comparing large data arrays.
 
-However, these objects **can** be properly compared with the dataset comparison
-utilities, :func:`ncdata.utils.dataset_differences` and
-:func:`ncdata.utils.variable_differences`.  By default, these operations are very
-comprehensive and may be very costly for instance comparing large data arrays, but they
-also allow more nuanced and controllable checking, e.g. to skip data array comparisons
-or ignore variable ordering.
+If you need to avoid comparing large (and possibly lazy) arrays then you can use the
+:func:`ncdata.utils.dataset_differences` and
+:func:`ncdata.utils.variable_differences` utility functions.
+These functions also provide multiple options to enable more tolerant comparison,
+such as allowing variables to have a different ordering.
+
+See: :ref:`utils_equality`
 
 .. _object_creation:
 
@@ -187,8 +186,7 @@ The result is the same:
 
 .. doctest:: python
 
-    >>> from ncdata.utils import dataset_differences
-    >>> print(dataset_differences(data1, data2))
-    []
+    >>> data1 == data2
+    True
 
 

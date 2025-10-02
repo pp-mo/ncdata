@@ -9,6 +9,8 @@ Rename Dimensions
 The :func:`~ncdata.utils.rename_dimension` utility does this, in a way which ensures a
 safe and consistent result.
 
+.. _utils_equality:
+
 Dataset Equality Testing
 ------------------------
 The function :func:`~ncdata.utils.dataset_differences` produces a list of messages
@@ -50,9 +52,11 @@ For Example:
    :func:`~ncdata.utils.variable_differences` is also provided.
 
 .. note::
-    The :meth:`ncdata.NcData.__eq__` and :meth:`ncdata.NcVariable.__eq__` comparison
-    methods are based on these utility functions.  This makes the basic ``==`` operation
-    potentially very expensive, if large arrays are involved.
+    The ``==`` and ``!-`` operations on  :class:`ncdata.NcData` and
+    :class:`ncdata.NcVariable` are implemented to call these utility functions.
+    However, lacking a keyword interface to enable any tolerance options, the operations
+    compare absolutely everything, and so can be very performance intensive if large data
+    arrays are present.
 
 .. _indexing_overview:
 
