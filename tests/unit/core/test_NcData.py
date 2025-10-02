@@ -58,5 +58,61 @@ class Test_NcData_copy:
         mocker.patch("ncdata.utils.ncdata_copy", mock_copycall)
         ncdata = NcData()
         result = ncdata.copy()
-        assert mock_copycall.called_once_witk(mocker.call(ncdata))
+        assert mock_copycall.call_args_list == [mocker.call(ncdata)]
         assert result == mock_copied_ncdata
+
+
+class Test_NcData_eq:
+    # check that == calls dataset_differences
+    def test(self, mocker):
+        ncdata1, ncdata2 = [NcData(name) for name in ("data1", "data2")]
+        called = mocker.patch("ncdata.utils.dataset_differences")
+        ncdata1 == ncdata2
+        assert called.call_args_list == [mocker.call(ncdata1, ncdata2)]
+
+    def test_self_equal(self, mocker):
+        ds = NcData()
+        called = mocker.patch("ncdata.utils.dataset_differences")
+        assert ds == ds
+        assert called.call_args_list == []
+
+    def test_badtype_nonequal(self, mocker):
+        ds = NcData()
+        called = mocker.patch("ncdata.utils.dataset_differences")
+        assert ds != 1
+        assert called.call_args_list == []
+
+
+class Test_NcVariable_slicer:
+    # check that .slicer makes a slice.
+    def test(self, mocker):
+        ncdata1 = NcData()
+
+        dim_args = (1, 2, 3)  # N.B. not actually acceptable for a real usage
+        mock_return = mocker.sentinel.retval
+        called = mocker.patch("ncdata.utils.Slicer", return_value=mock_return)
+        result = ncdata1.slicer(*dim_args)
+
+        assert called.call_args_list == [mocker.call(ncdata1, *dim_args)]
+        assert result == mock_return
+
+
+class Test_NcVariable_getitem:
+    # check that data[*keys] calls data.slicer[*keys]
+    def test(self, mocker):
+        from ncdata.utils import Slicer
+
+        ncdata1 = NcData()
+
+        dim_keys = (1, 2, 3)  # N.B. not actually acceptable for a real usage
+        mock_slicer = mocker.MagicMock(spec=Slicer)
+        called = mocker.patch(
+            "ncdata._core.NcData.slicer", return_value=mock_slicer
+        )
+        result = ncdata1[*dim_keys]
+
+        assert called.call_args_list == [mocker.call()]
+        assert mock_slicer.__getitem__.call_args_list == [
+            mocker.call(dim_keys)
+        ]
+        assert result == mock_slicer[dim_keys]
