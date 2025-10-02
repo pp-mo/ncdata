@@ -257,3 +257,24 @@ class Test_NcVariable_copy:
         )
         result = var.copy()
         self.check_var_iscopy(result, var)
+
+
+class Test_NcVariable_eq:
+    def test_equal(self, mocker):
+        # Check that == calls variable_differences
+        var1, var2 = [NcVariable(name=name) for name in ("x", "y")]
+        called = mocker.patch("ncdata.utils.variable_differences")
+        var1 == var2
+        assert called.call_args_list == [mocker.call(var1, var2)]
+
+    def test_self_equal(self, mocker):
+        var = NcVariable(name="x")
+        called = mocker.patch("ncdata.utils.variable_differences")
+        assert var == var
+        assert called.call_args_list == []
+
+    def test_badtype_nonequal(self, mocker):
+        var = NcVariable(name="x")
+        called = mocker.patch("ncdata.utils.variable_differences")
+        assert var != 1
+        assert called.call_args_list == []

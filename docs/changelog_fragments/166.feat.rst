@@ -1,0 +1,3 @@
+Provide exact == and !=  for datasets and variables, by just calling the difference utilities.
+This can be inefficient, but is simple to understand and generally useful.
+See: :ref:`equality_testing`

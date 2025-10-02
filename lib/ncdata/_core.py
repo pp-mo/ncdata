@@ -471,6 +471,50 @@ class NcData(_AttributeAccessMixin):
 
         return ncdata_copy(self)
 
+    # Provide a slicing interface, by just linking to ncdata.utils._dim_indexing code.
+    def slicer(self, *dim_names):
+        """
+        Make a :class:`~ncdata.utils.Slicer` object to index the data.
+
+        This creates a slicer which can then be indexed to sub-index the data.
+        See: :ref:`howto_slice`
+
+        Parameters
+        ----------
+        dim_names: list(str)
+            Names of dimensions to slice.
+
+        Returns
+        -------
+        :class:`~ncdata.utils.Slicer`
+
+        Examples
+        --------
+        .. testsetup::
+            >>> from ncdata._core import NcData, NcDimension
+            >>> ncdata = NcData(dimensions=[NcDimension('x', 4), NcDimension('y', 5)])
+
+        >>> subregion = ncdata.slicer('x', 'y')[3, 2:4]
+        """
+        from ncdata.utils import Slicer
+
+        return Slicer(self, *dim_names)
+
+    def __getitem__(self, keys):  # noqa: D105
+        return self.slicer()[*keys]
+
+    # Define equality in terms of dataset comparison utility
+    def __eq__(self, other):  # noqa: D105
+        if id(other) == id(self):
+            result = True
+        elif not isinstance(other, NcData):
+            result = False
+        else:
+            from ncdata.utils import dataset_differences
+
+            result = dataset_differences(self, other) == []
+        return result
+
 
 class NcDimension:
     """
@@ -627,6 +671,18 @@ class NcVariable(_AttributeAccessMixin):
             group=self.group,
         )
         return var
+
+    # Define equality in terms of variable comparison utility
+    def __eq__(self, other):  # noqa: D105
+        if id(other) == id(self):
+            result = True
+        elif not isinstance(other, NcVariable):
+            result = False
+        else:
+            from ncdata.utils import variable_differences
+
+            result = variable_differences(self, other) == []
+        return result
 
 
 class NcAttribute:

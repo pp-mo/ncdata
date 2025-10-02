@@ -288,7 +288,7 @@ attribute already exists or not.
 .. Note::
 
     Assigning attributes when *creating* a dataset, variable or group is somewhat
-    simpler, discussed :ref:`here <todo>`.
+    simpler, discussed :ref:`here <object_creation>`.
 
 
 .. _howto_create_variable:
@@ -354,6 +354,66 @@ It can be freely overwritten by the user.
 
     The :func:`~ncdata.utils.save_errors` function checks that all variables have
     valid dimensions, and that ``.data`` arrays match the dimensions.
+
+
+.. _howto_copy:
+
+Make a copy of data
+-------------------
+Use the :meth:`ncdata.NcData.copy` method to make a copy.
+
+.. doctest::
+
+    >>> data2 = data.copy()
+    >>> data == data2
+    True
+
+Note that this creates all-new independent ncdata objects, but all variable data arrays
+will be linked to the originals (to avoid making copies).
+
+See: :ref:`copy_notes`
+
+.. _howto_slice:
+
+Extract a subsection by indexing
+--------------------------------
+The nicest way is usually just to use the :meth:`~ncdata.Ncdata.slicer` method to specify
+dimensions to index, and then index the result.
+
+.. testsetup::
+
+    >>> from ncdata import NcData, NcDimension
+    >>> from ncdata.utils import Slicer
+    >>> full_data = NcData(dimensions=[NcDimension("x", 7), NcDimension("y", 6)])
+    >>> for nn, dim in full_data.dimensions.items():
+    ...    full_data.variables.add(NcVariable(nn, dimensions=[nn], data=np.arange(dim.size)))
+
+.. doctest::
+
+    >>> for dimname in full_data.dimensions:
+    ...     print(dimname, ':', full_data.variables[dimname].data)
+    x : [0 1 2 3 4 5 6]
+    y : [0 1 2 3 4 5]
+
+.. doctest::
+
+    >>> data_region = full_data.slicer("y", "x")[3, 1::2]
+
+.. doctest::
+
+    >>> for dimname in data_region.dimensions:
+    ...     print(dimname, ':', data_region.variables[dimname].data)
+    x : [1 3 5]
+
+You can also slice data directly, which simply acts on the dimensions in order:
+
+.. doctest::
+
+    >>> data_region_2 = full_data[1::2, 3]
+    >>> data_region_2 == data_region
+    True
+
+See: :ref:`indexing_overview`
 
 
 Read data from a NetCDF file
@@ -658,8 +718,7 @@ In fact, there should be NO difference between these two.
 
 .. doctest:: python
 
-    >>> from ncdata.utils import dataset_differences
-    >>> print(dataset_differences(data, data2) == [])
+    >>> data == data2
     True
 
 

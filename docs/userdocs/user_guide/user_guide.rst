@@ -9,5 +9,6 @@ Detailed explanations, beyond the basic tutorial-style introductions
     design_principles
     data_objects
     common_operations
+    utilities
     general_topics
     howtos

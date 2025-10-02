@@ -19,7 +19,7 @@ allapi:
 	sphinx-apidoc -Mfe -o ./details/api ../lib/ncdata
 
 towncrier:
-	towncrier build --keep
+	towncrier build --yes
 
 
 # Tweaked "make html", which restores the changelog state after docs build.
