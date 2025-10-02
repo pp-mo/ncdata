@@ -5,6 +5,7 @@ This is the more direct indexer approach.
 
 import numpy as np
 import pytest
+
 from ncdata.utils import dataset_differences, index_by_dimensions
 
 from . import (  # noqa: F401
@@ -41,34 +42,15 @@ def test_2d_index(xy_slices):  # noqa: F811
     assert dataset_differences(result, expect_data) == []
 
 
-class TestArgsKwargs:
+class TestKwargs:
     @pytest.fixture(autouse=True)
     def sample_3d(self):
         self.sample = make_dims_testdata(np.arange(5), np.arange(4))
 
-    def test_all_args(self):
-        """Check that no named dims is same as dims in default order."""
-        res1 = index_by_dimensions(self.sample, 1, slice(0, 2), [1, 0, 3])
-        res2 = index_by_dimensions(
-            self.sample, Z=1, Y=slice(0, 2), X=[1, 0, 3]
-        )
-        assert dataset_differences(res1, res2) == []
-
-    def test_args_kwargs(self):
-        """Check that unnamed dims are overridden by named ones."""
-        res1 = index_by_dimensions(self.sample, 0, 2, Z=1)
-        res2 = index_by_dimensions(self.sample, Z=1, Y=2)
-        assert dataset_differences(res1, res2) == []
-
-    def test_extra_args_ignored(self):
-        res1 = index_by_dimensions(self.sample, 0, 1, 2, 3)
-        res2 = index_by_dimensions(self.sample, 0, 1, 2)
-        assert dataset_differences(res1, res2) == []
-
     def test_bad_dimname_fail(self):
         msg = "Dimension 'Q' is not present in 'ncdata'."
         with pytest.raises(ValueError, match=msg):
-            index_by_dimensions(self.sample, 1, Q=7)
+            index_by_dimensions(self.sample, Q=7)
 
 
 class TestIndexTypes:
@@ -78,7 +60,7 @@ class TestIndexTypes:
 
     def test_slices(self):
         res1 = index_by_dimensions(
-            self.sample, slice(0, 1), slice(None, 2), slice(1, None, 2)
+            self.sample, Z=slice(0, 1), Y=slice(None, 2), X=slice(1, None, 2)
         )
         assert np.array_equal(
             res1.variables["zyx_vals"].data,
@@ -107,7 +89,7 @@ class TestIndexTypes:
     def test_ellipsis_fail(self):
         msg = "Key for dimension 'Z' is Ellipsis.* not supported."
         with pytest.raises(ValueError, match=msg):
-            index_by_dimensions(self.sample, ...)
+            index_by_dimensions(self.sample, Z=...)
 
     @pytest.mark.parametrize(
         "key", [np.newaxis, None], ids=["newaxis", "None"]
@@ -115,4 +97,4 @@ class TestIndexTypes:
     def test_newaxis_fail(self, key):
         msg = "Key for dimension 'Y' is np.newaxis / None.* not supported."
         with pytest.raises(ValueError, match=msg):
-            index_by_dimensions(self.sample, 1, key)
+            index_by_dimensions(self.sample, Y=key)
