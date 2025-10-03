@@ -1,1 +1,0 @@
-Made all docs examples into doctests; add doctest CI action.

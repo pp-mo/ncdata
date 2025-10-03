@@ -1,3 +1,0 @@
-Make :meth:`~ncdata.iris.to_iris` use the full iris load processing,
-instead of :meth:`iris.fileformats.netcdf.loader.load_cubes`.
-This means you can use load controls such as callbacks and constraints.

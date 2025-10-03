@@ -1,3 +1,0 @@
-Added the :func:`~ncdata.utils.rename_dimension` utility.
-This provides a "safe" dimension rename, which also replaces
-the name in all variables which use it.

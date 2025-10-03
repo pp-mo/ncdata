@@ -4,6 +4,10 @@
 
 Generic NetCDF data in Python.
 
+Represents raw netCDF data in Python, with no structural assumptions or interpretations,
+and provides facilities to inspect and manipulate it with complete freedom.
+
+### Also
 Provides fast data exchange between analysis packages, and full control of storage
 formatting.
 
@@ -70,7 +74,7 @@ enable_lockshare(iris=True)
 ncdata = from_nc4(input_path)
 for var in ncdata.variables.values():
     if "coords" in var.attributes:
-      var.attributes.rename("coords", "coordinates")
+        var.attributes.rename("coords", "coordinates")
 cubes = to_iris(ncdata)
 ```
 
@@ -93,20 +97,21 @@ ncdata = from_nc4("file1.nc")
 keys = ["air_", "surface"]
 
 # Explicitly add dimension names, to include all the dimension variables
-keys += + list(ncdata.dimensions)
+keys += list(ncdata.dimensions)
 
 # Identify the wanted variables
 select_vars = [
     var
     for var in ncdata.variables.values()
-    if any(key in var.name for key in keys)
+    if any(var.name.startswith(key) for key in keys)
 ]
 
 # Add any referenced coordinate variables
-for var in list(select_vars):
-    var = ncdata.variables[varname]
-    for coordname in var.attributes.get("coordinates", "").split(" "):
-        select_vars.append(ncdata.variables[coordname])
+for var in select_vars:
+    coordnames = var.avals.get("coordinates")
+    if coordnames:
+        for coordname in coordnames.split(" "):
+            select_vars.append(ncdata.variables[coordname])
 
 # Replace variables with only the wanted ones
 ncdata.variables.clear()
@@ -115,11 +120,3 @@ ncdata.variables.addall(select_vars)
 # Save
 to_nc4(ncdata, "pruned.nc")
 ```
-
-
-# Older References in Iris
-  * Iris issue : https://github.com/SciTools/iris/issues/4994
-  * planning presentation : https://github.com/SciTools/iris/files/10499677/Xarray-Iris.bridge.proposal.--.NcData.pdf
-  * in-Iris code workings : https://github.com/pp-mo/iris/pull/75
-
-
