@@ -96,6 +96,23 @@ def dataset_differences(
         A list of "error" strings, describing differences between the inputs.
         If empty, no differences were found.
 
+    Examples
+    --------
+    .. doctest::
+
+        >>> data = NcData(
+        ...    name="a",
+        ...    variables=[NcVariable("b", data=[1, 2, 3, 4])],
+        ...    attributes={"a1": 4}
+        ... )
+        >>> data2 = data.copy()
+        >>> data2.avals.update({"a1":3, "v":7})
+        >>> data2.variables["b"].data = np.array([1, 7, 3, 99])  # must be an array!
+        >>> print('\n'.join(dataset_differences(data, data2)))
+        Dataset attribute lists do not match: ['a1'] != ['a1', 'v']
+        Dataset "a1" attribute values differ : 4 != 3
+        Dataset variable "b" data contents differ, at 2 points: @INDICES[(1,), (3,)] : LHS=[2, 4], RHS=[7, 99]
+
     See Also
     --------
     :func:`~ncdata.utils.variable_differences`

@@ -377,8 +377,8 @@ See: :ref:`copy_notes`
 
 Extract a subsection by indexing
 --------------------------------
-The nicest way is usually just to use the :meth:`~ncdata.Ncdata.slicer` method to specify
-dimensions to index, and then index the result.
+The nicest way is usually to use the NcData :meth:`~ncdata.Ncdata.slicer` method to
+specify dimensions to index, and then index the result.
 
 .. testsetup::
 
@@ -390,20 +390,20 @@ dimensions to index, and then index the result.
 
 .. doctest::
 
-    >>> for dimname in full_data.dimensions:
-    ...     print(dimname, ':', full_data.variables[dimname].data)
-    x : [0 1 2 3 4 5 6]
-    y : [0 1 2 3 4 5]
-
-.. doctest::
-
     >>> data_region = full_data.slicer("y", "x")[3, 1::2]
 
+effect:
+
 .. doctest::
 
+    >>> for dimname in full_data.dimensions:
+    ...     print("(original)", dimname, ':', full_data.variables[dimname].data)
+    (original) x : [0 1 2 3 4 5 6]
+    (original) y : [0 1 2 3 4 5]
+
     >>> for dimname in data_region.dimensions:
-    ...     print(dimname, ':', data_region.variables[dimname].data)
-    x : [1 3 5]
+    ...     print("(new)", dimname, ':', data_region.variables[dimname].data)
+    (new) x : [1 3 5]
 
 You can also slice data directly, which simply acts on the dimensions in order:
 
@@ -454,8 +454,8 @@ Use the ``dim_chunks`` argument in the :func:`ncdata.netcdf4.from_nc4` function
 
     >>> from ncdata.netcdf4 import from_nc4
     >>> ds = from_nc4(filepath, dim_chunks={"time": 3})
-    >>> print(ds.variables["time"].data.chunksize)
-    (3,)
+    >>> print(ds.variables["time"].data.chunks)
+    ((3, 3, 3, 1),)
 
 
 Save data to a new file
@@ -531,8 +531,28 @@ Use :func:`ncdata.xarray.to_xarray` and :func:`ncdata.xarray.from_xarray`.
     >>> from ncdata.xarray import from_xarray, to_xarray
     >>> dataset = xarray.open_dataset(filepath)
     >>> ncdata = from_xarray(dataset)
-    >>>
+
+    >>> print(ncdata)
+    <NcData: <'no-name'>
+        variables:
+            <NcVariable(float64): vx()
+                vx:units = 'm.s-1'
+                vx:q = 4.2
+                vx:_FillValue = nan
+            >
+    <BLANKLINE>
+        global attributes:
+            :experiment = 'A301.7'
+    >
+
     >>> ds2 = to_xarray(ncdata)
+    >>> print(ds2)
+    <xarray.Dataset> Size: 8B
+    Dimensions:  ()
+    Data variables:
+        vx       float64 8B nan
+    Attributes:
+        experiment:  A301.7
 
 Note that:
 
@@ -573,7 +593,7 @@ passed using specific dictionary keywords, e.g.
     ...   iris_load_kwargs={'constraints': 'air_temperature'},
     ...   xr_save_kwargs={'unlimited_dims': ('time',)},
     ... )
-    ...
+
 
 Combine data from different input files into one output
 -------------------------------------------------------

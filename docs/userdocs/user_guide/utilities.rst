@@ -18,7 +18,7 @@ Dataset Equality Testing
 ------------------------
 The functions :func:`~ncdata.utils.dataset_differences` and
 :func:`~ncdata.utils.variable_differences` produce a list of messages detailing all the
-ways in which two datasets are different.
+ways in which two datasets or variables are different.
 
 For Example:
 ^^^^^^^^^^^^
@@ -51,19 +51,22 @@ For Example:
     Dataset "x" dimension has different "unlimited" status : False != True
     Dataset variable "vx" shapes differ : (5,) != (2,)
 
-.. note::
-   To compare isolated variables, the subsidiary routine
-   :func:`~ncdata.utils.variable_differences` is also provided.
+For a short-form test that two things are the same, you can just check that the
+results ``== []``.
+
+By default, these functions compare **everything** about the two arguments.
+However, they also have multiple keywords which allow certain *types* of differences to
+be ignored, E.G. ``check_dims_order=False``, ``check_var_data=False``.
 
 .. note::
     The ``==`` and ``!=`` operations on  :class:`ncdata.NcData` and
-    :class:`ncdata.NcVariable` simply call these utility functions to see if there are
-    any differences.
+    :class:`ncdata.NcVariable` use these utility functions to check for differences.
 
     .. warning::
-        As they lack a keyword interface, these operations have no tolerance options
-        and check absolutely everything.  This includes full data-array comparisons,
-        which could be very costly in time or space if data arrays are large.
+        As they lack a keyword interface, these operations provide no tolerance options,
+        so they always check absolutely everything.  Especially, they perform **full
+        data-array comparisons**, which can have very high performance costs if data
+        arrays are large.
 
 .. _utils_indexing:
 

@@ -46,7 +46,7 @@ For a full docs-build:
 
 .. note::
 
-    * the above is just for *local testing*, when required.
+    * the above is just for **local testing**, when required.
     * For PRs (and releases), we also provide *automatic* builds on GitHub,
       via ReadTheDocs_.
 
@@ -56,9 +56,9 @@ Release actions
 
 #. Update the :ref:`change-log page <change_log>` in the details section
 
-    #. ensure all major changes + PRs are referenced in the :ref:`change_notes` section.
+    #. start with ``$ towncrier build``
 
-       * The starting point for this is now just : ``$ towncrier build``.
+    #. ensure all major changes + PRs are referenced in the :ref:`change_notes` section.
 
     #. update the "latest version" stated in the :ref:`development_status` section
 
