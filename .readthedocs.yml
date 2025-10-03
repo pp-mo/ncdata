@@ -20,7 +20,7 @@ build:
       - git stash pop
     pre_build:
       - cd docs; make allapi
-      - if [ -e docs/changelog_fragments/*.rst ]; then cd docs; make towncrier; fi
+      - cd docs; make towncrier
 
 conda:
   environment: requirements/readthedocs.yml

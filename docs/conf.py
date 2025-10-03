@@ -27,6 +27,7 @@ version_parts = [str(part) for part in version_tuple]
 release = ".".join(version_parts)
 # A version string omitting extra segments, e.g. "v0.2.0.dev3"
 version = ".".join(version_parts[:4])
+version_minor = ".".join(version_parts[:2])
 
 # -- General configuration ---------------------------------------------------
 
