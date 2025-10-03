@@ -37,6 +37,8 @@ def dataset_differences(
     :class:`~ncdata.NcData` objects.
     File paths are opened with the :mod:`netCDF4` module.
 
+    See: :ref:`equality_testing`
+
     Parameters
     ----------
     dataset_or_path_1 : str or Path or netCDF4.Dataset or NcData
@@ -93,6 +95,26 @@ def dataset_differences(
         A list of "error" strings, describing differences between the inputs.
         If empty, no differences were found.
 
+    Examples
+    --------
+    .. doctest::
+
+        >>> data = NcData(
+        ...    name="a",
+        ...    variables=[NcVariable("b", data=[1, 2, 3, 4])],
+        ...    attributes={"a1": 4}
+        ... )
+        >>> data2 = data.copy()
+        >>> data2.avals.update({"a1":3, "v":7})
+        >>> data2.variables["b"].data = np.array([1, 7, 3, 99])  # must be an array!
+        >>> print('\n'.join(dataset_differences(data, data2)))
+        Dataset attribute lists do not match: ['a1'] != ['a1', 'v']
+        Dataset "a1" attribute values differ : 4 != 3
+        Dataset variable "b" data contents differ, at 2 points: @INDICES[(1,), (3,)] : LHS=[2, 4], RHS=[7, 99]
+
+    See Also
+    --------
+    :func:`~ncdata.utils.variable_differences`
     """
     ds1_was_path = not hasattr(dataset_or_path_1, "variables")
     ds2_was_path = not hasattr(dataset_or_path_2, "variables")
@@ -322,6 +344,8 @@ def variable_differences(
     r"""
     Compare variables.
 
+    See: :ref:`equality_testing`
+
     Parameters
     ----------
     v1, v2 : NcVariable
@@ -347,6 +371,9 @@ def variable_differences(
         A list of "error" strings, describing differences between the inputs.
         If empty, no differences were found.
 
+    See Also
+    --------
+    :func:`~ncdata.utils.dataset_differences`
     """
     errs = []
 

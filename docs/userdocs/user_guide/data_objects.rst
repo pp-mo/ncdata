@@ -186,7 +186,9 @@ However, for most operations on attributes, it is much easier to use the ``.aval
 property instead.  This accesses *the same attributes*, but in the form of a simple
 "name: value" dictionary.
 
-Thus for example, to fetch an attribute you would usually write just :
+Get attribute value
+^^^^^^^^^^^^^^^^^^^
+For example, to fetch an attribute you would usually write just :
 
 .. testsetup::
 
@@ -205,23 +207,15 @@ and **not** :
 
 .. doctest:: python
 
-    >>> # WRONG: this reads an NcAttribute, not its value
+    >>> # WRONG: this get the NcAttribute object, not its value
     >>> unit = dataset.variables["x"].attributes["units"]
 
-or:
-
-.. doctest:: python
-
-    >>> # WRONG: this gets NcAttribute.value as a character array, not a string
+    >>> # WRONG: this returns a character array, not a string
     >>> unit = dataset.variables["x"].attributes["units"].value
 
-or even (which is at least correct):
 
-.. doctest:: python
-
-    >>> unit = dataset.variables["x"].attributes["units"].as_python_value()
-
-
+Set attribute value
+^^^^^^^^^^^^^^^^^^^
 Likewise, to **set** a value, you would normally just
 
 .. doctest:: python
@@ -236,9 +230,11 @@ and **not**
     >>> dataset.variables["x"].attributes["units"].value = "K"
 
 
-Note also, that as the ``.avals`` is a dictionary, you can use standard dictionary
-methods such as ``update`` and ``get`` to perform other operations in a relatively
-natural, Pythonic way.
+``.avals`` as a dictionary
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+Note also, that as ``.avals`` is a dictionary, you can use standard dictionary
+methods such as ``pop``, ``update`` and ``get`` to perform other operations in a
+relatively natural, Pythonic way.
 
 .. doctest:: python
 
@@ -246,6 +242,12 @@ natural, Pythonic way.
     ...     dataset.avals["qq"] += " and that"
 
     >>> dataset.attributes.update({"experiment": "A407", "expt_run": 704})
+
+.. note::
+    The new ``.avals`` property effectively replaces the old
+    :meth:`~ncdata.NcData.get_attrval` and :meth:`~ncdata.NcData.set_attrval` methods,
+    which are now deprecated and will eventually be removed.
+
 
 .. _data-constructors:
 

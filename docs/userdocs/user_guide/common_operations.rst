@@ -55,6 +55,19 @@ Example :
 
     >>> dataset.variables["x"].avals["units"] = "m s-1"
 
+
+There is also an :meth:`~ncdata.NameMap.addall` method, which adds multiple content
+objects in one operation.
+
+.. doctest:: python
+
+    >>> vars = [NcVariable(name) for name in ("a", "b", "c")]
+    >>> dataset.variables.addall(vars)
+    >>> list(dataset.variables)
+    ['x', 'a', 'b', 'c']
+
+.. _operations_rename:
+
 Rename
 ------
 A component can be renamed with the :meth:`~ncdata.NameMap.rename` method.  This changes
@@ -66,6 +79,18 @@ Example :
 .. doctest:: python
 
     >>> dataset.variables.rename("x", "y")
+
+result:
+
+.. doctest:: python
+
+    >>> print(dataset.variables.get("x"))
+    None
+    >>> print(dataset.variables.get("y"))
+    <NcVariable(<no-dtype>): y()
+        y:units = 'm s-1'
+    >
+
 
 .. warning::
     Renaming a dimension will not rename references to it (i.e. in variables), which
@@ -123,14 +148,29 @@ Equality Testing
 ----------------
 We implement equality operations ``==`` / ``!=`` for all the core data objects.
 
-However, simple equality testing on :class:`@ncdata.NcData` and :class:`@ncdata.NcVariable`
-objects can be very costly if it requires comparing large data arrays.
+.. doctest::
+
+    >>> vA = dataset.variables["a"]
+    >>> vB = dataset.variables["b"]
+    >>> vA == vB
+    False
+
+.. doctest::
+
+    >>> dataset == dataset.copy()
+    True
+
+.. warning::
+    Equality testing for :class:`~ncdata.NcData` and :class:`~ncdata.NcVariable` actually
+    calls the :func:`ncdata.utils.dataset_differences` and
+    :func:`ncdata.utils.variable_differences` utilities.
+
+    This can be very costly if it needs to compare large data arrays.
 
 If you need to avoid comparing large (and possibly lazy) arrays then you can use the
 :func:`ncdata.utils.dataset_differences` and
-:func:`ncdata.utils.variable_differences` utility functions.
-These functions also provide multiple options to enable more tolerant comparison,
-such as allowing variables to have a different ordering.
+:func:`ncdata.utils.variable_differences` utility functions directly instead.
+These provide a ``check_var_data=False`` option, to ignore differences in data content.
 
 See: :ref:`utils_equality`
 

@@ -9,12 +9,16 @@ Rename Dimensions
 The :func:`~ncdata.utils.rename_dimension` utility does this, in a way which ensures a
 safe and consistent result.
 
+See: :ref:`operations_rename`
+
+
 .. _utils_equality:
 
 Dataset Equality Testing
 ------------------------
-The function :func:`~ncdata.utils.dataset_differences` produces a list of messages
-detailing all the ways in which two datasets are different.
+The functions :func:`~ncdata.utils.dataset_differences` and
+:func:`~ncdata.utils.variable_differences` produce a list of messages detailing all the
+ways in which two datasets or variables are different.
 
 For Example:
 ^^^^^^^^^^^^
@@ -47,24 +51,32 @@ For Example:
     Dataset "x" dimension has different "unlimited" status : False != True
     Dataset variable "vx" shapes differ : (5,) != (2,)
 
-.. note::
-   To compare isolated variables, a subsidiary routine
-   :func:`~ncdata.utils.variable_differences` is also provided.
+For a short-form test that two things are the same, you can just check that the
+results ``== []``.
+
+By default, these functions compare **everything** about the two arguments.
+However, they also have multiple keywords which allow certain *types* of differences to
+be ignored, E.G. ``check_dims_order=False``, ``check_var_data=False``.
 
 .. note::
-    The ``==`` and ``!-`` operations on  :class:`ncdata.NcData` and
-    :class:`ncdata.NcVariable` are implemented to call these utility functions.
-    However, lacking a keyword interface to enable any tolerance options, the operations
-    compare absolutely everything, and so can be very performance intensive if large data
-    arrays are present.
+    The ``==`` and ``!=`` operations on  :class:`ncdata.NcData` and
+    :class:`ncdata.NcVariable` use these utility functions to check for differences.
 
-.. _indexing_overview:
+    .. warning::
+        As they lack a keyword interface, these operations provide no tolerance options,
+        so they always check absolutely everything.  Especially, they perform **full
+        data-array comparisons**, which can have very high performance costs if data
+        arrays are large.
+
+.. _utils_indexing:
 
 Sub-indexing
 ------------
 A new dataset can be derived by indexing over dimensions, analagous to sub-indexing
-an array.  This operation indexes all the variables appropriately, to produce a new
-independent dataset which is complete and self-consistent.
+an array.
+
+This operation indexes all the variables appropriately, to produce a new, independent
+dataset which is complete and self-consistent.
 
 The basic indexing operation is provided in three forms:
 
@@ -197,6 +209,8 @@ Consistency Checking
 The :func:`~ncdata.utils.save_errors` function provides a general
 correctness-and-consistency check.
 
+See: :ref:`correctness-checks`
+
 For example:
 
 .. testsetup::
@@ -218,13 +232,10 @@ For example:
     Variable 'q' has a dtype which cannot be saved to netcdf : dtype('O').
 
 
-See : :ref:`correctness-checks`
-
-
 Data Copying
 ------------
-The :func:`~ncdata.utils.ncdata_copy` makes structural copies of datasets.
-However, this can be easily be accessed as :meth:`ncdata.NcData.copy`, which is the same
-operation.
+The :func:`~ncdata.utils.ncdata_copy` function makes structural copies of datasets.
+However, this can now be more easily accessed as :meth:`ncdata.NcData.copy`, which is
+the same operation.
 
 See: :ref:`copy_notes`
