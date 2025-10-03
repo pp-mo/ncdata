@@ -8,8 +8,7 @@ build:
     # Content here largely copied from Iris
     #  see : https://github.com/SciTools/iris/pull/4855
     post_checkout:
-      # The SciTools/iris repository is shallow i.e., has a .git/shallow,
-      # therefore complete the repository with a full history in order
+      # In case the repository is shallow, complete with a full history in order
       # to allow setuptools-scm to correctly auto-discover the version.
       - git fetch --unshallow
       - git fetch --all

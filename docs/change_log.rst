@@ -11,7 +11,7 @@ We intend to follow `PEP 440 <https://peps.python.org/pep-0440/>`_,
 or (older) `SemVer <https://semver.org/>`_ versioning principles.
 This means the version string has the basic form **"major.minor.bugfix[special-types]"**.
 
-Current release version is at **"v0.2"**.
+Current release version is at : |version|
 
 This is a complete implementation, with functional operational of all public APIs.
 The code is however still experimental, and APIs are not stable
@@ -24,6 +24,55 @@ Change Notes
 Summary of key features by release number.
 
 .. towncrier release notes start
+
+v0.3.0
+~~~~~~
+Added handy utilities; made attribute access easier; reworked documentation.
+
+Features
+^^^^^^^^
+
+- Added the ability to extract a sub-region by indexing/slicing over dimensions.
+  The :class:`ncdata.NcData` objects can be indexed with the ``[]`` operation, or over
+  specifed dimensions with the :meth:`~ncdata.NcData.slicer` method.
+  This is based on the new :meth:`~ncdata.utils.index_by_dimensions()` utility method
+  and :class:`~ncdata.utils.Slicer` class.
+  See: :ref:`utils_indexing` (`ISSUE#68 <https://github.com/pp-mo/ncdata/pull/68>`_)
+- Added the :func:`~ncdata.utils.rename_dimension` utility.
+  This provides a "safe" dimension rename, which also replaces
+  the name in all variables which use it. (`ISSUE#87 <https://github.com/pp-mo/ncdata/pull/87>`_)
+- Added the ".avals" property as an easier way of managing attributes:
+  This provides a simple "name: value" map, bypassing the NcAttribute objects and converting values to and from simple Python equivalents.
+  This effectively replaces the older 'set_attrval' and 'get_attrval', which will eventually be removed.
+  See: :ref:`attributes_and_avals` (`ISSUE#117 <https://github.com/pp-mo/ncdata/pull/117>`_)
+- Make :meth:`~ncdata.iris.to_iris` use the full iris load processing,
+  instead of :meth:`iris.fileformats.netcdf.loader.load_cubes`.
+  This means you can use load controls such as callbacks and constraints. (`ISSUE#131 <https://github.com/pp-mo/ncdata/pull/131>`_)
+- Provide exact == and !=  for datasets and variables, by just calling the difference utilities.
+  This can be inefficient, but is simple to understand and generally useful.
+  See: :ref:`equality_testing` (`ISSUE#166 <https://github.com/pp-mo/ncdata/pull/166>`_)
+
+
+Documentation changes
+^^^^^^^^^^^^^^^^^^^^^
+
+- Added a `userguide page <userdocs/user_guide/utilities.html>`_ summarising all the utility features in :mod:`ncdata.utils`. (`ISSUE#161 <https://github.com/pp-mo/ncdata/pull/161>`_)
+- Made all docs examples into doctests; add doctest CI action. (`ISSUE#136 <https://github.com/pp-mo/ncdata/pull/136>`_)
+
+
+Bug Fixes
+^^^^^^^^^
+
+- Fixed a bug in dataset comparison, where variables with missing or unbroadcastable data arrays could cause errors rather than generating difference messages. (`ISSUE#153 <https://github.com/pp-mo/ncdata/pull/153>`_)
+
+
+Developer and Internal changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Switch to towncrier for whats-new management. (`ISSUE#116 <https://github.com/pp-mo/ncdata/pull/116>`_)
+- Added regular linkcheck gha. (`ISSUE#123 <https://github.com/pp-mo/ncdata/pull/123>`_)
+- @valeriupredoi added test for Zarr conversion to Iris cubes. (`ISSUE#145 <https://github.com/pp-mo/ncdata/pull/145>`_)
+
 
 v0.2.0
 ~~~~~~

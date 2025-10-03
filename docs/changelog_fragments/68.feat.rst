@@ -1,6 +1,0 @@
-Added the ability to extract a sub-region by indexing/slicing over dimensions.
-The :class:`ncdata.NcData` objects can be indexed with the ``[]`` operation, or over
-specifed dimensions with the :meth:`~ncdata.NcData.slicer` method.
-This is based on the new :meth:`~ncdata.utils.index_by_dimensions()` utility method
-and :class:`~ncdata.utils.Slicer` class.
-See: :ref:`utils_indexing`
