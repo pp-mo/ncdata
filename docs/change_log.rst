@@ -11,7 +11,7 @@ We intend to follow `PEP 440 <https://peps.python.org/pep-0440/>`_,
 or (older) `SemVer <https://semver.org/>`_ versioning principles.
 This means the version string has the basic form **"major.minor.bugfix[special-types]"**.
 
-Current release version is at **"v0.2"**.
+Current release version is at **v0.3.0**.
 
 This is a complete implementation, with functional operational of all public APIs.
 The code is however still experimental, and APIs are not stable
