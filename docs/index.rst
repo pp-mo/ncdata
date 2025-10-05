@@ -12,6 +12,7 @@ ncdata
    :alt: ncdata logo
 
 NetCDF data interoperability.
+TEST VERSION
 
 Represents generic netcdf data as Python objects, equivalent to actual data
 files, but independent and freely modifiable.
