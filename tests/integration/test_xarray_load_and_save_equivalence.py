@@ -8,11 +8,11 @@ Testcases start as netcdf files.
 
 import pytest
 import xarray
+
 from ncdata.netcdf4 import from_nc4, to_nc4
 from ncdata.threadlock_sharing import lockshare_context
 from ncdata.utils import dataset_differences
 from ncdata.xarray import from_xarray, to_xarray
-
 from tests.data_testcase_schemas import (
     BAD_LOADSAVE_TESTCASES,
     session_testdir,
@@ -68,7 +68,7 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
 
     # Re-save from Xarray
     temp_direct_savepath = tmp_path / "temp_save_xarray.nc"
-    xrds.to_netcdf(temp_direct_savepath)
+    xrds.to_netcdf(temp_direct_savepath, engine="netcdf4")
     # Save same, via ncdata
     temp_ncdata_savepath = tmp_path / "temp_save_xarray_via_ncdata.nc"
     ncds_fromxr = from_xarray(xrds)
