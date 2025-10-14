@@ -12,7 +12,7 @@ dependencies:
   - pip
   - pydata-sphinx-theme
   - pytest
-  - python<3.13
+  - python<3.14
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx-copybutton
