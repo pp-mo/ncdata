@@ -29,3 +29,8 @@ Check install
     <NcData: <'no-name'>
     >
 
+
+Developer Installation
+----------------------
+To work on changes to the ncdata code, you will need an "editable installation".
+See : :ref:`developer_install`.
