@@ -68,7 +68,7 @@ def test_save_direct_vs_viancdata(standard_testcase, tmp_path):
 
     # Re-save from Xarray
     temp_direct_savepath = tmp_path / "temp_save_xarray.nc"
-    xrds.to_netcdf(temp_direct_savepath)
+    xrds.to_netcdf(temp_direct_savepath, engine="netcdf4")
     # Save same, via ncdata
     temp_ncdata_savepath = tmp_path / "temp_save_xarray_via_ncdata.nc"
     ncds_fromxr = from_xarray(xrds)

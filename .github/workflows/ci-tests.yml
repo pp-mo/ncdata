@@ -20,12 +20,13 @@ on:
 
 jobs:
   tests:
-    name: "Test Python ${{ matrix.version }} session= ${{ matrix.session }}"
+    name: "Test session=${{ matrix.session }}  Python=${{ matrix.python-version }}"
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         session: ["tests", "doctests-docs", "doctests-api"]
+        python-version: ["3.12", "3.13"]
     defaults:
       run:
         shell: bash -l {0}
@@ -42,7 +43,7 @@ jobs:
         with:
           miniforge-version: latest
           activate-environment: testenv
-          python-version: ${{ matrix.version }}
+          python-version: ${{ matrix.python-version }}
           channels: conda-forge
           show-channel-urls: true
 
