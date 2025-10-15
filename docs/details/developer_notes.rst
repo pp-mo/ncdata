@@ -19,7 +19,7 @@ with a ``towncrier`` command-line command:
     * "feat": user features
     * "doc": documentation changes
     * "bug": bug fixes
-    * "def": general developer-relevant changes
+    * "dev": general developer-relevant changes
     * "misc": miscellaneous
 
   (For reference, these categories are configured in ``pyproject.toml``).
