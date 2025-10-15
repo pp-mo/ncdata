@@ -19,8 +19,7 @@ allapi:
 	sphinx-apidoc -Mfe -o ./details/api ../lib/ncdata
 
 towncrier:
-	if [ -e changelog_fragments/*.rst ]; then towncrier build --yes; fi
-
+	if [[ "$$(ls changelog_fragments)" != "" ]]; then towncrier build --yes; fi
 
 # Tweaked "make html", which restores the changelog state after docs build.
 html-keeplog: html
