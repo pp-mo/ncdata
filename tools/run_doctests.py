@@ -11,8 +11,9 @@ import warnings
 
 
 def list_modules_recursive(
-    module_importname: str, include_private: bool = True,
-    exclude_matches: list[str] = []
+    module_importname: str,
+    include_private: bool = True,
+    exclude_matches: list[str] = [],
 ):
     """Find all the submodules of a given module.
 
@@ -45,7 +46,8 @@ def list_modules_recursive(
                 if ispkg:
                     module_names.extend(
                         list_modules_recursive(
-                            submodule_name, include_private=include_private,
+                            submodule_name,
+                            include_private=include_private,
                             exclude_matches=exclude_matches,
                         )
                     )
@@ -61,8 +63,7 @@ def list_modules_recursive(
 
 
 def list_filepaths_recursive(
-    file_path: str,
-    exclude_matches: list[str] = []
+    file_path: str, exclude_matches: list[str] = []
 ) -> list[Path]:
     """Expand globs to a list of filepaths.
 
@@ -71,7 +72,8 @@ def list_filepaths_recursive(
     actual_paths: list[Path] = []
     segments = file_path.split("/")
     i_wilds = [
-        index for index, segment in enumerate(segments)
+        index
+        for index, segment in enumerate(segments)
         if any(char in segment for char in "*?[")
     ]
     if len(i_wilds) == 0:
@@ -85,14 +87,17 @@ def list_filepaths_recursive(
 
     # Also apply exclude and private filters to results
     result = [
-        path for path in actual_paths
+        path
+        for path in actual_paths
         if not any(match in str(path) for match in exclude_matches)
         and not path.name.startswith("_")
     ]
     return result
 
 
-def process_options(opt_str: str, paths_are_modules: bool = True) -> dict[str, str]:
+def process_options(
+    opt_str: str, paths_are_modules: bool = True
+) -> dict[str, str]:
     """Convert the "-o/--options" arg into a **kwargs for the doctest function call."""
     # Remove all spaces (think they are never needed).
     opt_str = opt_str.replace(" ", "")
@@ -132,7 +137,7 @@ def process_options(opt_str: str, paths_are_modules: bool = True) -> dict[str, s
 
 def run_doctest_paths(
     paths: list[str],
-    paths_are_modules:bool = False,
+    paths_are_modules: bool = False,
     recurse_modules: bool = False,
     include_private_modules: bool = False,
     exclude_matches: list[str] = [],
@@ -170,8 +175,9 @@ def run_doctest_paths(
             module_paths = []
             for path in paths:
                 module_paths += list_modules_recursive(
-                    path, include_private=include_private_modules,
-                    exclude_matches=exclude_matches
+                    path,
+                    include_private=include_private_modules,
+                    exclude_matches=exclude_matches,
                 )
             paths = module_paths
     else:
@@ -180,8 +186,7 @@ def run_doctest_paths(
         filepaths = []
         for path in paths:
             filepaths += list_filepaths_recursive(
-                path,
-                exclude_matches=exclude_matches
+                path, exclude_matches=exclude_matches
             )
         paths = filepaths
 
@@ -235,14 +240,14 @@ def run_doctest_paths(
             f"    paths tested    = {n_paths_tested}",
             f"    tests completed = {n_total_tests}",
             f"    errors          = {n_total_fails}",
-            ""
+            "",
         ]
         if n_total_fails > 0:
             msgs += ["FAILED."]
         else:
             msgs += ["OK."]
 
-        print('\n'.join(msgs))
+        print("\n".join(msgs))
 
     return n_total_fails
 
@@ -272,8 +277,10 @@ _parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 _parser.add_argument(
-    "-m", "--module", action="store_true",
-    help="paths are module paths (xx.yy.zz), instead of filepaths."
+    "-m",
+    "--module",
+    action="store_true",
+    help="paths are module paths (xx.yy.zz), instead of filepaths.",
 )
 _parser.add_argument(
     "-r",
@@ -299,13 +306,16 @@ _parser.add_argument(
     nargs="?",
     help=(
         "kwargs (Python) for doctest call"
-        ", e.g. \"raise_on_error=True,optionflags=8\"."
+        ', e.g. "raise_on_error=True,optionflags=8".'
     ),
     type=str,
     default="",
 )
 _parser.add_argument(
-    "-v", "--verbose", action="store_true", help="show details of each operation."
+    "-v",
+    "--verbose",
+    action="store_true",
+    help="show details of each operation.",
 )
 _parser.add_argument(
     "-d",
