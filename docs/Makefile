@@ -18,8 +18,10 @@ allapi:
 	rm -rf ./details/api
 	sphinx-apidoc -Mfe -o ./details/api ../lib/ncdata
 
+# N.B. when no changelog entries pending, *don't* add a release section.
+#  - this gives a "clean" changelog when building a release version.
 towncrier:
-	if [[ "$$(ls changelog_fragments)" != "" ]]; then towncrier build --yes; fi
+	if [ "$$(ls changelog_fragments | grep "\.rst")" != "" ]; then towncrier build --yes; fi
 
 # Tweaked "make html", which restores the changelog state after docs build.
 html-keeplog: html
