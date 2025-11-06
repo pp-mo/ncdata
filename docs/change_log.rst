@@ -25,6 +25,37 @@ Summary of key features by release number.
 
 .. towncrier release notes start
 
+v0.3.1 (2025-11-06)
+~~~~~~~~~~~~~~~~~~~~~~~~~
+A minor release to replace v0.3.0, fixing some test errors introduced by the latest
+xarray (`2025.10.1 <https://github.com/pydata/xarray/releases/tag/v2025.10.1>`_).
+
+.. note::
+    **Note on Python v3.14**
+
+    At present (Nov 2025), a number of dependencies do not work
+    with Python 3.14 -- notably Iris.
+
+    These will probably be fixed soon, but for now we aren't testing ncdata with Python 3.14.
+
+    Core operations do *appear* to function with Python 3.14, but correct operation can't be
+    guaranteed until we specifically adopt it.
+
+
+Documentation changes
+^^^^^^^^^^^^^^^^^^^^^
+
+- Document how to create a developer installation. (`ISSUE#174 <https://github.com/pp-mo/ncdata/pull/174>`_)
+
+
+Developer and Internal changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Fix xarray 2025.09.1 problem. (`ISSUE#173 <https://github.com/pp-mo/ncdata/pull/173>`_)
+- Test against given Python versions : currently 3.12 and 3.13.
+  **Not** python 3.14, for now, due to emerging problems with dependencies (notably Iris). (`ISSUE#175 <https://github.com/pp-mo/ncdata/pull/175>`_)
+
+
 v0.3.0
 ~~~~~~
 Added handy utilities; made attribute access easier; reworked documentation.

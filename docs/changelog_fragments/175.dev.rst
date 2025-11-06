@@ -1,2 +1,0 @@
-Test against given Python versions : currently 3.12 and 3.13.
-**Not** python 3.14, for now, due to emerging problems with dependencies (notably Iris).
