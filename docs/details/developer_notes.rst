@@ -19,7 +19,7 @@ with a ``towncrier`` command-line command:
     * "feat": user features
     * "doc": documentation changes
     * "bug": bug fixes
-    * "def": general developer-relevant changes
+    * "dev": general developer-relevant changes
     * "misc": miscellaneous
 
   (For reference, these categories are configured in ``pyproject.toml``).
@@ -28,6 +28,19 @@ with a ``towncrier`` command-line command:
 
 * N.B. for this to work well, every change should be identified with a matching github issue.
   If there are multiple associated PRs, they should all be linked to the issue.
+
+.. _developer_install:
+
+Developer Installation
+----------------------
+For an editable installation, make a Python environment containing at least **numpy,
+netCDF4, dask and pip**.  It is also highly recommended to get
+`towncrier <https://github.com/twisted/towncrier>`_ and
+`pre-commit <https://github.com/pre-commit/pre-commit>`_.
+(and enable pre-commit with ``$ pre-commit install``).
+
+Then, cd to your checkout, and ``$ pip install -e .``.
+This should result in an editable development installation.
 
 
 Documentation build
@@ -83,7 +96,7 @@ Release actions
 
     #. create a new env with test dependencies
 
-       * ``$ conda create -n ncdtmp python=3.11 iris xarray filelock requests pytest pip``
+       * ``$ conda create -n ncdtmp python=3.13 iris xarray filelock requests pytest pip``
        * ( N.B. 'filelock' and 'requests' are *test dependencies* of iris )
 
     #. install the new package with
