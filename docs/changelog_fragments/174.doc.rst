@@ -1,1 +1,0 @@
-Document how to create a developer installation.
