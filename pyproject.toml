@@ -14,7 +14,7 @@ authors = [
     {name = "Patrick Peglar", email = "patrick.peglar@metoffice.gov.uk"},
 ]
 description = "Abstract NetCDF data objects, providing fast data transfer between analysis packages."
-requires-python = ">=3.7, <3.14"
+requires-python = ">=3.10"
 keywords = [
     "cf-metadata",
     "data-analysis",
@@ -33,9 +33,6 @@ classifiers = [
     "Operating System :: Unix",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
