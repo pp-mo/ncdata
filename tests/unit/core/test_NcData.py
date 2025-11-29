@@ -3,6 +3,7 @@
 There is almost no behaviour, but we can test some constructor usages.
 """
 
+import pytest
 from ncdata import NcData, NcDimension, NcVariable
 
 
@@ -99,17 +100,28 @@ class Test_NcVariable_slicer:
 
 class Test_NcVariable_getitem:
     # check that data[*keys] calls data.slicer[*keys]
-    def test(self, mocker):
+    @pytest.mark.parametrize(
+        "multiple_indices", [False, True], ids=["oneIndex", "multiIndex"]
+    )
+    def test(self, mocker, multiple_indices):
         from ncdata.utils import Slicer
 
         ncdata1 = NcData()
 
-        dim_keys = (1, 2, 3)  # N.B. not actually acceptable for a real usage
         mock_slicer = mocker.MagicMock(spec=Slicer)
         called = mocker.patch(
             "ncdata._core.NcData.slicer", return_value=mock_slicer
         )
-        result = ncdata1[*dim_keys]
+        if multiple_indices:
+            # Index with multiple keys, which should be passed as a tuple
+            # Slightly awkward code, because the "[*keys]" syntax is only valid from
+            #  Python >=3.11
+            result = ncdata1[1, 2, 3]
+            dim_keys = (1, 2, 3)
+        else:
+            # Index with a single key: should be passed as-is
+            dim_keys = slice(0, 3)
+            result = ncdata1[dim_keys]
 
         assert called.call_args_list == [mocker.call()]
         assert mock_slicer.__getitem__.call_args_list == [
