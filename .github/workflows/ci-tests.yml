@@ -27,6 +27,20 @@ jobs:
       matrix:
         session: ["tests", "doctests-docs", "doctests-api"]
         python-version: ["3.10", "3.11", "3.12", "3.13"]
+        exclude:
+          - session: "doctests-docs"
+            python-version: "3.10"
+          - session: "doctests-docs"
+            python-version: "3.11"
+          - session: "doctests-docs"
+            python-version: "3.12"
+          - session: "doctests-api"
+            python-version: "3.10"
+          - session: "doctests-api"
+            python-version: "3.11"
+          - session: "doctests-api"
+            python-version: "3.12"
+
     defaults:
       run:
         shell: bash -l {0}
