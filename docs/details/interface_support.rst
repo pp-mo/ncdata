@@ -1,7 +1,11 @@
 .. _interface_support:
 
-Support for Interface Packages
-==============================
+Support for Interfaces and Dependencies
+=======================================
+
+Python Compatibility
+--------------------
+NcData currently supports Python >= 3.10, and is tested against 3.10, 3.11, 3.12 and 3.13.
 
 NetCDF4 Compatibility
 ---------------------
@@ -94,10 +98,10 @@ masked data to NaNs.
     See : `issue#66 <https://github.com/pp-mo/ncdata/issues/66>`_
 
 
-Iris Features
--------------
+Iris Compatibility
+------------------
 The `Continuous Integration testing on GitHub`_ tests against the
-latest-current "main" branch of Iris.
+latest release of Iris.
 
 Ncdata is compatible with iris >= v3.7.0
 see : `support added in v3.7.0 <https://scitools-iris.readthedocs.io/en/stable/whatsnew/3.7.html#internal>`_

@@ -26,7 +26,21 @@ jobs:
       fail-fast: false
       matrix:
         session: ["tests", "doctests-docs", "doctests-api"]
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        exclude:
+          - session: "doctests-docs"
+            python-version: "3.10"
+          - session: "doctests-docs"
+            python-version: "3.11"
+          - session: "doctests-docs"
+            python-version: "3.12"
+          - session: "doctests-api"
+            python-version: "3.10"
+          - session: "doctests-api"
+            python-version: "3.11"
+          - session: "doctests-api"
+            python-version: "3.12"
+
     defaults:
       run:
         shell: bash -l {0}
@@ -50,13 +64,6 @@ jobs:
       - name: "Install dependencies"
         run: |
           conda install --yes numpy pytest pytest-mock iris xarray filelock requests zarr aiohttp fsspec
-
-      - name: "Install *latest* Iris"
-        run: |
-          git clone https://github.com/SciTools/iris.git ./iris
-          cd iris
-          pip install -e .
-          cd ..
 
       - name: "Install repo-under-test"
         run: |
