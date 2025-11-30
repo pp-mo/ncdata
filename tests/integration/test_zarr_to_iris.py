@@ -7,7 +7,6 @@ import fsspec
 import iris
 import pytest
 import xarray as xr
-
 from ncdata.iris_xarray import cubes_from_xarray as conversion_func
 
 
