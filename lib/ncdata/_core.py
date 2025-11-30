@@ -500,8 +500,12 @@ class NcData(_AttributeAccessMixin):
 
         return Slicer(self, *dim_names)
 
-    def __getitem__(self, keys):  # noqa: D105
-        return self.slicer()[*keys]
+    def __getitem__(self, indices):  # noqa: D105
+        # N.B. Python [,,] syntax ensures there is only ever one argument,
+        #  either a single key or a tuple :
+        #    : [x] --> keys == x
+        #    : [x, y, ...] --> keys == (x, y, ...)
+        return self.slicer().__getitem__(indices)
 
     # Define equality in terms of dataset comparison utility
     def __eq__(self, other):  # noqa: D105
