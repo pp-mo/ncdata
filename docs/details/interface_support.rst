@@ -101,7 +101,7 @@ masked data to NaNs.
 Iris Compatibility
 ------------------
 The `Continuous Integration testing on GitHub`_ tests against the
-latest-current "main" branch of Iris.
+latest release of Iris.
 
 Ncdata is compatible with iris >= v3.7.0
 see : `support added in v3.7.0 <https://scitools-iris.readthedocs.io/en/stable/whatsnew/3.7.html#internal>`_
