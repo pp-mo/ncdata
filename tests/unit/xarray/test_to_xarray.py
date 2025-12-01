@@ -61,7 +61,10 @@ def test_real_nocopy():
 
     # Check that the data content is  the *SAME ARRAY*
     xr_data = xrds.variables["var_x"]._data
-    assert xr_data is real_numpy_data
+    # There may be a wrapper object, for some versions of xarray,
+    #  so test by modifying the original + check that the result tracks it.
+    real_numpy_data[-1] = 777
+    assert np.all(xr_data == real_numpy_data)
 
 
 @pytest.mark.parametrize("scaleandoffset", ["WITHscaling", "NOscaling"])

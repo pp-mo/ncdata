@@ -7,7 +7,10 @@ import fsspec
 import iris
 import pytest
 import xarray as xr
+import zarr
 from ncdata.iris_xarray import cubes_from_xarray as conversion_func
+
+zarr_major_version = int(zarr.__version__.split(".")[0])
 
 
 def _return_kwargs():
@@ -51,6 +54,9 @@ def test_load_zarr2_local():
     _run_checks(cube)
 
 
+@pytest.mark.skipif(
+    zarr_major_version < 3, reason="Zarr3 file not supported by zarr v2."
+)
 def test_load_zarr3_local():
     """Test loading a Zarr3 store from local FS."""
     zarr_path = (
@@ -88,9 +94,17 @@ S3_TEST_PATH = (
     "https://uor-aces-o.s3-ext.jc.rl.ac.uk/"
     "esmvaltool-zarr/pr_Amon_CNRM-ESM2-1_02Kpd-11_r1i1p2f2_gr_200601-220112.zarr3"
 )
-_S3_accessible = _is_url_ok(S3_TEST_PATH)
+
+# Check 3 files, as we apparently sometimes get 'partial success'
+_S3_accessible = all(
+    _is_url_ok(S3_TEST_PATH + subpath)
+    for subpath in ["", "/.zattrs", "/.zmetadata"]
+)
 
 
+@pytest.mark.skipif(
+    zarr_major_version < 3, reason="Zarr3 file not supported by zarr v2."
+)
 @pytest.mark.skipif(not _S3_accessible, reason="S3 url not accessible")
 def test_load_remote_zarr():
     """Test loading a remote Zarr store.
