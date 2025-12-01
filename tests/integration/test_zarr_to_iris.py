@@ -7,8 +7,11 @@ import fsspec
 import iris
 import pytest
 import xarray as xr
+import zarr
 
 from ncdata.iris_xarray import cubes_from_xarray as conversion_func
+
+zarr_major_version = int(zarr.__version__.split(".")[0])
 
 
 def _return_kwargs():
@@ -52,6 +55,9 @@ def test_load_zarr2_local():
     _run_checks(cube)
 
 
+@pytest.mark.skipif(
+    zarr_major_version < 3, reason="Zarr3 file not supported by zarr v2."
+)
 def test_load_zarr3_local():
     """Test loading a Zarr3 store from local FS."""
     zarr_path = (
@@ -97,6 +103,9 @@ _S3_accessible = all(
 )
 
 
+@pytest.mark.skipif(
+    zarr_major_version < 3, reason="Zarr3 file not supported by zarr v2."
+)
 @pytest.mark.skipif(not _S3_accessible, reason="S3 url not accessible")
 def test_load_remote_zarr():
     """Test loading a remote Zarr store.
