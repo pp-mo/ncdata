@@ -25,6 +25,25 @@ Summary of key features by release number.
 
 .. towncrier release notes start
 
+ncdata 0.3.2 (2025-12-01)
+~~~~~~~~~~~~~~~~~~~~~~~~~
+A bugfix release, just to allow working with Python 3.10.
+
+Bug Fixes
+^^^^^^^^^
+
+- Made indexing work with Python v3.10. (`ISSUE#183 <https://github.com/pp-mo/ncdata/pull/183>`_)
+
+
+Developer and Internal changes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+- Support more Python versions: now allowing >=3.10 and no longer limiting <3.14.
+  CI testing now against 3.10 / 3.11 / 3.12 / 3.13.
+  (`ISSUE#186 <https://github.com/pp-mo/ncdata/pull/186>`_)
+
+
+
 v0.3.1 (2025-11-06)
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 A minor release to replace v0.3.0, fixing some test errors introduced by the latest
