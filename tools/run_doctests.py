@@ -3,16 +3,17 @@ import argparse
 import doctest
 import importlib
 import os
-import traceback
 from pathlib import Path
 import pkgutil
 import sys
+import traceback
 import warnings
 
 
 def list_modules_recursive(
-    module_importname: str, include_private: bool = True,
-    exclude_matches: list[str] = []
+    module_importname: str,
+    include_private: bool = True,
+    exclude_matches: list[str] = [],
 ):
     """Find all the submodules of a given module.
 
@@ -45,7 +46,8 @@ def list_modules_recursive(
                 if ispkg:
                     module_names.extend(
                         list_modules_recursive(
-                            submodule_name, include_private=include_private,
+                            submodule_name,
+                            include_private=include_private,
                             exclude_matches=exclude_matches,
                         )
                     )
@@ -61,8 +63,7 @@ def list_modules_recursive(
 
 
 def list_filepaths_recursive(
-    file_path: str,
-    exclude_matches: list[str] = []
+    file_path: str, exclude_matches: list[str] = []
 ) -> list[Path]:
     """Expand globs to a list of filepaths.
 
@@ -71,7 +72,8 @@ def list_filepaths_recursive(
     actual_paths: list[Path] = []
     segments = file_path.split("/")
     i_wilds = [
-        index for index, segment in enumerate(segments)
+        index
+        for index, segment in enumerate(segments)
         if any(char in segment for char in "*?[")
     ]
     if len(i_wilds) == 0:
@@ -85,7 +87,8 @@ def list_filepaths_recursive(
 
     # Also apply exclude and private filters to results
     result = [
-        path for path in actual_paths
+        path
+        for path in actual_paths
         if not any(match in str(path) for match in exclude_matches)
         and not path.name.startswith("_")
     ]
@@ -132,7 +135,7 @@ def process_options(opt_str: str, paths_are_modules: bool = True) -> dict[str, s
 
 def run_doctest_paths(
     paths: list[str],
-    paths_are_modules:bool = False,
+    paths_are_modules: bool = False,
     recurse_modules: bool = False,
     include_private_modules: bool = False,
     exclude_matches: list[str] = [],
@@ -170,8 +173,9 @@ def run_doctest_paths(
             module_paths = []
             for path in paths:
                 module_paths += list_modules_recursive(
-                    path, include_private=include_private_modules,
-                    exclude_matches=exclude_matches
+                    path,
+                    include_private=include_private_modules,
+                    exclude_matches=exclude_matches,
                 )
             paths = module_paths
     else:
@@ -179,15 +183,12 @@ def run_doctest_paths(
         doctest_function = doctest.testfile
         filepaths = []
         for path in paths:
-            filepaths += list_filepaths_recursive(
-                path,
-                exclude_matches=exclude_matches
-            )
+            filepaths += list_filepaths_recursive(path, exclude_matches=exclude_matches)
         paths = filepaths
 
     for path in paths:
         if verbose:
-            print(f"\n-----\ndoctest.{doctest_function.__name__}: {path!r}")
+            print(f"\n-----\ndoctest.{doctest_function.__name__}: {path}")
         if dry_run:
             continue
 
@@ -207,7 +208,14 @@ def run_doctest_paths(
                 n_total_tests += n_tests
                 n_paths_tested += 1
                 if n_fails:
-                    print(f"\nERRORS in path: {arg}\n")
+                    n_ok = n_tests - n_fails
+                    msg = (
+                        f"**ERRORS**\n"
+                        f"{n_ok}/{n_tests} OK, {n_fails}/{n_tests} FAILED in path: {path}"
+                    )
+                    print(msg)
+                elif verbose:
+                    print(f"{n_tests}/{n_tests} OK in path: {path}")
             except Exception as exc:
                 op_fail = exc
 
@@ -235,14 +243,14 @@ def run_doctest_paths(
             f"    paths tested    = {n_paths_tested}",
             f"    tests completed = {n_total_tests}",
             f"    errors          = {n_total_fails}",
-            ""
+            "",
         ]
         if n_total_fails > 0:
             msgs += ["FAILED."]
         else:
             msgs += ["OK."]
 
-        print('\n'.join(msgs))
+        print("\n".join(msgs))
 
     return n_total_fails
 
@@ -272,8 +280,10 @@ _parser = argparse.ArgumentParser(
     formatter_class=argparse.RawDescriptionHelpFormatter,
 )
 _parser.add_argument(
-    "-m", "--module", action="store_true",
-    help="paths are module paths (xx.yy.zz), instead of filepaths."
+    "-m",
+    "--module",
+    action="store_true",
+    help="paths are module paths (xx.yy.zz), instead of filepaths.",
 )
 _parser.add_argument(
     "-r",
@@ -298,8 +308,7 @@ _parser.add_argument(
     "--options",
     nargs="?",
     help=(
-        "kwargs (Python) for doctest call"
-        ", e.g. \"raise_on_error=True,optionflags=8\"."
+        'kwargs (Python) for doctest call, e.g. "raise_on_error=True,optionflags=8".'
     ),
     type=str,
     default="",
