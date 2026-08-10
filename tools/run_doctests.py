@@ -95,7 +95,9 @@ def list_filepaths_recursive(
     return result
 
 
-def process_options(opt_str: str, paths_are_modules: bool = True) -> dict[str, str]:
+def process_options(
+    opt_str: str, paths_are_modules: bool = True
+) -> dict[str, str]:
     """Convert the "-o/--options" arg into a **kwargs for the doctest function call."""
     # Remove all spaces (think they are never needed).
     opt_str = opt_str.replace(" ", "")
@@ -183,7 +185,9 @@ def run_doctest_paths(
         doctest_function = doctest.testfile
         filepaths = []
         for path in paths:
-            filepaths += list_filepaths_recursive(path, exclude_matches=exclude_matches)
+            filepaths += list_filepaths_recursive(
+                path, exclude_matches=exclude_matches
+            )
         paths = filepaths
 
     for path in paths:
@@ -314,7 +318,10 @@ _parser.add_argument(
     default="",
 )
 _parser.add_argument(
-    "-v", "--verbose", action="store_true", help="show details of each operation."
+    "-v",
+    "--verbose",
+    action="store_true",
+    help="show details of each operation.",
 )
 _parser.add_argument(
     "-d",
