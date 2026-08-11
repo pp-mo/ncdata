@@ -1,26 +1,31 @@
 #!/usr/bin/env python3
+"""CLI runner interface for Python doctests.
+
+TODO this utility should be templated for easy code sharing across repos.
+"""
+
 import argparse
 import doctest
 import importlib
-import os
 from pathlib import Path
 import pkgutil
 import sys
 import traceback
+from typing import Any, Callable
 import warnings
 
 
 def list_modules_recursive(
     module_importname: str,
     include_private: bool = True,
-    exclude_matches: list[str] = [],
-):
+    exclude_fragments: list[str] = [],
+) -> list[str]:
     """Find all the submodules of a given module.
 
     Also filter with private and exclude controls.
     """
     module_names = [module_importname]
-    # Identify module from its import path (no import -> fail back to caller)
+    # Identify module from its import path : N.B. fail --> return [module-path]
     try:
         error = None
         module = importlib.import_module(module_importname)
@@ -29,118 +34,104 @@ def list_modules_recursive(
         error = exc
 
     if error is None:
-        # Add sub-modules to the list
+        # Add all sub-modules to the list
         # Get the filepath of the module base directory
-        module_filepath = Path(module.__file__)
+        module_filepath = Path(str(module.__file__))
         if module_filepath.name == "__init__.py":
-            search_filepath = str(module_filepath.parent)
-            for _, name, ispkg in pkgutil.iter_modules([search_filepath]):
-                if name.startswith("_") and not include_private:
+            for _, name, ispkg in pkgutil.iter_modules([module_filepath.parent]):
+                if name[:1] == "_" and not include_private:
                     continue
-
                 submodule_name = module_importname + "." + name
-                if any(match in submodule_name for match in exclude_matches):
+                if any(match in submodule_name for match in exclude_fragments):
                     continue
-
                 module_names.append(submodule_name)
                 if ispkg:
                     module_names.extend(
                         list_modules_recursive(
                             submodule_name,
                             include_private=include_private,
-                            exclude_matches=exclude_matches,
+                            exclude_fragments=exclude_fragments,
                         )
                     )
 
-    # I don't know why there are duplicates, but there can be.
-    result = []
-    for name in module_names:
-        if name not in result:
-            # For some reason, some things get listed twice.
-            result.append(name)
-
-    return result
+    # Remove duplicates, which may occur.
+    return sorted(set(module_names))
 
 
 def list_filepaths_recursive(
-    file_path: str, exclude_matches: list[str] = []
+    file_spec: str, exclude_fragments: list[str] = []
 ) -> list[Path]:
-    """Expand globs to a list of filepaths.
+    """Expand a filepath string, possibly containing globs, to a list of filepaths.
 
     Also filter with exclude controls.
     """
-    actual_paths: list[Path] = []
-    segments = file_path.split("/")
+    segments = file_spec.split("/")
     i_wilds = [
         index
         for index, segment in enumerate(segments)
         if any(char in segment for char in "*?[")
     ]
     if len(i_wilds) == 0:
-        actual_paths.append(Path(file_path))
+        found_paths = [Path(file_spec)]
     else:
         i_first_wild = i_wilds[0]
+        # Split into a regular path prefix + the part including globs
         base_path = Path("/".join(segments[:i_first_wild]))
-        file_spec = "/".join(segments[i_first_wild:])
-        # This is the magic bit! expand with globs, '**' enabling recursive
-        actual_paths += list(base_path.glob(file_spec))
+        glob_spec = "/".join(segments[i_first_wild:])
+        # expand with globs
+        found_paths = list(base_path.glob(glob_spec))
 
-    # Also apply exclude and private filters to results
-    result = [
+    # Also apply excludes to results
+    # NB there is NO "private" filtering for sourcefiles
+    found_paths = [
         path
-        for path in actual_paths
-        if not any(match in str(path) for match in exclude_matches)
-        and not path.name.startswith("_")
+        for path in found_paths
+        if not path.is_dir()
+        and not any(match in str(path) for match in exclude_fragments)
     ]
-    return result
+    return found_paths
 
 
 def process_options(
     opt_str: str, paths_are_modules: bool = True
-) -> dict[str, str]:
+) -> dict[str, str | int | bool]:
     """Convert the "-o/--options" arg into a **kwargs for the doctest function call."""
-    # Remove all spaces (think they are never needed).
-    opt_str = opt_str.replace(" ", "")
+    opt_str = opt_str.replace(" ", "")  # Remove spaces -- never meaningful
     # Split on commas, and split each one on "=" expecting a simple name=val form
-    opts_dict = {}
+    opts_dict: dict[str, str | int | bool] = {}
     if opt_str:  # N.B. to avoid unexpected behaviour: "".split() --> [""]
         for setting_str in opt_str.split(","):
             try:
                 name, val = setting_str.split("=")
-
-                # Detect + translate numeric and boolean values.
+                # Detect + translate integers and booleans (only, else leave as 'str').
+                value: str | int | bool = val
                 bool_vals = {"true": True, "false": False}
                 if val.isdigit():
-                    val = int(val)
+                    value = int(val)
                 elif val.lower() in bool_vals:
-                    val = bool_vals[val.lower()]
-
+                    value = bool_vals[val.lower()]
             except ValueError:
                 msg = f"Invalid option setting {setting_str!r}, expected 'name=value' only."
                 raise ValueError(msg)
+            opts_dict[name] = value
 
-            opts_dict[name] = val
-
-    # Post-process to "fix" options, especially to correct defaults
-    # TODO this is not very clever, think of something better??
+    # Implement some handy defaults
     if not paths_are_modules:
         if not "module_relative" in opts_dict:
-            opts_dict["module_relative"] = False
-    if not "verbose" in opts_dict:
-        opts_dict["verbose"] = False
+            opts_dict["module_relative"] = False  # we want this OFF, by default anyway
     if not "optionflags" in opts_dict:
         default_flags = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
-        opts_dict["optionflags"] = default_flags
+        opts_dict["optionflags"] = default_flags  # a generally useful default?
 
     return opts_dict
 
 
 def run_doctest_paths(
-    paths: list[str],
+    paths: list[str] | list[Path],
     paths_are_modules: bool = False,
     recurse_modules: bool = False,
     include_private_modules: bool = False,
-    exclude_matches: list[str] = [],
+    exclude_fragments: list[str] = [],
     doctest_kwargs: dict = {},
     verbose: bool = False,
     dry_run: bool = False,
@@ -155,7 +146,7 @@ def run_doctest_paths(
             f", paths_are_modules={paths_are_modules!r}"
             f", recurse_modules={recurse_modules!r}"
             f", include_private_modules={include_private_modules!r}"
-            f", exclude_matches={exclude_matches!r}"
+            f", exclude_fragments={exclude_fragments!r}"
             f", doctest_kwargs={doctest_kwargs!r}"
             f", verbose={verbose!r}"
             f", dry_run={dry_run!r}"
@@ -169,15 +160,16 @@ def run_doctest_paths(
     # For now at least, simply discard ALL warnings.
     warnings.simplefilter("ignore")
 
+    doctest_function: Callable
     if paths_are_modules:
         doctest_function = doctest.testmod
         if recurse_modules:
             module_paths = []
             for path in paths:
                 module_paths += list_modules_recursive(
-                    path,
+                    str(path),  # for modules, 'paths' are always strings anyway
                     include_private=include_private_modules,
-                    exclude_matches=exclude_matches,
+                    exclude_fragments=exclude_fragments,
                 )
             paths = module_paths
     else:
@@ -186,7 +178,7 @@ def run_doctest_paths(
         filepaths = []
         for path in paths:
             filepaths += list_filepaths_recursive(
-                path, exclude_matches=exclude_matches
+                str(path), exclude_fragments=exclude_fragments
             )
         paths = filepaths
 
@@ -197,9 +189,11 @@ def run_doctest_paths(
             continue
 
         op_fail = None
+        arg: Any  # can be a string or a 'Module' object
         if paths_are_modules:
+            path_str = str(path)
             try:
-                arg = importlib.import_module(path)
+                arg = importlib.import_module(path_str)
             except Exception as exc:
                 op_fail = exc
         else:
@@ -318,10 +312,7 @@ _parser.add_argument(
     default="",
 )
 _parser.add_argument(
-    "-v",
-    "--verbose",
-    action="store_true",
-    help="show details of each operation.",
+    "-v", "--verbose", action="store_true", help="show details of each operation."
 )
 _parser.add_argument(
     "-d",
@@ -350,7 +341,7 @@ def parserargs_as_kwargs(args):
         paths_are_modules=args.module,
         recurse_modules=args.recurse,
         include_private_modules=not args.publiconly,
-        exclude_matches=args.exclude or [],
+        exclude_fragments=args.exclude or [],
         doctest_kwargs=process_options(args.options, args.module),
         verbose=args.verbose,
         dry_run=args.dryrun,
