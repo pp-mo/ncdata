@@ -1,0 +1,43 @@
+Comparison
+
+# PRELIM
+iris_cubes = iris.load(source_filepath)
+remove_cube_nounits(iris_cubes)
+remove_masked_arrays(iris_cubes)
+iris_cubes = namesort_cubes(iris_cubes)
+
+# THEN WORKS...
+
+from ncdata.iris import to_iris, from_iris
+ncds = from_iris(iris_cubes)
+rb_cubes = to_iris(ncds)
+rb_cubes = namesort_cubes(rb_cubes)
+remove_cube_nounits(rb_cubes)
+for cube in rb_cubes:
+    cube.attributes.pop("Conventions", None)
+
+print(iris_cubes == rb_cubes)
+True 
+
+# NEXT STEP ...
+xrrb_ncds = from_xarray(xrds)
+
+# then need to correct ...
+# ordering of dims + vars does not match
+# lots of vars have additional "_FillValue" and "coordinates" attributes (remove by checking original ?)
+
+for v in xrrb_ncds.variables.values():
+    v2 = ncds.variables[v.name]
+    for attr in ("_FillValue", "coordinates"):
+        if not attr in v2.attributes:
+            v.attributes.pop(attr, None)
+
+
+>>> pl(dataset_differences(xrrb_ncds, ncds, check_dims_order=False, check_vars_order=False, check_attrs_order=False))
+Dataset variable "Mesh2d_half_levels" datatypes differ : dtype('float64') != dtype('int32')
+Dataset variable "Mesh2d_half_levels_face_nodes" datatypes differ : dtype('float64') != dtype('int32')
+Dataset variable "Mesh2d_half_levels_edge_nodes" datatypes differ : dtype('float64') != dtype('int32')
+
+
+## LOOKS LIKE, these ones didn't get type-fixed, BECAUSE they are in mesh, not cube coords.
+??can fix in 
