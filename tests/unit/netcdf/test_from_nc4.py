@@ -111,3 +111,23 @@ def test_target_types(sourcetype, tmp_path):
 
     diffs = dataset_differences(ncdata, ncdata_expected)
     assert diffs == []
+
+
+class TestVarStrs:
+    def test_load_vlenstrs(self, tmp_path):
+        varstr_test_spec = {
+            "dims": [
+                dict(name="x", size=3),
+                dict(name="strlen", size=10)],
+            "vars": [
+                dict(
+                    name="var_0",
+                    dims=['x'],
+                    dtype=str,
+                    data=np.array(["one", "two", "three"], dtype='U10'),
+                ),
+            ]
+        }
+        filepath = tmp_path / "testinput.nc"
+        ncds = file_and_ncdata_from_spec(filepath, varstr_test_spec)
+        print(ncds)
