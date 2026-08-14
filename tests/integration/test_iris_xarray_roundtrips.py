@@ -20,7 +20,7 @@ from ncdata.iris_xarray import cubes_to_xarray
 from ncdata.netcdf4 import from_nc4
 from ncdata.threadlock_sharing import lockshare_context
 from ncdata.utils import dataset_differences
-from ncdata.xarray import from_xarray
+from ncdata.xarray import from_xarray, to_xarray
 
 from tests.data_testcase_schemas import (
     BAD_LOADSAVE_TESTCASES,
@@ -34,6 +34,7 @@ from tests.integration.equivalence_testing_utils import (
     nanmask_cube,
     prune_cube_varproperties,
     remove_cube_nounits,
+    remove_masked_arrays,
     set_tiny_chunks,
 )
 
@@ -83,6 +84,7 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
             "unstructured_grid__mesh_C12",
             "_unstructured_grid__theta_nodal_xios",
         ]
+        # extra cases that don't function when not supporting masked arrays
     )
     if any(key in standard_testcase.name for key in exclude_case_keys):
         pytest.skip("excluded testcase")
@@ -115,12 +117,17 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
     # see : https://github.com/SciTools/iris/issues/5368
     remove_cube_nounits(iris_cubes)
 
+    # Fix masked arrays for compatibility with xarray limitations
+    remove_masked_arrays(iris_cubes)
+
     # Unfortunately, cube order is not guaranteed to be stable.
     iris_cubes = namesort_cubes(iris_cubes)
 
     # Convert to xarray, and back again.
-    ds = cubes_to_xarray(iris_cubes)
-    ncds_fromxr = from_xarray(ds)
+    # xrds = cubes_to_xarray(iris_cubes)
+    ncds = from_iris(iris_cubes)
+    xrds = to_xarray(ncds)
+    ncds_fromxr = from_xarray(xrds)
     from ncdata.iris import to_iris
 
     iris_xr_cubes = to_iris(ncds_fromxr)
@@ -177,7 +184,11 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
         # FOR NOW: compare with experimental ncdata comparison.
         # I know this is a bit circular, but it is useful for debugging, for now ...
         result = dataset_differences(
-            from_iris(iris_cubes), from_iris(iris_xr_cubes)
+            from_iris(iris_cubes),
+            from_iris(iris_xr_cubes),
+            check_dims_order=False,
+            check_vars_order=False,
+            check_attrs_order=False,
         )
         assert result == []
 

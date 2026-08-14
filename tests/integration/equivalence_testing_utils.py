@@ -8,7 +8,11 @@ ncdata and other types of data preserve information.
 import dask.array as da
 import iris.mesh
 import numpy as np
+import numpy.ma
 import pytest
+from iris.coords import _DimensionalMetadata
+from iris.cube import Cube
+from iris.mesh import MeshCoord
 
 
 def cubes_equal__corrected(c1, c2):
@@ -269,6 +273,87 @@ def remove_cube_nounits(cube_or_cubes):
         )
         for comp in components:
             remove_element_nounits(comp)
+
+
+def is_maskedtype(array: da.Array | np.ndarray) -> bool:
+    """Tell whether an array is a masked type.
+
+    Works with either numpy or Dask arrays.
+    Can only detect *explicitly* masked Dask arrays, as recorded in its `._meta`.
+    """
+    if isinstance(array, da.Array):
+        array = array._meta
+    return isinstance(array, np.ma.MaskedArray)
+
+
+def nanify_array(array: np.ndarray) -> np.ndarray:
+    """Return an array replacing masks with NaNs.
+
+    Works with either numpy or Dask arrays.
+    If not masked type, return the original, otherwise a new array.
+    Always leaves the input unmodified.
+    Can only detect *explicitly* masked Dask arrays, as recorded in its `._meta`.
+    """
+
+    # Convert to a nanarray -- make float if integral
+    def fix_nanable_dtype(array):
+        dtype = array.dtype
+        if dtype.kind in "iu":
+            size = max(dtype.itemsize, 4)  # no "f1" or "f2" types
+            dtype = f"f{size}"
+            array = array.astype(dtype)
+        return array
+
+    if not is_maskedtype(array):
+        result = array
+    elif isinstance(array, np.ma.MaskedArray):
+        result = fix_nanable_dtype(array.data.copy())
+        result[array.mask] = np.nan
+    elif isinstance(array, da.Array):
+        result = fix_nanable_dtype(da.ma.getdata(array))
+        mask = da.ma.getmaskarray(array)
+        result = da.where(mask, np.nan, result)
+    else:
+        raise ValueError(f"array of unknown type ({type(array)}): {array}")
+
+    return result
+
+
+def remove_masked_arrays(cube_or_cubes: Cube | list[Cube]):
+    """Replace masked data arrays in cubes.
+
+    Replace any masked data arrays with xarray-compatible nanarray equivalents
+    Applies to all cubes components.
+    """
+    # Make new cubes anytime it is necessary to replace the original
+    if hasattr(cube_or_cubes, "add_aux_coord"):
+        cubes = [cube_or_cubes]
+    else:
+        cubes = cube_or_cubes
+
+    for cube in cubes:
+        if is_maskedtype(cube.core_data()):
+            cube.data = nanify_array(cube.core_data())
+
+        components: list(_DimensionalMetadata) = (
+            [
+                co
+                for co, dims in (
+                    cube._dim_coords_and_dims + cube._aux_coords_and_dims
+                )  # NB don't mess with 'virtual' coords, i.e. factories + mesh-coords
+                if not isinstance(co, MeshCoord)
+            ]
+            + list(cube.cell_measures())
+            + list(cube.ancillary_variables())
+        )
+        if cube.mesh:
+            components.extend(cube.mesh.all_coords)
+            components.extend(cube.mesh.all_connectivities)
+        for comp in components:
+            if is_maskedtype(comp._core_values()):
+                comp._values = nanify_array(comp._core_values())
+            if hasattr(comp, "bounds") and is_maskedtype(comp.core_bounds()):
+                comp.bounds = nanify_array(comp.core_bounds())
 
 
 #
