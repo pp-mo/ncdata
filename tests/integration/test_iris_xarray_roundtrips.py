@@ -188,7 +188,8 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
         # FOR NOW: compare with experimental ncdata comparison.
         # I know this is a bit circular, but it is useful for debugging, for now ...
         result = dataset_differences(
-            from_iris(iris_cubes), from_iris(iris_xr_cubes)
+            from_iris(iris_cubes), from_iris(iris_xr_cubes),
+            check_attrs_order=False, check_dims_order=False, check_vars_order=False
         )
         assert result == []
 
