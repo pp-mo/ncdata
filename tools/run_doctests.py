@@ -18,11 +18,10 @@ import warnings
 def list_modules_recursive(
     module_importname: str,
     include_private: bool = True,
-    exclude_fragments: list[str] = [],
 ) -> list[str]:
     """Find all the submodules of a given module.
 
-    Also filter with private and exclude controls.
+    Also filter out private modules, if selected.
     """
     module_names = [module_importname]
     # Identify module from its import path : N.B. fail --> return [module-path]
@@ -35,22 +34,18 @@ def list_modules_recursive(
 
     if error is None:
         # Add all sub-modules to the list
-        # Get the filepath of the module base directory
-        module_filepath = Path(str(module.__file__))
+        module_filepath = Path(str(module.__file__))  # Get filepath of module base
         if module_filepath.name == "__init__.py":
             for _, name, ispkg in pkgutil.iter_modules([module_filepath.parent]):
                 if name[:1] == "_" and not include_private:
                     continue
                 submodule_name = module_importname + "." + name
-                if any(match in submodule_name for match in exclude_fragments):
-                    continue
                 module_names.append(submodule_name)
                 if ispkg:
                     module_names.extend(
                         list_modules_recursive(
                             submodule_name,
                             include_private=include_private,
-                            exclude_fragments=exclude_fragments,
                         )
                     )
 
@@ -59,35 +54,27 @@ def list_modules_recursive(
 
 
 def list_filepaths_recursive(
-    file_spec: str, exclude_fragments: list[str] = []
+    file_spec: str,
 ) -> list[Path]:
     """Expand a filepath string, possibly containing globs, to a list of filepaths.
 
     Also filter with exclude controls.
     """
-    segments = file_spec.split("/")
-    i_wilds = [
-        index
-        for index, segment in enumerate(segments)
-        if any(char in segment for char in "*?[")
-    ]
-    if len(i_wilds) == 0:
+    if not any(c in file_spec for c in "?*["):
+        # when no globs, action the (single) filepath --> error if it doesn't exist
         found_paths = [Path(file_spec)]
     else:
-        i_first_wild = i_wilds[0]
-        # Split into a regular path prefix + the part including globs
-        base_path = Path("/".join(segments[:i_first_wild]))
-        glob_spec = "/".join(segments[i_first_wild:])
-        # expand with globs
-        found_paths = list(base_path.glob(glob_spec))
+        # split the path and do a glob --> list[Path]
+        path = Path(file_spec).absolute()  # make absolute so we can get a root part
+        base_pth = Path(path.root)
+        glob_path = path.relative_to(base_pth)
+        found_paths = base_pth.glob(glob_path)
 
-    # Also apply excludes to results
-    # NB there is NO "private" filtering for sourcefiles
+    # Apply excludes to results : NB no "private" option (unlike modules)
     found_paths = [
         path
         for path in found_paths
         if not path.is_dir()
-        and not any(match in str(path) for match in exclude_fragments)
     ]
     return found_paths
 
@@ -169,7 +156,7 @@ def run_doctest_paths(
                 module_paths += list_modules_recursive(
                     str(path),  # for modules, 'paths' are always strings anyway
                     include_private=include_private_modules,
-                    exclude_fragments=exclude_fragments,
+                    # exclude_fragments=exclude_fragments,
                 )
             paths = module_paths
     else:
@@ -178,11 +165,14 @@ def run_doctest_paths(
         filepaths = []
         for path in paths:
             filepaths += list_filepaths_recursive(
-                str(path), exclude_fragments=exclude_fragments
+                str(path) #, exclude_fragments=exclude_fragments
             )
         paths = filepaths
 
     for path in paths:
+        # filter with excludes
+        if any(frag in str(path) for frag in exclude_fragments):
+            continue
         if verbose:
             print(f"\n-----\ndoctest.{doctest_function.__name__}: {path}")
         if dry_run:
@@ -335,26 +325,21 @@ _parser.add_argument(
 )
 
 
-def parserargs_as_kwargs(args):
-    return dict(
-        paths=args.paths,
-        paths_are_modules=args.module,
-        recurse_modules=args.recurse,
-        include_private_modules=not args.publiconly,
-        exclude_fragments=args.exclude or [],
-        doctest_kwargs=process_options(args.options, args.module),
-        verbose=args.verbose,
-        dry_run=args.dryrun,
-        stop_on_failure=args.stop_on_fail,
-    )
-
-
 if __name__ == "__main__":
     args = _parser.parse_args(sys.argv[1:])
     if not args.paths:
         _parser.print_help()
     else:
-        kwargs = parserargs_as_kwargs(args)
-        n_errs = run_doctest_paths(**kwargs)
+        n_errs = run_doctest_paths(
+            paths=args.paths,
+            paths_are_modules=args.module,
+            recurse_modules=args.recurse,
+            include_private_modules=not args.publiconly,
+            exclude_fragments=args.exclude or [],
+            doctest_kwargs=process_options(args.options, args.module),
+            verbose=args.verbose,
+            dry_run=args.dryrun,
+            stop_on_failure=args.stop_on_fail,
+        )
         if n_errs > 0:
             exit(1)

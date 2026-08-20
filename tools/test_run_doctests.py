@@ -116,37 +116,6 @@ class TestListModules:
             "tmp_test_module.sm2.s6",
         ]
 
-    def test_exclude_submod(self, tempmodules):
-        result = list_modules_recursive(tempmodules, exclude_fragments=["sm1"])
-        assert result == [
-            "tmp_test_module",
-            "tmp_test_module.s0",
-            "tmp_test_module.s1",
-            "tmp_test_module.sm2",
-            "tmp_test_module.sm2.s6",
-        ]
-
-    def test_exclude_namematch(self, tempmodules):
-        result = list_modules_recursive(tempmodules, exclude_fragments=["s1"])
-        assert result == [
-            "tmp_test_module",
-            "tmp_test_module.s0",
-            # 'tmp_test_module.s1',
-            "tmp_test_module.sm1",
-            # 'tmp_test_module.sm1._ps1',
-            # 'tmp_test_module.sm1.s1',
-            "tmp_test_module.sm1.s2",
-            "tmp_test_module.sm1.ssm1",
-            "tmp_test_module.sm1.ssm1.s3",
-            "tmp_test_module.sm1.ssm1.s4",
-            "tmp_test_module.sm1.ssm2",
-            "tmp_test_module.sm1.ssm2._ps2",
-            "tmp_test_module.sm1.ssm2.s4",
-            "tmp_test_module.sm1.ssm2.s5",
-            "tmp_test_module.sm2",
-            "tmp_test_module.sm2.s6",
-        ]
-
 
 class TestListSources:
     def test_nonexist(self, tempsources):
@@ -194,24 +163,6 @@ class TestListSources:
                 "maindir/subdir1/subsubdir2/s4.rst",
                 "maindir/subdir1/subsubdir2/s5.rst",
                 "maindir/subdir1/subsubdir2/_px2.rst",
-            ]
-        ]
-
-    def test_recurse_exclude_subpath(self, tempsources, tmp_path):
-        result = list_filepaths_recursive(
-            tempsources + "/**/*.rst", exclude_fragments=["/subsubdir2/"]
-        )
-        assert result == [
-            tmp_path / pathstr
-            for pathstr in [
-                "maindir/s0.rst",
-                "maindir/s1.rst",
-                "maindir/subdir1/s1.rst",
-                "maindir/subdir1/s2.rst",
-                "maindir/subdir1/_px1.rst",
-                "maindir/subdir2/s6.rst",
-                "maindir/subdir1/subsubdir1/s3.rst",  # Note the odd ordering
-                "maindir/subdir1/subsubdir1/s4.rst",
             ]
         ]
 
@@ -441,3 +392,37 @@ class TestCliModules:
             assert n_mods > 1
         else:
             assert n_mods == 1
+
+    @pytest.mark.parametrize("exclude", ["noexclude", "exclude"])
+    def test_realrun_submodules(self, exclude):
+        # Tested via CLI because the exclude logic is now common to modules+sourcefiles
+        do_exclude = exclude == "exclude"
+        args = ["-mrd", "curses"]
+        if do_exclude:
+            args += ["-e", "as"]
+        result = runmain(*args)
+        expected = [
+            '-----',
+            'doctest.testmod: curses',
+        ]
+        if not do_exclude:
+            expected += [
+                '-----',
+                'doctest.testmod: curses.ascii',
+                '-----',
+                'doctest.testmod: curses.has_key',
+            ]
+        expected += [
+            '-----',
+            'doctest.testmod: curses.panel',
+            '-----',
+            'doctest.testmod: curses.textpad',
+            '=====',
+            'run_doctest: FINAL REPORT',
+            '(DRY RUN: no actual tests)',
+            '    paths tested    = 0',
+            '    tests completed = 0',
+            '    errors          = 0',
+            'OK.'
+        ]
+        assert result == expected
