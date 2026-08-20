@@ -34,9 +34,13 @@ def list_modules_recursive(
 
     if error is None:
         # Add all sub-modules to the list
-        module_filepath = Path(str(module.__file__))  # Get filepath of module base
+        module_filepath = Path(
+            str(module.__file__)
+        )  # Get filepath of module base
         if module_filepath.name == "__init__.py":
-            for _, name, ispkg in pkgutil.iter_modules([module_filepath.parent]):
+            for _, name, ispkg in pkgutil.iter_modules(
+                [module_filepath.parent]
+            ):
                 if name[:1] == "_" and not include_private:
                     continue
                 submodule_name = module_importname + "." + name
@@ -65,17 +69,15 @@ def list_filepaths_recursive(
         found_paths = [Path(file_spec)]
     else:
         # split the path and do a glob --> list[Path]
-        path = Path(file_spec).absolute()  # make absolute so we can get a root part
+        path = Path(
+            file_spec
+        ).absolute()  # make absolute so we can get a root part
         base_pth = Path(path.root)
         glob_path = path.relative_to(base_pth)
         found_paths = base_pth.glob(glob_path)
 
     # Apply excludes to results : NB no "private" option (unlike modules)
-    found_paths = [
-        path
-        for path in found_paths
-        if not path.is_dir()
-    ]
+    found_paths = [path for path in found_paths if not path.is_dir()]
     return found_paths
 
 
@@ -105,7 +107,9 @@ def process_options(
     # Implement some handy defaults
     if not paths_are_modules:
         if not "module_relative" in opts_dict:
-            opts_dict["module_relative"] = False  # we want this OFF, by default anyway
+            opts_dict["module_relative"] = (
+                False  # we want this OFF, by default anyway
+            )
     if not "optionflags" in opts_dict:
         default_flags = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
         opts_dict["optionflags"] = default_flags  # a generally useful default?
@@ -154,7 +158,9 @@ def run_doctest_paths(
             module_paths = []
             for path in paths:
                 module_paths += list_modules_recursive(
-                    str(path),  # for modules, 'paths' are always strings anyway
+                    str(
+                        path
+                    ),  # for modules, 'paths' are always strings anyway
                     include_private=include_private_modules,
                     # exclude_fragments=exclude_fragments,
                 )
@@ -165,7 +171,7 @@ def run_doctest_paths(
         filepaths = []
         for path in paths:
             filepaths += list_filepaths_recursive(
-                str(path) #, exclude_fragments=exclude_fragments
+                str(path)  # , exclude_fragments=exclude_fragments
             )
         paths = filepaths
 
@@ -302,7 +308,10 @@ _parser.add_argument(
     default="",
 )
 _parser.add_argument(
-    "-v", "--verbose", action="store_true", help="show details of each operation."
+    "-v",
+    "--verbose",
+    action="store_true",
+    help="show details of each operation.",
 )
 _parser.add_argument(
     "-d",

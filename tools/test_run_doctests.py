@@ -284,7 +284,10 @@ class TestCliSources:
         result = runmain(badsources + "/*.*t", "-vf", expect_rc=1)
         result_fullstr = "\n".join(result)
         assert not "s1.rst" in result_fullstr
-        assert f"0/1 OK, 1/1 FAILED in path: {badsources}/s0.rst" in result_fullstr
+        assert (
+            f"0/1 OK, 1/1 FAILED in path: {badsources}/s0.rst"
+            in result_fullstr
+        )
         test_lines = [
             "(FAIL FAST: stopped at first path with errors)",
             "    paths tested    = 1",
@@ -368,7 +371,10 @@ class TestCliModules:
     @pytest.mark.parametrize("publiconly", [False, True])
     def test_modules_publiconly(self, publiconly):
         """Check that the '-p' option is passed down."""
-        args = ["argparse", "-mdv"]  # NB list module: don't recurse or run actual tests
+        args = [
+            "argparse",
+            "-mdv",
+        ]  # NB list module: don't recurse or run actual tests
         if publiconly:
             args += ["-p"]
         result = runmain(*args)
@@ -402,27 +408,27 @@ class TestCliModules:
             args += ["-e", "as"]
         result = runmain(*args)
         expected = [
-            '-----',
-            'doctest.testmod: curses',
+            "-----",
+            "doctest.testmod: curses",
         ]
         if not do_exclude:
             expected += [
-                '-----',
-                'doctest.testmod: curses.ascii',
-                '-----',
-                'doctest.testmod: curses.has_key',
+                "-----",
+                "doctest.testmod: curses.ascii",
+                "-----",
+                "doctest.testmod: curses.has_key",
             ]
         expected += [
-            '-----',
-            'doctest.testmod: curses.panel',
-            '-----',
-            'doctest.testmod: curses.textpad',
-            '=====',
-            'run_doctest: FINAL REPORT',
-            '(DRY RUN: no actual tests)',
-            '    paths tested    = 0',
-            '    tests completed = 0',
-            '    errors          = 0',
-            'OK.'
+            "-----",
+            "doctest.testmod: curses.panel",
+            "-----",
+            "doctest.testmod: curses.textpad",
+            "=====",
+            "run_doctest: FINAL REPORT",
+            "(DRY RUN: no actual tests)",
+            "    paths tested    = 0",
+            "    tests completed = 0",
+            "    errors          = 0",
+            "OK.",
         ]
         assert result == expected
