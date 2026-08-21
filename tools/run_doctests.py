@@ -34,18 +34,23 @@ def list_modules_recursive(
         print(f"\n\nIMPORT FAILED: {module_importname}\n  error: {exc}")
 
     if module_path is not None:
-        module_names.extend([
-            mod_info.name
-            for mod_info in pkgutil.walk_packages(
-                path=module_path,
-                prefix=f"{module_importname}.",
-            )
-        ])
+        module_names.extend(
+            [
+                mod_info.name
+                for mod_info in pkgutil.walk_packages(
+                    path=module_path,
+                    prefix=f"{module_importname}.",
+                )
+            ]
+        )
         if not include_private:
             module_names = [
-                name for name in module_names
-                if not any(part.startswith("_") for part in name.split(".")[1:])
-           ]
+                name
+                for name in module_names
+                if not any(
+                    part.startswith("_") for part in name.split(".")[1:]
+                )
+            ]
 
     return module_names
 
