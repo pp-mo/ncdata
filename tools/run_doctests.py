@@ -23,38 +23,31 @@ def list_modules_recursive(
 
     Also filter out private modules, if selected.
     """
-    module_names = [module_importname]
+
     # Identify module from its import path : N.B. fail --> return [module-path]
+    module_names = [module_importname]
+    module_path = None
     try:
-        error = None
         module = importlib.import_module(module_importname)
+        module_path = getattr(module, "__path__", None)
     except Exception as exc:
-        print(f"\n\nIMPORT FAILED: {module_importname}\n")
-        error = exc
+        print(f"\n\nIMPORT FAILED: {module_importname}\n  error: {exc}")
 
-    if error is None:
-        # Add all sub-modules to the list
-        module_filepath = Path(
-            str(module.__file__)
-        )  # Get filepath of module base
-        if module_filepath.name == "__init__.py":
-            for _, name, ispkg in pkgutil.iter_modules(
-                [module_filepath.parent]
-            ):
-                if name[:1] == "_" and not include_private:
-                    continue
-                submodule_name = module_importname + "." + name
-                module_names.append(submodule_name)
-                if ispkg:
-                    module_names.extend(
-                        list_modules_recursive(
-                            submodule_name,
-                            include_private=include_private,
-                        )
-                    )
+    if module_path is not None:
+        module_names.extend([
+            mod_info.name
+            for mod_info in pkgutil.walk_packages(
+                path=module_path,
+                prefix=f"{module_importname}.",
+            )
+        ])
+        if not include_private:
+            module_names = [
+                name for name in module_names
+                if not any(part.startswith("_") for part in name.split(".")[1:])
+           ]
 
-    # Remove duplicates, which may occur.
-    return sorted(set(module_names))
+    return module_names
 
 
 def list_filepaths_recursive(
@@ -65,20 +58,18 @@ def list_filepaths_recursive(
     Also filter with exclude controls.
     """
     if not any(c in file_spec for c in "?*["):
-        # when no globs, action the (single) filepath --> error if it doesn't exist
         found_paths = [Path(file_spec)]
     else:
-        # split the path and do a glob --> list[Path]
-        path = Path(
-            file_spec
-        ).absolute()  # make absolute so we can get a root part
-        base_pth = Path(path.root)
-        glob_path = path.relative_to(base_pth)
-        found_paths = base_pth.glob(glob_path)
+        path = Path(file_spec).expanduser()
+        if path.is_absolute():
+            glob_root = Path(path.anchor)
+            glob_pattern = path.relative_to(glob_root)
+        else:
+            glob_root = Path.cwd()
+            glob_pattern = path
+        found_paths = list(glob_root.glob(str(glob_pattern)))
 
-    # Apply excludes to results : NB no "private" option (unlike modules)
-    found_paths = [path for path in found_paths if not path.is_dir()]
-    return found_paths
+    return [path for path in found_paths if not path.is_dir()]
 
 
 def process_options(
