@@ -434,7 +434,7 @@ def _define_unit_dtype_testcases():
                     name="vx",
                     dims=["strlen"],
                     dtype="S1",
-                    data=np.array("abc", dtype="S1"),
+                    data=np.array(list("abc"), dtype="S1"),
                 )
             ],
         }
