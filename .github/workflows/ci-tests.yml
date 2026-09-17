@@ -81,6 +81,14 @@ jobs:
           mkdir --parents ${GITHUB_WORKSPACE}/iris_test_data
           mv iris-test-data-${IRIS_TEST_DATA_VERSION} ${GITHUB_WORKSPACE}/iris_test_data_download
 
+      - name: "TEMPORARY: install specific Iris from pp-mo/lazy_encoding"
+        run: |
+          cd ${GITHUB_WORKSPACE}
+          git clone https://github.com/pp-mo/iris.git ./iris2
+          cd ./iris2
+          git checkout lazy_encoding
+          pip install -e .
+
       - name: "Run tests"
         if: matrix.session == 'tests'
         run: |
