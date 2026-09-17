@@ -356,7 +356,7 @@ def _define_iris_testdata_testcases():
         #     "_ORCA2__votemper",
         # ]
         EXCLUDES = []
-        for filepath in _netcdf_testfile_paths:
+        for filepath in sorted(_netcdf_testfile_paths):
             param_name = str(filepath)
             # remove unwanted path elements
             param_name = param_name.replace(str(_testdirpath), "")
