@@ -72,6 +72,8 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
         + [
             # outstanding dims-mismatch problems.
             "testing__small_theta_colpex",
+            # all-masked variables --> changing dtype, since xarray>v2026.02.0
+            "testing__cell_methods",
             # coordinate attributes on mesh coordinate variables
             "testdata____ugrid__21_triangle_example",
             # Broken UGRID files now won't load in Iris >= 3.10
