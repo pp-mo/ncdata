@@ -85,8 +85,7 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
             # Iris can't accept the new form as it insists on integer types for
             # mesh connectivities :-(
             # TODO: do something to get this working again?
-            # TEMP - re-enable ??  :: but we do expect this to fail with xr>2026.02
-            # "unstructured"
+            "unstructured",
         ]
     )
     if any(key in standard_testcase.name for key in exclude_case_keys):
