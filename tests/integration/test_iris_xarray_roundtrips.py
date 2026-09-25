@@ -224,15 +224,6 @@ def test_roundtrip_xix(
         #   float time(time) ;
         #       time:bounds = 'time_bnds'
         #   float time_bnds(time, time_bnds) ;
-        # TEMP - re-enable ??
-        # "label_and_climate__small_FC_167",
-        # "rotated__xyt__small_rotPole_precipitation",
-        # # This one fails to load in xarray, for somewhat unclear reasons
-        # #     NotImplementedError: Can not use auto rechunking with object dtype.
-        # #     We are unable to estimate the size in bytes of object data
-        # "unstructured_grid__lfric_surface_mean",
-        # # Iris loses the name of the unstructured dimension, causing multiple problems
-        # "unstructured_grid__data_C4",
     ]
     if any(key in standard_testcase.name for key in excluded_casename_keys):
         pytest.skip("excluded testcase")

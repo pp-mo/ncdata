@@ -57,12 +57,6 @@ def test_load_direct_vs_viancdata(
         # yet account for this.
         # TODO: fix in Nc4VariableLike, when we are sure of the interpretation
         "label_and_climate__small_FC_167_mon_19601101",
-        # Some of the legacy UGRID unstructured files have incorrect encodings
-        # which are currently causing loading errors in Iris since UGRID loading
-        # became an always-on thing in v3.11
-        # TEMP - re-enable ??
-        # "unstructured_grid__theta_nodal_xios",
-        # "ugrid__21_triangle_example",
     ]
     if version_tuple(iris.__version__) < version_tuple("3.13"):
         # TODO: remove backwards compatibility when we drop Python 3.10 support

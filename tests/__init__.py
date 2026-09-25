@@ -30,9 +30,8 @@ class MonitoredArray:
 def version_tuple(version_string):
     """Make a comparable tuple from a package version string.
 
-    Considers only the two first parts "major.minor"
     Allows only the final segment to have non-numeric parts.
-    Return a tuple of the parts.
+    Returns a tuple of the parts.
     """
     parts = version_string.split(".")
     last_part = parts[-1]
