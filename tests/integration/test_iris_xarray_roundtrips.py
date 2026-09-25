@@ -22,6 +22,7 @@ from ncdata.threadlock_sharing import lockshare_context
 from ncdata.utils import dataset_differences
 from ncdata.xarray import from_xarray
 
+from tests import version_tuple
 from tests.data_testcase_schemas import (
     BAD_LOADSAVE_TESTCASES,
     session_testdir,
@@ -90,6 +91,14 @@ def test_roundtrip_ixi(standard_testcase, use_irislock, adjust_chunks):
             "unstructured",
         ]
     )
+    if version_tuple(iris.__version__) < version_tuple("3.16"):
+        # TODO: remove backwards compatibility when we drop Python 3.11 support
+        exclude_case_keys.extend(
+            [
+                "ds__dtype__string",
+                "ds__stringvar",
+            ]
+        )
     if any(key in standard_testcase.name for key in exclude_case_keys):
         pytest.skip("excluded testcase")
 
