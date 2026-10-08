@@ -43,7 +43,9 @@ def list_modules_recursive(
             module_names = [
                 name
                 for name in module_names
-                if not any(part.startswith("_") for part in name.split(".")[1:])
+                if not any(
+                    part.startswith("_") for part in name.split(".")[1:]
+                )
             ]
 
     return module_names
@@ -94,7 +96,9 @@ def process_options(
     # Implement some handy defaults
     if not paths_are_modules:
         if not "module_relative" in opts_dict:
-            opts_dict["module_relative"] = False  # we want this OFF, by default anyway
+            opts_dict["module_relative"] = (
+                False  # we want this OFF, by default anyway
+            )
     if not "optionflags" in opts_dict:
         default_flags = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
         opts_dict["optionflags"] = default_flags  # a generally useful default?
@@ -143,7 +147,9 @@ def run_doctest_paths(
             module_paths = []
             for path in paths:
                 module_paths += list_modules_recursive(
-                    str(path),  # for modules, 'paths' are always strings anyway
+                    str(
+                        path
+                    ),  # for modules, 'paths' are always strings anyway
                     include_private=include_private_modules,
                     # exclude_fragments=exclude_fragments,
                 )
@@ -319,6 +325,10 @@ _parser.add_argument(
 
 if __name__ == "__main__":
     args = _parser.parse_args(sys.argv[1:])
+    # Clobber sys.argv after parsing, as the doctest functions check it even when
+    #  called directly :-(
+    sys.argv = sys.argv[:1]
+
     if not args.paths:
         _parser.print_help()
     else:
