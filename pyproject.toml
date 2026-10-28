@@ -64,7 +64,7 @@ ignore = ["lib/ncdata/_version.py/_version.py"]
 [tool.codespell]
 ignore-words-list = "alpha-numeric,assertIn,degreee,discontiguities,lazyness,meaned,nin,re-use,re-uses,re-using,re-used,anc,abl,ND,Nd"
 
-tool.coverage.report]
+[tool.coverage.report]
 exclude_lines = [
     "pragma: no cover",
     "if __name__ == .__main__.:",
@@ -253,4 +253,3 @@ showcontent = true
 directory = "misc"
 name = "Developer and Internal changes"
 showcontent = true
-
