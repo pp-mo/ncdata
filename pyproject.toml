@@ -175,8 +175,17 @@ ignore = [
     # NOTE: This rule may cause conflicts when used with "ruff format".
     "ISC001",  # Implicitly concatenate string literals on one line.
 
-    # TODO: exceptions that still need investigating are below. Might be fixable, or might become permanent (above):
+    # project-specific ignores
     "ANN",  # not needed as we are using MyPy
+    "C408", # Unnecessary `dict()` call (rewrite as a literal)
+            # [[TRUST: where used, readabiility is wanted over efficiency]]
+    "FBT",  # flake8-boolean-trap (no bools in positional args)
+    "FIX002",  # TODO comments.
+    "PLC0415",  # Imports at top [[TRUST: exceptions are intentional]]
+    "SLF",  # flake8 private member accesses
+    "TD",  # flake8 TODO bans
+    # TODO: exceptions that still need investigating are below. Might be fixable, or might become permanent (above):
+    "ERA001", # Found commented-out code
 ]
 preview = false
 select = [
@@ -201,8 +210,10 @@ max-complexity = 22
     "D100",  # Missing docstring in public module
     "D101",  # Missing docstring in public class
     "D102",  # Missing docstring in public method
+    "D103",  # Missing docstring in public function
     "D205",  # 1 blank line required between summary line and description
     "D401",  # 1 First line of docstring should be in imperative mood
+    "N801",  # Class name should use CapWords convention
     "T201",  # Print statement.
 ]
 
