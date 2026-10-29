@@ -200,6 +200,9 @@ select = [
 force-sort-within-sections = true
 known-first-party = ["<PACKAGE_NAME>"]  # e.g "iris" or "cf_units"
 
+[tool.ruff.lint.flake8-copyright]
+notice-rgx = "^[ #]*Copyright SciTools contributors"
+
 [tool.ruff.lint.mccabe]
 max-complexity = 22
 
