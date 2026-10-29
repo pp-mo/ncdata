@@ -176,6 +176,7 @@ ignore = [
     "ISC001",  # Implicitly concatenate string literals on one line.
 
     # TODO: exceptions that still need investigating are below. Might be fixable, or might become permanent (above):
+    "ANN",  # not needed as we are using MyPy
 ]
 preview = false
 select = [
@@ -194,11 +195,15 @@ max-complexity = 22
 
 [tool.ruff.lint.per-file-ignores]
 # All test scripts
-"<PATH_TO_TESTS>/*.py" = [ # e.g "cf_units/tests" or "lib/iris/tests"
+"./tests/**/*.py" = [ # e.g "cf_units/tests" or "lib/iris/tests"
     # https://docs.astral.sh/ruff/rules
+    "S101",  # Use of assert.
     "D100",  # Missing docstring in public module
+    "D101",  # Missing docstring in public class
+    "D102",  # Missing docstring in public method
     "D205",  # 1 blank line required between summary line and description
     "D401",  # 1 First line of docstring should be in imperative mood
+    "T201",  # Print statement.
 ]
 
 [tool.ruff.lint.pydocstyle]
