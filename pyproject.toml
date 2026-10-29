@@ -184,6 +184,7 @@ ignore = [
     "PLC0415",  # Imports at top [[TRUST: exceptions are intentional]]
     "SLF",  # flake8 private member accesses
     "TD",  # flake8 TODO bans
+
     # TODO: exceptions that still need investigating are below. Might be fixable, or might become permanent (above):
     "ERA001", # Found commented-out code
 ]
@@ -192,7 +193,7 @@ select = [
     "ALL",
     # Note: the above "all" disables conflicting rules, if you want that
     # rule it needs to be explicitly enabled below:
-    "D212",  # Multi-line docstring summary should start at the first line
+    "D213",  # Multi-line docstring summary should start at the second line
 ]
 
 [tool.ruff.lint.isort]
