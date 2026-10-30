@@ -183,6 +183,7 @@ ignore = [
     "FIX002",  # TODO comments.
     "PLC0415",  # Imports at top [[TRUST: exceptions are intentional]]
     "SLF",  # flake8 private member accesses
+    "T201",  # Print statement.
     "TD",  # flake8 TODO bans
 
     # TODO: exceptions that still need investigating are below. Might be fixable, or might become permanent (above):
@@ -218,7 +219,6 @@ max-complexity = 22
     "D205",  # 1 blank line required between summary line and description
     "D401",  # 1 First line of docstring should be in imperative mood
     "N801",  # Class name should use CapWords convention
-    "T201",  # Print statement.
 ]
 
 [tool.ruff.lint.pydocstyle]
