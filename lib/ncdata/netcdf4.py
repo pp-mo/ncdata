@@ -109,7 +109,8 @@ class _NetCDFDataProxy:
     Copied from Iris, with some simplifications.
     """
 
-    __slots__ = ("shape", "dtype", "path", "variable_name", "group_names_path")
+    # N.B. avoiding sorting this, the order is convenient for understanding.
+    __slots__ = ("shape", "dtype", "path", "variable_name", "group_names_path")  # noqa: RUF023
 
     def __init__(
         self, shape, dtype, filepath, variable_name, group_names_path=None
