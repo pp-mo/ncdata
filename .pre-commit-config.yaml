@@ -20,6 +20,10 @@ files: |
         tests\/.+\.py|
         tools\/.+\.py
     )
+
+exclude: |
+  docs/conf.py  # sufficiently different that linting is unhelpful
+
 minimum_pre_commit_version: 1.21.0
 
 repos:
