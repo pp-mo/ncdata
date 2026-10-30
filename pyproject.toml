@@ -158,6 +158,7 @@ ignore = [
 
 [tool.ruff]
 line-length = 88
+src = ["lib"]
 
 [tool.ruff.format]
 preview = false
@@ -198,8 +199,12 @@ select = [
 ]
 
 [tool.ruff.lint.isort]
-force-sort-within-sections = true
-known-first-party = ["<PACKAGE_NAME>"]  # e.g "iris" or "cf_units"
+#known-first-party = ["ncdata"]
+known-local-folder = ["tests"]
+# The identification of first-party modules is wrong here, and **different from isort**.
+# It seems to consider these first-party because there is an 'ncdata.xarray' etc.
+# Also that confuses it and it then treats all ncdata as **third-party**.
+#known-third-party = ["iris", "xarray"]
 
 [tool.ruff.lint.flake8-copyright]
 notice-rgx = "^[ #]*Copyright SciTools contributors"
